@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Suivi des activités - NutriStep{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 30px; color: #333;">🏃 Suivi des activités</h1>
+
+<div class="card">
+    <h2>➕ Ajouter une activité</h2>
+    <form method="POST" action="{{ url_for('add_activity') }}">
+        <div style="display: grid; grid-template-columns: 200px 120px 120px 150px 1fr auto; gap: 15px; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="activity_type">Type d'activité</label>
+                <input type="text" class="form-control" id="activity_type" name="activity_type" 
+                       placeholder="Ex: Course, Yoga" required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="duration">Durée (min)</label>
+                <input type="number" class="form-control" id="duration" name="duration" 
+                       placeholder="30" required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="calories_burned">Calories</label>
+                <input type="number" class="form-control" id="calories_burned" name="calories_burned" 
+                       placeholder="200">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="date">Date</label>
+                <input type="date" class="form-control" id="date" name="date" required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="note">Note</label>
+                <input type="text" class="form-control" id="note" name="note" 
+                       placeholder="Ressenti, lieu...">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>📋 Historique</h2>
+    {% if entries %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Activité</th>
+                    <th>Durée</th>
+                    <th>Calories brûlées</th>
+                    <th>Note</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td>{{ entry.date.strftime('%d/%m/%Y') }}</td>
+                    <td><strong>{{ entry.activity_type }}</strong></td>
+                    <td>{{ entry.duration }} min</td>
+                    <td>{{ entry.calories_burned or '--' }} kcal</td>
+                    <td>{{ entry.note or '--' }}</td>
+                    <td>
+                        <a href="{{ url_for('delete_activity', id=entry.id) }}" 
+                           class="btn btn-danger btn-small"
+                           onclick="return confirm('Supprimer cette activité ?')">
+                            🗑️ Supprimer
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="color: #999; text-align: center; padding: 40px;">Aucune activité enregistrée pour le moment</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Définir la date par défaut à aujourd'hui
+    document.getElementById('date').valueAsDate = new Date();
+</script>
+{% endblock %}

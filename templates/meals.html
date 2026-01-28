@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Suivi des repas - NutriStep{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 30px; color: #333;">🍽️ Suivi des repas</h1>
+
+<div class="card">
+    <h2>➕ Ajouter un repas</h2>
+    <form method="POST" action="{{ url_for('add_meal') }}">
+        <div style="display: grid; grid-template-columns: 150px 1fr 120px 150px auto; gap: 15px; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="meal_type">Type</label>
+                <select class="form-control" id="meal_type" name="meal_type" required>
+                    <option value="breakfast">🌅 Petit-déj</option>
+                    <option value="lunch">🌞 Déjeuner</option>
+                    <option value="dinner">🌙 Dîner</option>
+                    <option value="snack">🍪 Snack</option>
+                </select>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="description">Description</label>
+                <input type="text" class="form-control" id="description" name="description" 
+                       placeholder="Ex: Salade de pâtes, yaourt" required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="calories">Calories</label>
+                <input type="number" class="form-control" id="calories" name="calories" placeholder="500">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="date">Date</label>
+                <input type="date" class="form-control" id="date" name="date" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>📋 Historique</h2>
+    {% if entries %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Calories</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td>{{ entry.date.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        {% if entry.meal_type == 'breakfast' %}🌅 Petit-déj
+                        {% elif entry.meal_type == 'lunch' %}🌞 Déjeuner
+                        {% elif entry.meal_type == 'dinner' %}🌙 Dîner
+                        {% else %}🍪 Snack
+                        {% endif %}
+                    </td>
+                    <td>{{ entry.description }}</td>
+                    <td>{{ entry.calories or '--' }} kcal</td>
+                    <td>
+                        <a href="{{ url_for('delete_meal', id=entry.id) }}" 
+                           class="btn btn-danger btn-small"
+                           onclick="return confirm('Supprimer ce repas ?')">
+                            🗑️ Supprimer
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="color: #999; text-align: center; padding: 40px;">Aucun repas enregistré pour le moment</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Définir la date par défaut à aujourd'hui
+    document.getElementById('date').valueAsDate = new Date();
+</script>
+{% endblock %}
