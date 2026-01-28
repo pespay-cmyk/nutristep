@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - NutriStep{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 30px; color: #333;">👋 Bonjour {{ session.username }} !</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Poids actuel</h3>
+        <div class="value">
+            {% if latest_weight %}
+                {{ latest_weight.weight }}
+            {% else %}
+                --
+            {% endif %}
+        </div>
+        <div class="unit">kg</div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>Calories consommées aujourd'hui</h3>
+        <div class="value">{{ total_calories_today }}</div>
+        <div class="unit">kcal</div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>Calories brûlées aujourd'hui</h3>
+        <div class="value">{{ total_calories_burned }}</div>
+        <div class="unit">kcal</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>📈 Évolution du poids (30 derniers jours)</h2>
+    <canvas id="weightChart" height="80"></canvas>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="card">
+        <h2>🍽️ Repas d'aujourd'hui</h2>
+        {% if today_meals %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Calories</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for meal in today_meals %}
+                    <tr>
+                        <td>
+                            {% if meal.meal_type == 'breakfast' %}🌅 Petit-déj
+                            {% elif meal.meal_type == 'lunch' %}🌞 Déjeuner
+                            {% elif meal.meal_type == 'dinner' %}🌙 Dîner
+                            {% else %}🍪 Snack
+                            {% endif %}
+                        </td>
+                        <td>{{ meal.description }}</td>
+                        <td>{{ meal.calories or '--' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="color: #999; text-align: center; padding: 20px;">Aucun repas enregistré aujourd'hui</p>
+        {% endif %}
+        <a href="{{ url_for('meals') }}" class="btn btn-primary" style="margin-top: 15px;">Ajouter un repas</a>
+    </div>
+    
+    <div class="card">
+        <h2>🏃 Activités d'aujourd'hui</h2>
+        {% if today_activities %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Activité</th>
+                        <th>Durée</th>
+                        <th>Calories</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in today_activities %}
+                    <tr>
+                        <td>{{ activity.activity_type }}</td>
+                        <td>{{ activity.duration }} min</td>
+                        <td>{{ activity.calories_burned or '--' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="color: #999; text-align: center; padding: 20px;">Aucune activité enregistrée aujourd'hui</p>
+        {% endif %}
+        <a href="{{ url_for('activities') }}" class="btn btn-primary" style="margin-top: 15px;">Ajouter une activité</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const ctx = document.getElementById('weightChart').getContext('2d');
+    
+    const weightData = {
+        labels: [
+            {% for entry in weight_history %}
+                '{{ entry.date.strftime("%d/%m") }}'{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Poids (kg)',
+            data: [
+                {% for entry in weight_history %}
+                    {{ entry.weight }}{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 4,
+            pointBackgroundColor: '#667eea'
+        }]
+    };
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: weightData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' kg';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
