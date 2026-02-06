@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from authlib.integrations.flask_client import OAuth
 from datetime import datetime, timedelta
 import os
+import json
 from functools import wraps
 from dotenv import load_dotenv
 
@@ -71,11 +72,35 @@ class WeightEntry(db.Model):
 class MealEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    meal_type = db.Column(db.String(20), nullable=False)  # breakfast, lunch, dinner, snack
-    description = db.Column(db.Text, nullable=False)
-    calories = db.Column(db.Integer)
+
+    # Nouveau: 5 types de repas
+    meal_type = db.Column(db.String(20), nullable=False)
+    # Valeurs: breakfast, snack_morning, lunch, snack_afternoon, dinner
+
     date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
+
+    # Nouveau: aliments (liste JSON)
+    foods = db.Column(db.Text)  # Stocké comme JSON ["yaourt", "pomme", ...]
+
+    # Nouveau: qualification
+    qualification = db.Column(db.String(20), default='normal')  # normal, exception, equilibrage
+
+    # Nouveau: si "rien" pour ce repas
+    is_none = db.Column(db.Boolean, default=False)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def get_foods_list(self):
+        """Retourne la liste des aliments"""
+        import json
+        if self.foods:
+            return json.loads(self.foods)
+        return []
+
+    def set_foods_list(self, foods_list):
+        """Définit la liste des aliments"""
+        import json
+        self.foods = json.dumps(foods_list)
 
 class ActivityEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -389,46 +414,157 @@ def delete_weight(id):
 @login_required
 def meals():
     user_id = session['user_id']
-    entries = MealEntry.query.filter_by(user_id=user_id).order_by(MealEntry.date.desc(), MealEntry.created_at.desc()).all()
-    user = User.query.get(session['user_id'])
-    return render_template('meals.html', entries=entries, theme=user.theme)
+    user = User.query.get(user_id)
 
-@app.route('/meals/add', methods=['POST'])
+    # Gérer l'offset de semaine (navigation)
+    week_offset = int(request.args.get('week_offset', 0))
+
+    # Calculer la semaine à afficher
+    today = datetime.utcnow().date()
+    # Trouver le lundi de la semaine actuelle
+    days_since_monday = today.weekday()
+    week_start = today - timedelta(days=days_since_monday) + timedelta(weeks=week_offset)
+    week_end = week_start + timedelta(days=6)
+
+    # Préparer les données pour chaque jour de la semaine
+    week_days = []
+    day_names_fr = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+
+    for i in range(7):
+        current_date = week_start + timedelta(days=i)
+
+        # Récupérer les repas de ce jour
+        day_meals = MealEntry.query.filter_by(
+            user_id=user_id,
+            date=current_date
+        ).all()
+
+        # Organiser par type de repas
+        meals_by_type = {
+            'breakfast': None,
+            'snack_morning': None,
+            'lunch': None,
+            'snack_afternoon': None,
+            'dinner': None
+        }
+
+        for meal in day_meals:
+            meals_by_type[meal.meal_type] = {
+                'foods': meal.get_foods_list(),
+                'qualification': meal.qualification,
+                'is_none': meal.is_none
+            }
+
+        # Vérifier si tous les repas sont remplis
+        all_types = ['breakfast', 'snack_morning', 'lunch', 'snack_afternoon', 'dinner']
+        filled_meals = [t for t in all_types if meals_by_type[t] is not None]
+        is_complete = len(filled_meals) == 5
+        has_meals = len(filled_meals) > 0
+
+        # Compter les exceptions et équilibrages
+        exception_count = sum(1 for m in day_meals if m.qualification == 'exception')
+        equilibrage_count = sum(1 for m in day_meals if m.qualification == 'equilibrage')
+
+        week_days.append({
+            'date': current_date,
+            'day_name': day_names_fr[i],
+            'is_today': current_date == today,
+            'meals': meals_by_type,
+            'is_complete': is_complete,
+            'has_meals': has_meals,
+            'exception_count': exception_count,
+            'equilibrage_count': equilibrage_count
+        })
+
+    # Récupérer l'historique des aliments pour l'autocomplétion
+    all_user_meals = MealEntry.query.filter_by(user_id=user_id).all()
+    food_history = set()
+    for meal in all_user_meals:
+        if meal.foods:
+            food_history.update(meal.get_foods_list())
+
+    return render_template('meals.html',
+                         week_days=week_days,
+                         week_start=week_start,
+                         week_end=week_end,
+                         week_offset=week_offset,
+                         food_history=list(food_history),
+                         theme=user.theme)
+
+@app.route('/api/get-day-meals')
 @login_required
-def add_meal():
+def get_day_meals():
     user_id = session['user_id']
-    meal_type = request.form.get('meal_type')
-    description = request.form.get('description')
-    calories = request.form.get('calories')
-    date_str = request.form.get('date')
-
+    date_str = request.args.get('date')
     date = datetime.strptime(date_str, '%Y-%m-%d').date()
 
-    new_entry = MealEntry(
+    # Récupérer les repas de ce jour
+    day_meals = MealEntry.query.filter_by(
         user_id=user_id,
-        meal_type=meal_type,
-        description=description,
-        calories=int(calories) if calories else None,
         date=date
-    )
-    db.session.add(new_entry)
-    db.session.commit()
+    ).all()
 
-    flash('Repas enregistré !', 'success')
-    return redirect(url_for('meals'))
+    # Organiser par type
+    meals_by_type = {
+        'breakfast': {'foods': [], 'qualification': 'normal', 'is_none': False},
+        'snack_morning': {'foods': [], 'qualification': 'normal', 'is_none': False},
+        'lunch': {'foods': [], 'qualification': 'normal', 'is_none': False},
+        'snack_afternoon': {'foods': [], 'qualification': 'normal', 'is_none': False},
+        'dinner': {'foods': [], 'qualification': 'normal', 'is_none': False}
+    }
 
-@app.route('/meals/delete/<int:id>')
+    for meal in day_meals:
+        meals_by_type[meal.meal_type] = {
+            'foods': meal.get_foods_list(),
+            'qualification': meal.qualification,
+            'is_none': meal.is_none
+        }
+
+    return jsonify({
+        'date': date_str,
+        'meals': meals_by_type
+    })
+
+@app.route('/meals/save-day', methods=['POST'])
 @login_required
-def delete_meal(id):
-    entry = MealEntry.query.get_or_404(id)
-    if entry.user_id != session['user_id']:
-        flash('Action non autorisée.', 'danger')
-        return redirect(url_for('meals'))
+def save_day_meals():
+    user_id = session['user_id']
+    date_str = request.form.get('date')
+    date = datetime.strptime(date_str, '%Y-%m-%d').date()
 
-    db.session.delete(entry)
+    meal_types = ['breakfast', 'snack_morning', 'lunch', 'snack_afternoon', 'dinner']
+
+    # Supprimer les anciens repas de ce jour
+    MealEntry.query.filter_by(user_id=user_id, date=date).delete()
+
+    # Sauvegarder les nouveaux repas
+    for meal_type in meal_types:
+        # Vérifier si "rien"
+        is_none = request.form.get(f'{meal_type}_none') == 'on'
+
+        # Récupérer les aliments
+        foods = request.form.getlist(f'{meal_type}_food[]')
+        foods = [f.strip() for f in foods if f.strip()]
+
+        # Récupérer la qualification
+        qualification = request.form.get(f'{meal_type}_qualification', 'normal')
+
+        # Créer l'entrée seulement si "rien" OU au moins un aliment
+        if is_none or len(foods) > 0:
+            meal_entry = MealEntry(
+                user_id=user_id,
+                meal_type=meal_type,
+                date=date,
+                is_none=is_none,
+                qualification=qualification
+            )
+            meal_entry.set_foods_list(foods)
+            db.session.add(meal_entry)
+
     db.session.commit()
-    flash('Repas supprimé.', 'info')
-    return redirect(url_for('meals'))
+
+    return jsonify({'success': True})
+
 
 # ========================================
 # ROUTES ACTIVITÉS
