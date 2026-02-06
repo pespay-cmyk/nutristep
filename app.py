@@ -5,6 +5,10 @@ from authlib.integrations.flask_client import OAuth
 from datetime import datetime, timedelta
 import os
 from functools import wraps
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement depuis .env
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -15,6 +19,9 @@ if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+print("CLIENT_ID =", repr(os.environ.get("GOOGLE_CLIENT_ID")))
+print("SECRET    =", repr(os.environ.get("GOOGLE_CLIENT_SECRET")))
 
 # Configuration OAuth avec authlib
 oauth = OAuth(app)
