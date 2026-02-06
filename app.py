@@ -45,8 +45,9 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=True)  # Nullable pour les comptes Google
     google_id = db.Column(db.String(255), unique=True, nullable=True)  # ID Google
+    theme = db.Column(db.String(20), default='green')  # Thème préféré de l'utilisateur
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # Relations
     weight_entries = db.relationship('WeightEntry', backref='user', lazy=True, cascade='all, delete-orphan')
     meal_entries = db.relationship('MealEntry', backref='user', lazy=True, cascade='all, delete-orphan')
@@ -106,18 +107,18 @@ def google_authorized():
     try:
         token = google.authorize_access_token()
         user_info = token.get('userinfo')
-        
+
         if not user_info:
             flash('Impossible de récupérer les informations depuis Google.', 'danger')
             return redirect(url_for('login'))
-        
+
         google_id = user_info['sub']
         email = user_info['email']
         name = user_info.get('name', email.split('@')[0])
-        
+
         # Chercher si l'utilisateur existe déjà
         user = User.query.filter_by(google_id=google_id).first()
-        
+
         if not user:
             # Chercher par email (au cas où l'utilisateur a créé un compte classique avant)
             user = User.query.filter_by(email=email).first()
@@ -133,7 +134,7 @@ def google_authorized():
                 while User.query.filter_by(username=username).first():
                     username = f"{base_username}{counter}"
                     counter += 1
-                
+
                 user = User(
                     username=username,
                     email=email,
@@ -141,15 +142,15 @@ def google_authorized():
                     password_hash=None  # Pas de mot de passe pour les comptes Google
                 )
                 db.session.add(user)
-            
+
             db.session.commit()
-        
+
         # Connecter l'utilisateur
         session['user_id'] = user.id
         session['username'] = user.username
         flash(f'Bienvenue {user.username} !', 'success')
         return redirect(url_for('dashboard'))
-        
+
     except Exception as e:
         flash(f'Erreur lors de la connexion avec Google: {str(e)}', 'danger')
         return redirect(url_for('login'))
@@ -169,9 +170,9 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
+
         user = User.query.filter_by(username=username).first()
-        
+
         if user and user.password_hash and check_password_hash(user.password_hash, password):
             session['user_id'] = user.id
             session['username'] = user.username
@@ -179,8 +180,8 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             flash('Identifiants incorrects.', 'danger')
-    
-    return render_template('login.html')
+
+    return render_template('login.html', theme='green')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -189,19 +190,19 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
         password_confirm = request.form.get('password_confirm')
-        
+
         if password != password_confirm:
             flash('Les mots de passe ne correspondent pas.', 'danger')
-            return render_template('register.html')
-        
+            return render_template('register.html', theme='green')
+
         if User.query.filter_by(username=username).first():
             flash('Ce nom d\'utilisateur existe déjà.', 'danger')
-            return render_template('register.html')
-        
+            return render_template('register.html', theme='green')
+
         if User.query.filter_by(email=email).first():
             flash('Cet email est déjà utilisé.', 'danger')
-            return render_template('register.html')
-        
+            return render_template('register.html', theme='green')
+
         new_user = User(
             username=username,
             email=email,
@@ -209,17 +210,34 @@ def register():
         )
         db.session.add(new_user)
         db.session.commit()
-        
+
         flash('Compte créé avec succès ! Vous pouvez maintenant vous connecter.', 'success')
         return redirect(url_for('login'))
-    
-    return render_template('register.html')
+
+    return render_template('register.html', theme='green')
 
 @app.route('/logout')
 def logout():
     session.clear()
     flash('Vous êtes déconnecté.', 'info')
     return redirect(url_for('login'))
+
+@app.route('/api/change-theme', methods=['POST'])
+@login_required
+def change_theme():
+    data = request.get_json()
+    theme = data.get('theme', 'green')
+
+    # Valider le thème
+    if theme not in ['green', 'ocean', 'sunset']:
+        return jsonify({'error': 'Invalid theme'}), 400
+
+    # Mettre à jour le thème de l'utilisateur
+    user = User.query.get(session['user_id'])
+    user.theme = theme
+    db.session.commit()
+
+    return jsonify({'success': True})
 
 # ========================================
 # ROUTES PRINCIPALES
@@ -229,30 +247,32 @@ def logout():
 @login_required
 def dashboard():
     user_id = session['user_id']
-    
+
     # Récupérer les dernières données
     latest_weight = WeightEntry.query.filter_by(user_id=user_id).order_by(WeightEntry.date.desc()).first()
     today_meals = MealEntry.query.filter_by(user_id=user_id, date=datetime.utcnow().date()).all()
     today_activities = ActivityEntry.query.filter_by(user_id=user_id, date=datetime.utcnow().date()).all()
-    
+
     # Statistiques
     total_calories_today = sum(meal.calories or 0 for meal in today_meals)
     total_calories_burned = sum(activity.calories_burned or 0 for activity in today_activities)
-    
+
     # Poids des 30 derniers jours pour le graphique
     thirty_days_ago = datetime.utcnow().date() - timedelta(days=30)
     weight_history = WeightEntry.query.filter(
         WeightEntry.user_id == user_id,
         WeightEntry.date >= thirty_days_ago
     ).order_by(WeightEntry.date).all()
-    
+
+    user = User.query.get(session['user_id'])
     return render_template('dashboard.html',
                          latest_weight=latest_weight,
                          today_meals=today_meals,
                          today_activities=today_activities,
                          total_calories_today=total_calories_today,
                          total_calories_burned=total_calories_burned,
-                         weight_history=weight_history)
+                         weight_history=weight_history,
+                         theme=user.theme)
 
 # ========================================
 # ROUTES POIDS
@@ -263,7 +283,8 @@ def dashboard():
 def weight():
     user_id = session['user_id']
     entries = WeightEntry.query.filter_by(user_id=user_id).order_by(WeightEntry.date.desc()).all()
-    return render_template('weight.html', entries=entries)
+    user = User.query.get(session['user_id'])
+    return render_template('weight.html', entries=entries, theme=user.theme)
 
 @app.route('/weight/add', methods=['POST'])
 @login_required
@@ -272,9 +293,9 @@ def add_weight():
     weight = float(request.form.get('weight'))
     date_str = request.form.get('date')
     note = request.form.get('note', '')
-    
+
     date = datetime.strptime(date_str, '%Y-%m-%d').date()
-    
+
     new_entry = WeightEntry(
         user_id=user_id,
         weight=weight,
@@ -283,7 +304,7 @@ def add_weight():
     )
     db.session.add(new_entry)
     db.session.commit()
-    
+
     flash('Poids enregistré !', 'success')
     return redirect(url_for('weight'))
 
@@ -294,7 +315,7 @@ def delete_weight(id):
     if entry.user_id != session['user_id']:
         flash('Action non autorisée.', 'danger')
         return redirect(url_for('weight'))
-    
+
     db.session.delete(entry)
     db.session.commit()
     flash('Entrée supprimée.', 'info')
@@ -309,7 +330,8 @@ def delete_weight(id):
 def meals():
     user_id = session['user_id']
     entries = MealEntry.query.filter_by(user_id=user_id).order_by(MealEntry.date.desc(), MealEntry.created_at.desc()).all()
-    return render_template('meals.html', entries=entries)
+    user = User.query.get(session['user_id'])
+    return render_template('meals.html', entries=entries, theme=user.theme)
 
 @app.route('/meals/add', methods=['POST'])
 @login_required
@@ -319,9 +341,9 @@ def add_meal():
     description = request.form.get('description')
     calories = request.form.get('calories')
     date_str = request.form.get('date')
-    
+
     date = datetime.strptime(date_str, '%Y-%m-%d').date()
-    
+
     new_entry = MealEntry(
         user_id=user_id,
         meal_type=meal_type,
@@ -331,7 +353,7 @@ def add_meal():
     )
     db.session.add(new_entry)
     db.session.commit()
-    
+
     flash('Repas enregistré !', 'success')
     return redirect(url_for('meals'))
 
@@ -342,7 +364,7 @@ def delete_meal(id):
     if entry.user_id != session['user_id']:
         flash('Action non autorisée.', 'danger')
         return redirect(url_for('meals'))
-    
+
     db.session.delete(entry)
     db.session.commit()
     flash('Repas supprimé.', 'info')
@@ -357,7 +379,8 @@ def delete_meal(id):
 def activities():
     user_id = session['user_id']
     entries = ActivityEntry.query.filter_by(user_id=user_id).order_by(ActivityEntry.date.desc(), ActivityEntry.created_at.desc()).all()
-    return render_template('activities.html', entries=entries)
+    user = User.query.get(session['user_id'])
+    return render_template('activities.html', entries=entries,theme=user.theme)
 
 @app.route('/activities/add', methods=['POST'])
 @login_required
@@ -368,9 +391,9 @@ def add_activity():
     calories_burned = request.form.get('calories_burned')
     date_str = request.form.get('date')
     note = request.form.get('note', '')
-    
+
     date = datetime.strptime(date_str, '%Y-%m-%d').date()
-    
+
     new_entry = ActivityEntry(
         user_id=user_id,
         activity_type=activity_type,
@@ -381,7 +404,7 @@ def add_activity():
     )
     db.session.add(new_entry)
     db.session.commit()
-    
+
     flash('Activité enregistrée !', 'success')
     return redirect(url_for('activities'))
 
@@ -392,7 +415,7 @@ def delete_activity(id):
     if entry.user_id != session['user_id']:
         flash('Action non autorisée.', 'danger')
         return redirect(url_for('activities'))
-    
+
     db.session.delete(entry)
     db.session.commit()
     flash('Activité supprimée.', 'info')
@@ -407,18 +430,18 @@ def delete_activity(id):
 def weight_data():
     user_id = session['user_id']
     days = int(request.args.get('days', 30))
-    
+
     start_date = datetime.utcnow().date() - timedelta(days=days)
     entries = WeightEntry.query.filter(
         WeightEntry.user_id == user_id,
         WeightEntry.date >= start_date
     ).order_by(WeightEntry.date).all()
-    
+
     data = {
         'dates': [entry.date.strftime('%Y-%m-%d') for entry in entries],
         'weights': [entry.weight for entry in entries]
     }
-    
+
     return jsonify(data)
 
 # ========================================
