@@ -298,6 +298,9 @@ def weight():
     # Vérifier si déjà saisi aujourd'hui
     weight_today = WeightEntry.query.filter_by(user_id=user_id, date=today).first()
 
+    # Récupérer le dernier poids pour le pré-remplir
+    last_weight = entries[0].weight if entries else None
+
     # Calculer le nombre de jours depuis la dernière saisie
     days_since_last_entry = None
     if entries and not weight_today:
@@ -323,12 +326,20 @@ def weight():
             weight_evolution_message = f"✨ Poids stable ! C'est bien, tu maintiens le cap. Continue tes efforts ! 🎯"
             weight_evolution_style = "background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid #f59e0b; color: #92400e"
 
+    # Préparer les données pour le graphique (toutes les données)
+    all_entries = WeightEntry.query.filter_by(user_id=user_id).order_by(WeightEntry.date).all()
+    all_dates = [entry.date.strftime('%d/%m') for entry in all_entries]
+    all_weights = [entry.weight for entry in all_entries]
+
     return render_template('weight.html',
                          entries=entries,
                          weight_today=weight_today,
+                         last_weight=last_weight,
                          days_since_last_entry=days_since_last_entry,
                          weight_evolution_message=weight_evolution_message,
                          weight_evolution_style=weight_evolution_style,
+                         all_dates=all_dates,
+                         all_weights=all_weights,
                          today=today,
                          theme=user.theme)
 
