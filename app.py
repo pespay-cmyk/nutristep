@@ -172,24 +172,18 @@ def index():
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login')
 def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+    # Si déjà connecté, rediriger vers le dashboard
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
 
-        user = User.query.filter_by(username=username).first()
-
-        if user and user.password_hash and check_password_hash(user.password_hash, password):
-            session['user_id'] = user.id
-            session['username'] = user.username
-            flash(f'Bienvenue {user.username} !', 'success')
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Identifiants incorrects.', 'danger')
-
+    # Afficher la page de login Google uniquement
     return render_template('login.html', theme='green')
 
+
+
+"""
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -222,7 +216,7 @@ def register():
         return redirect(url_for('login'))
 
     return render_template('register.html', theme='green')
-
+"""
 @app.route('/logout')
 def logout():
     session.clear()
