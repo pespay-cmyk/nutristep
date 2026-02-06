@@ -289,30 +289,78 @@ def dashboard():
 @login_required
 def weight():
     user_id = session['user_id']
+    user = User.query.get(user_id)
+    today = datetime.utcnow().date()
+
+    # Récupérer toutes les entrées
     entries = WeightEntry.query.filter_by(user_id=user_id).order_by(WeightEntry.date.desc()).all()
-    user = User.query.get(session['user_id'])
-    return render_template('weight.html', entries=entries, theme=user.theme)
+
+    # Vérifier si déjà saisi aujourd'hui
+    weight_today = WeightEntry.query.filter_by(user_id=user_id, date=today).first()
+
+    # Calculer le nombre de jours depuis la dernière saisie
+    days_since_last_entry = None
+    if entries and not weight_today:
+        last_entry_date = entries[0].date
+        days_since_last_entry = (today - last_entry_date).days
+
+    # Message d'encouragement basé sur l'évolution
+    weight_evolution_message = None
+    weight_evolution_style = None
+
+    if len(entries) >= 2:
+        latest_weight = entries[0].weight
+        previous_weight = entries[1].weight
+        diff = latest_weight - previous_weight
+
+        if diff < -0.2:  # Baisse significative
+            weight_evolution_message = f"🎉 Bravo ! Tu as perdu {abs(diff):.1f} kg depuis ta dernière pesée ! Continue comme ça ! 💪"
+            weight_evolution_style = "background: linear-gradient(135deg, #dcfce7, #bbf7d0); border-left: 4px solid #10b981; color: #065f46"
+        elif diff > 0.2:  # Hausse
+            weight_evolution_message = f"💙 Pas de panique ! +{diff:.1f} kg, ça arrive. L'important c'est de continuer, tu vas y arriver ! 🌟"
+            weight_evolution_style = "background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-left: 4px solid #3b82f6; color: #1e3a8a"
+        elif abs(diff) <= 0.2:  # Stable
+            weight_evolution_message = f"✨ Poids stable ! C'est bien, tu maintiens le cap. Continue tes efforts ! 🎯"
+            weight_evolution_style = "background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid #f59e0b; color: #92400e"
+
+    return render_template('weight.html',
+                         entries=entries,
+                         weight_today=weight_today,
+                         days_since_last_entry=days_since_last_entry,
+                         weight_evolution_message=weight_evolution_message,
+                         weight_evolution_style=weight_evolution_style,
+                         today=today,
+                         theme=user.theme)
 
 @app.route('/weight/add', methods=['POST'])
 @login_required
 def add_weight():
     user_id = session['user_id']
-    weight = float(request.form.get('weight'))
-    date_str = request.form.get('date')
-    note = request.form.get('note', '')
+    today = datetime.utcnow().date()
 
-    date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    # Vérifier si déjà saisi aujourd'hui
+    existing_entry = WeightEntry.query.filter_by(user_id=user_id, date=today).first()
+    if existing_entry:
+        flash('Tu as déjà enregistré ton poids aujourd\'hui !', 'warning')
+        return redirect(url_for('weight'))
+
+    weight = float(request.form.get('weight'))
+
+    # Validation
+    if weight < 30 or weight > 300:
+        flash('Le poids doit être entre 30 et 300 kg.', 'danger')
+        return redirect(url_for('weight'))
 
     new_entry = WeightEntry(
         user_id=user_id,
         weight=weight,
-        date=date,
-        note=note
+        date=today,
+        note=None  # Plus de notes
     )
     db.session.add(new_entry)
     db.session.commit()
 
-    flash('Poids enregistré !', 'success')
+    flash('Poids enregistré avec succès ! 🎉', 'success')
     return redirect(url_for('weight'))
 
 @app.route('/weight/delete/<int:id>')
