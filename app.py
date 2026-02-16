@@ -4,9 +4,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from authlib.integrations.flask_client import OAuth
 from datetime import datetime, timedelta
 import os
-import json
 from functools import wraps
 from dotenv import load_dotenv
+import json
 
 # Charger les variables d'environnement depuis .env
 load_dotenv()
@@ -273,6 +273,7 @@ def change_theme():
 @login_required
 def dashboard():
     user_id = session['user_id']
+    user = User.query.get(user_id)
 
     # Récupérer les dernières données
     latest_weight = WeightEntry.query.filter_by(user_id=user_id).order_by(WeightEntry.date.desc()).first()
@@ -416,23 +417,47 @@ def meals():
     user_id = session['user_id']
     user = User.query.get(user_id)
 
-    # Gérer l'offset de semaine (navigation)
-    week_offset = int(request.args.get('week_offset', 0))
+    # Gérer l'offset de mois (navigation)
+    month_offset = int(request.args.get('month_offset', 0))
 
-    # Calculer la semaine à afficher
+    # Calculer le mois à afficher
     today = datetime.utcnow().date()
-    # Trouver le lundi de la semaine actuelle
-    days_since_monday = today.weekday()
-    week_start = today - timedelta(days=days_since_monday) + timedelta(weeks=week_offset)
-    week_end = week_start + timedelta(days=6)
 
-    # Préparer les données pour chaque jour de la semaine
-    week_days = []
-    day_names_fr = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+    # Premier jour du mois actuel + offset
+    first_day_current_month = today.replace(day=1)
 
-    for i in range(7):
-        current_date = week_start + timedelta(days=i)
+    # Ajouter l'offset de mois
+    target_month = first_day_current_month.month + month_offset
+    target_year = first_day_current_month.year
 
+    while target_month > 12:
+        target_month -= 12
+        target_year += 1
+    while target_month < 1:
+        target_month += 12
+        target_year -= 1
+
+    first_day_month = first_day_current_month.replace(year=target_year, month=target_month, day=1)
+
+    # Dernier jour du mois
+    if target_month == 12:
+        last_day_month = first_day_month.replace(year=target_year + 1, month=1, day=1) - timedelta(days=1)
+    else:
+        last_day_month = first_day_month.replace(month=target_month + 1, day=1) - timedelta(days=1)
+
+    # Trouver le lundi avant le 1er du mois (pour la grille)
+    days_since_monday = first_day_month.weekday()
+    grid_start = first_day_month - timedelta(days=days_since_monday)
+
+    # Trouver le dimanche après la fin du mois
+    days_until_sunday = 6 - last_day_month.weekday()
+    grid_end = last_day_month + timedelta(days=days_until_sunday)
+
+    # Préparer les données pour chaque jour de la grille
+    month_days = []
+    current_date = grid_start
+
+    while current_date <= grid_end:
         # Récupérer les repas de ce jour
         day_meals = MealEntry.query.filter_by(
             user_id=user_id,
@@ -455,26 +480,30 @@ def meals():
                 'is_none': meal.is_none
             }
 
-        # Vérifier si tous les repas sont remplis
-        all_types = ['breakfast', 'snack_morning', 'lunch', 'snack_afternoon', 'dinner']
-        filled_meals = [t for t in all_types if meals_by_type[t] is not None]
-        is_complete = len(filled_meals) == 5
-        has_meals = len(filled_meals) > 0
+        # Critère VERT : Les 3 repas principaux (breakfast, lunch, dinner) sont remplis
+        main_meals = ['breakfast', 'lunch', 'dinner']
+        main_meals_filled = all(meals_by_type[t] is not None for t in main_meals)
+        is_complete = main_meals_filled
+
+        # A des repas = au moins un repas rempli
+        has_meals = any(meals_by_type[t] is not None for t in meals_by_type)
 
         # Compter les exceptions et équilibrages
         exception_count = sum(1 for m in day_meals if m.qualification == 'exception')
         equilibrage_count = sum(1 for m in day_meals if m.qualification == 'equilibrage')
 
-        week_days.append({
+        month_days.append({
             'date': current_date,
-            'day_name': day_names_fr[i],
             'is_today': current_date == today,
+            'other_month': current_date.month != target_month,
             'meals': meals_by_type,
             'is_complete': is_complete,
             'has_meals': has_meals,
             'exception_count': exception_count,
             'equilibrage_count': equilibrage_count
         })
+
+        current_date += timedelta(days=1)
 
     # Récupérer l'historique des aliments pour l'autocomplétion
     all_user_meals = MealEntry.query.filter_by(user_id=user_id).all()
@@ -483,11 +512,15 @@ def meals():
         if meal.foods:
             food_history.update(meal.get_foods_list())
 
+    # Noms des mois en français
+    month_names = ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+
     return render_template('meals.html',
-                         week_days=week_days,
-                         week_start=week_start,
-                         week_end=week_end,
-                         week_offset=week_offset,
+                         month_days=month_days,
+                         month_name=month_names[target_month],
+                         year=target_year,
+                         month_offset=month_offset,
                          food_history=list(food_history),
                          theme=user.theme)
 

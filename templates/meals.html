@@ -9,15 +9,17 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
     }
 
-    .week-navigator {
+    .month-navigator {
         display: flex;
         gap: 12px;
         align-items: center;
     }
 
-    .week-navigator button {
+    .month-navigator button {
         background: white;
         border: 2px solid var(--primary-start);
         color: var(--primary-start);
@@ -28,30 +30,59 @@
         transition: all 0.3s;
     }
 
-    .week-navigator button:hover {
+    .month-navigator button:hover {
         background: var(--primary-start);
         color: white;
     }
 
-    .week-grid {
+    .month-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .weekdays-header {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        gap: 16px;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .weekday-label {
+        text-align: center;
+        font-weight: 700;
+        font-size: 13px;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        padding: 12px;
+        background: rgba(255,255,255,0.5);
+        border-radius: 12px;
+    }
+
+    .month-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 12px;
         margin-bottom: 32px;
     }
 
     .day-card {
         background: white;
         border-radius: 16px;
-        padding: 20px;
+        padding: 16px;
         border: 3px solid transparent;
         cursor: pointer;
         transition: all 0.3s;
         position: relative;
-        min-height: 200px;
+        min-height: 120px;
     }
 
-    .day-card:hover {
+    .day-card.other-month {
+        opacity: 0.3;
+        pointer-events: none;
+    }
+
+    .day-card:not(.other-month):hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 25px var(--hover-shadow);
     }
@@ -73,22 +104,13 @@
 
     .day-header {
         text-align: center;
-        margin-bottom: 16px;
-        padding-bottom: 12px;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
         border-bottom: 2px solid rgba(0,0,0,0.1);
     }
 
-    .day-name {
-        font-size: 12px;
-        text-transform: uppercase;
-        font-weight: 700;
-        letter-spacing: 1px;
-        color: var(--text-secondary);
-        margin-bottom: 4px;
-    }
-
     .day-date {
-        font-size: 24px;
+        font-size: 20px;
         font-weight: 800;
         color: var(--text-primary);
     }
@@ -97,9 +119,9 @@
         display: inline-block;
         background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
         color: white;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 8px;
+        font-size: 9px;
         font-weight: 700;
         margin-top: 4px;
         letter-spacing: 0.5px;
@@ -108,52 +130,44 @@
     .meal-indicators {
         display: flex;
         flex-direction: column;
-        gap: 6px;
-        font-size: 13px;
+        gap: 4px;
+        font-size: 12px;
     }
 
     .meal-indicator {
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 4px 8px;
-        border-radius: 8px;
-        background: rgba(255,255,255,0.7);
-    }
-
-    .meal-indicator.filled {
-        background: rgba(16, 185, 129, 0.2);
+        gap: 6px;
+        padding: 3px 6px;
+        border-radius: 6px;
+        background: rgba(16, 185, 129, 0.15);
         color: #065f46;
         font-weight: 600;
     }
 
     .meal-indicator.none {
-        background: rgba(156, 163, 175, 0.2);
+        background: rgba(156, 163, 175, 0.15);
         color: #4b5563;
         font-style: italic;
-    }
-
-    .meal-indicator.empty {
-        background: rgba(239, 68, 68, 0.1);
-        color: #991b1b;
+        font-size: 11px;
     }
 
     .qualification-badges {
         position: absolute;
-        top: 12px;
-        right: 12px;
+        top: 8px;
+        right: 8px;
         display: flex;
         gap: 4px;
     }
 
     .qualification-badge {
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 14px;
+        font-size: 11px;
         font-weight: bold;
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
@@ -375,18 +389,32 @@
 
 <div class="card">
     <div class="calendar-header">
-        <h2 style="margin: 0;">📅 Semaine du {{ week_start.strftime('%d/%m') }} au {{ week_end.strftime('%d/%m/%Y') }}</h2>
-        <div class="week-navigator">
-            <button onclick="changeWeek(-1)">← Semaine précédente</button>
-            <button onclick="changeWeek(0)">Aujourd'hui</button>
-            <button onclick="changeWeek(1)">Semaine suivante →</button>
+        <h2 class="month-title">📅 {{ month_name }} {{ year }}</h2>
+        <div class="month-navigator">
+            <button onclick="changeMonth(-1)">← Mois précédent</button>
+            <button onclick="changeMonth(0)">Ce mois</button>
+            <button onclick="changeMonth(1)">Mois suivant →</button>
         </div>
     </div>
 
-    <div class="week-grid">
-        {% for day_data in week_days %}
-        <div class="day-card {% if day_data.is_complete %}complete{% elif day_data.has_meals %}incomplete{% endif %} {% if day_data.is_today %}today{% endif %}"
-             onclick="openDayModal('{{ day_data.date.isoformat() }}')">
+    <!-- En-têtes des jours de la semaine -->
+    <div class="weekdays-header">
+        <div class="weekday-label">Lun</div>
+        <div class="weekday-label">Mar</div>
+        <div class="weekday-label">Mer</div>
+        <div class="weekday-label">Jeu</div>
+        <div class="weekday-label">Ven</div>
+        <div class="weekday-label">Sam</div>
+        <div class="weekday-label">Dim</div>
+    </div>
+
+    <div class="month-grid">
+        {% for day_data in month_days %}
+        <div class="day-card 
+                    {% if day_data.other_month %}other-month{% endif %}
+                    {% if day_data.is_complete %}complete{% elif day_data.has_meals %}incomplete{% endif %} 
+                    {% if day_data.is_today %}today{% endif %}"
+             {% if not day_data.other_month %}onclick="openDayModal('{{ day_data.date.isoformat() }}')"{% endif %}>
             
             <!-- Badges de qualification -->
             {% if day_data.exception_count > 0 or day_data.equilibrage_count > 0 %}
@@ -405,34 +433,34 @@
             {% endif %}
 
             <div class="day-header">
-                <div class="day-name">{{ day_data.day_name }}</div>
                 <div class="day-date">{{ day_data.date.strftime('%d') }}</div>
-                {% if day_data.is_today %}
+                {% if day_data.is_today and not day_data.other_month %}
                 <div class="today-badge">AUJOURD'HUI</div>
                 {% endif %}
             </div>
 
+            {% if not day_data.other_month %}
             <div class="meal-indicators">
+                <!-- Afficher uniquement les repas remplis -->
                 {% for meal_type, meal_label, emoji in [
-                    ('breakfast', 'Petit-déj', '🌅'),
+                    ('breakfast', 'P.déj', '🌅'),
                     ('snack_morning', 'Encas', '☕'),
-                    ('lunch', 'Déjeuner', '🌞'),
+                    ('lunch', 'Déj', '🌞'),
                     ('snack_afternoon', 'Goûter', '🍪'),
                     ('dinner', 'Dîner', '🌙')
                 ] %}
-                <div class="meal-indicator {% if day_data.meals[meal_type] %}{% if day_data.meals[meal_type].is_none %}none{% else %}filled{% endif %}{% else %}empty{% endif %}">
-                    <span>{{ emoji }}</span>
-                    <span>{{ meal_label }}</span>
                     {% if day_data.meals[meal_type] %}
-                        {% if day_data.meals[meal_type].is_none %}
-                            <span style="margin-left: auto;">-</span>
-                        {% else %}
-                            <span style="margin-left: auto;">✓</span>
-                        {% endif %}
+                        <div class="meal-indicator {% if day_data.meals[meal_type].is_none %}none{% endif %}">
+                            <span>{{ emoji }}</span>
+                            <span>{{ meal_label }}</span>
+                            {% if day_data.meals[meal_type].is_none %}
+                                <span style="margin-left: auto; font-size: 10px;">rien</span>
+                            {% endif %}
+                        </div>
                     {% endif %}
-                </div>
                 {% endfor %}
             </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
@@ -451,7 +479,7 @@
                 <!-- Le contenu sera chargé dynamiquement -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn" style="background: #6b7280; color: white;" onclick="closeDayModal()">Annuler</button>
+                <button type="button" class="btn" style="background: #6b7280; color: white;" onclick="cancelModal()">Annuler</button>
                 <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
             </div>
         </form>
@@ -462,15 +490,16 @@
 
 {% block extra_js %}
 <script>
-    let currentWeekOffset = {{ week_offset }};
+    let currentMonthOffset = {{ month_offset }};
     let userFoodHistory = {{ food_history|tojson }};
+    let hasUnsavedChanges = false;
 
-    function changeWeek(offset) {
+    function changeMonth(offset) {
         if (offset === 0) {
             window.location.href = '{{ url_for("meals") }}';
         } else {
-            const newOffset = currentWeekOffset + offset;
-            window.location.href = '{{ url_for("meals") }}?week_offset=' + newOffset;
+            const newOffset = currentMonthOffset + offset;
+            window.location.href = '{{ url_for("meals") }}?month_offset=' + newOffset;
         }
     }
 
@@ -487,6 +516,9 @@
         document.getElementById('modalTitle').textContent = 'Repas du ' + formattedDate;
         document.getElementById('formDate').value = date;
         
+        // Réinitialiser le flag
+        hasUnsavedChanges = false;
+        
         // Charger les repas existants
         fetch(`/api/get-day-meals?date=${date}`)
             .then(response => response.json())
@@ -496,8 +528,18 @@
             });
     }
 
+    function cancelModal() {
+        if (hasUnsavedChanges) {
+            if (!confirm('⚠️ Tu as des modifications non enregistrées. Es-tu sûr de vouloir fermer sans enregistrer ?')) {
+                return;
+            }
+        }
+        closeDayModal();
+    }
+
     function closeDayModal() {
         document.getElementById('dayModal').classList.remove('active');
+        hasUnsavedChanges = false;
     }
 
     function renderMealForm(dayData) {
@@ -531,7 +573,7 @@
                     
                     <div class="none-checkbox">
                         <input type="checkbox" id="${meal.type}_none" name="${meal.type}_none" 
-                               ${mealData.is_none ? 'checked' : ''} onchange="toggleNone('${meal.type}')">
+                               ${mealData.is_none ? 'checked' : ''} onchange="toggleNone('${meal.type}'); markChanged();">
                         <label for="${meal.type}_none" style="cursor: pointer; font-weight: 600;">Rien mangé pour ce repas</label>
                     </div>
                     
@@ -540,19 +582,19 @@
                             <div class="food-item">
                                 <input type="text" class="form-control" name="${meal.type}_food[]" 
                                        value="${food}" placeholder="Ex: Yaourt nature" 
-                                       oninput="showAutocomplete(this)">
-                                <button type="button" class="btn-remove" onclick="removeFood(this)">✕</button>
+                                       oninput="showAutocomplete(this); markChanged();">
+                                <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();">✕</button>
                             </div>
                         `).join('') : `
                             <div class="food-item">
                                 <input type="text" class="form-control" name="${meal.type}_food[]" 
-                                       placeholder="Ex: Yaourt nature" oninput="showAutocomplete(this)">
-                                <button type="button" class="btn-remove" onclick="removeFood(this)">✕</button>
+                                       placeholder="Ex: Yaourt nature" oninput="showAutocomplete(this); markChanged();">
+                                <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();">✕</button>
                             </div>
                         `}
                     </div>
                     
-                    <button type="button" class="btn-add" onclick="addFood('${meal.type}')" 
+                    <button type="button" class="btn-add" onclick="addFood('${meal.type}'); markChanged();" 
                             id="${meal.type}_add_btn" ${mealData.is_none ? 'style="display:none;"' : ''}>
                         ➕ Ajouter un aliment
                     </button>
@@ -563,15 +605,19 @@
         document.getElementById('modalBody').innerHTML = html;
     }
 
+    function markChanged() {
+        hasUnsavedChanges = true;
+    }
+
     function setQualification(mealType, qualification) {
         document.getElementById(`${mealType}_qualification`).value = qualification;
         
-        // Mettre à jour les boutons visuellement
         const buttons = document.querySelectorAll(`[onclick*="setQualification('${mealType}'"]`);
         buttons.forEach(btn => {
             btn.classList.remove('active', 'normal', 'exception', 'equilibrage');
         });
         event.target.classList.add('active', qualification);
+        markChanged();
     }
 
     function toggleNone(mealType) {
@@ -594,8 +640,8 @@
         newItem.className = 'food-item';
         newItem.innerHTML = `
             <input type="text" class="form-control" name="${mealType}_food[]" 
-                   placeholder="Ex: Pomme" oninput="showAutocomplete(this)">
-            <button type="button" class="btn-remove" onclick="removeFood(this)">✕</button>
+                   placeholder="Ex: Pomme" oninput="showAutocomplete(this); markChanged();">
+            <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();">✕</button>
         `;
         foodsDiv.appendChild(newItem);
     }
@@ -614,7 +660,6 @@
         
         if (matches.length === 0) return;
         
-        // Créer ou mettre à jour le dropdown
         let dropdown = input.nextElementSibling;
         if (!dropdown || !dropdown.classList.contains('autocomplete-dropdown')) {
             dropdown = document.createElement('div');
@@ -628,7 +673,6 @@
         ).join('');
         dropdown.classList.add('active');
         
-        // Fermer au clic ailleurs
         document.addEventListener('click', function closeDropdown(e) {
             if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.classList.remove('active');
@@ -641,9 +685,9 @@
         const input = element.parentElement.previousElementSibling;
         input.value = food;
         element.parentElement.classList.remove('active');
+        markChanged();
     }
 
-    // Soumettre le formulaire
     document.getElementById('mealForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -656,16 +700,24 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                hasUnsavedChanges = false;
                 closeDayModal();
                 location.reload();
             }
         });
     });
 
-    // Fermer la modal en cliquant en dehors
     document.getElementById('dayModal').addEventListener('click', function(e) {
         if (e.target === this) {
-            closeDayModal();
+            cancelModal();
+        }
+    });
+
+    // Avertir si l'utilisateur quitte la page avec des modifications non enregistrées
+    window.addEventListener('beforeunload', function(e) {
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            e.returnValue = '';
         }
     });
 </script>
