@@ -3,46 +3,107 @@
 {% block title %}Suivi des activités - NutriStep{% endblock %}
 
 {% block content %}
-<h1 style="margin-bottom: 30px; color: #333;">🏃 Suivi des activités</h1>
 
+<style>
+    /* RESPONSIVE MOBILE pour Activities */
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 24px !important;
+        }
+
+        .card h2 {
+            font-size: 18px !important;
+        }
+
+        form > div {
+            grid-template-columns: 1fr !important;
+        }
+
+        table {
+            font-size: 12px;
+        }
+
+        table th, table td {
+            padding: 8px 6px;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+        }
+
+        .stat-card h3 {
+            font-size: 11px;
+        }
+    }
+</style>
+
+<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">🏃 Suivi des activités</h1>
+
+<!-- Formulaire d'ajout -->
 <div class="card">
-    <h2>➕ Ajouter une activité</h2>
+    <h2>➕ Enregistrer une activité</h2>
     <form method="POST" action="{{ url_for('add_activity') }}">
-        <div style="display: grid; grid-template-columns: 200px 120px 120px 150px 1fr auto; gap: 15px; align-items: end;">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="activity_type">Type d'activité</label>
-                <input type="text" class="form-control" id="activity_type" name="activity_type" 
-                       placeholder="Ex: Course, Yoga" required>
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="duration">Durée (min)</label>
-                <input type="number" class="form-control" id="duration" name="duration" 
-                       placeholder="30" required>
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="calories_burned">Calories</label>
-                <input type="number" class="form-control" id="calories_burned" name="calories_burned" 
-                       placeholder="200">
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 0;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div class="form-group">
                 <label for="date">Date</label>
-                <input type="date" class="form-control" id="date" name="date" required>
+                <input type="date" class="form-control" id="date" name="date" 
+                       value="{{ today.isoformat() }}" required>
             </div>
             
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="note">Note</label>
-                <input type="text" class="form-control" id="note" name="note" 
-                       placeholder="Ressenti, lieu...">
+            <div class="form-group">
+                <label for="activity_type">Type d'activité</label>
+                <select class="form-control" id="activity_type" name="activity_type" required onchange="toggleFields()">
+                    <option value="">-- Choisir --</option>
+                    <option value="Marche">🚶 Marche</option>
+                    <option value="Course">🏃 Course</option>
+                    <option value="Vélo">🚴 Vélo</option>
+                    <option value="Natation">🏊 Natation</option>
+                    <option value="Musculation">💪 Musculation</option>
+                    <option value="Yoga">🧘 Yoga</option>
+                    <option value="Pas">👣 Pas quotidiens</option>
+                    <option value="Autre">🎯 Autre</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="steps_field" style="display: none;">
+                <label for="steps">Nombre de pas</label>
+                <input type="number" class="form-control" id="steps" name="steps" 
+                       placeholder="Ex: 8500" min="0">
             </div>
             
-            <button type="submit" class="btn btn-primary">Enregistrer</button>
+            <div class="form-group" id="duration_field">
+                <label for="duration">Durée (minutes)</label>
+                <input type="number" class="form-control" id="duration" name="duration" 
+                       placeholder="Ex: 30" min="0">
+            </div>
+            
+            <div class="form-group" id="calories_field">
+                <label for="calories_burned">Calories brûlées (optionnel)</label>
+                <input type="number" class="form-control" id="calories_burned" name="calories_burned" 
+                       placeholder="Ex: 250" min="0">
+            </div>
         </div>
+        
+        <div class="form-group" id="note_field">
+            <label for="note">Note (optionnel)</label>
+            <input type="text" class="form-control" id="note" name="note" 
+                   placeholder="Ex: Parcours en forêt, bon rythme">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
     </form>
 </div>
 
+<!-- Historique -->
 <div class="card">
     <h2>📋 Historique</h2>
     {% if entries %}
@@ -50,9 +111,8 @@
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Activité</th>
-                    <th>Durée</th>
-                    <th>Calories brûlées</th>
+                    <th>Type</th>
+                    <th>Détails</th>
                     <th>Note</th>
                     <th>Action</th>
                 </tr>
@@ -60,11 +120,45 @@
             <tbody>
                 {% for entry in entries %}
                 <tr>
-                    <td>{{ entry.date.strftime('%d/%m/%Y') }}</td>
-                    <td><strong>{{ entry.activity_type }}</strong></td>
-                    <td>{{ entry.duration }} min</td>
-                    <td>{{ entry.calories_burned or '--' }} kcal</td>
-                    <td>{{ entry.note or '--' }}</td>
+                    <td style="font-weight: 600;">
+                        {{ entry.date.strftime('%d/%m/%Y') }}
+                        {% if entry.date == today %}
+                            <span style="background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-left: 8px;">AUJOURD'HUI</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong style="color: var(--text-primary);">
+                            {% if entry.activity_type == 'Marche' %}🚶
+                            {% elif entry.activity_type == 'Course' %}🏃
+                            {% elif entry.activity_type == 'Vélo' %}🚴
+                            {% elif entry.activity_type == 'Natation' %}🏊
+                            {% elif entry.activity_type == 'Musculation' %}💪
+                            {% elif entry.activity_type == 'Yoga' %}🧘
+                            {% elif entry.activity_type == 'Pas' %}👣
+                            {% else %}🎯
+                            {% endif %}
+                            {{ entry.activity_type }}
+                        </strong>
+                    </td>
+                    <td>
+                        {% if entry.activity_type == 'Pas' %}
+                            <strong style="color: #10b981; font-size: 18px;">{{ entry.steps or 0 }}</strong> pas
+                        {% else %}
+                            {% if entry.duration %}
+                                <span style="color: var(--text-secondary);">⏱️ {{ entry.duration }} min</span>
+                            {% endif %}
+                            {% if entry.calories_burned %}
+                                <span style="color: #ef4444; margin-left: 12px;">🔥 {{ entry.calories_burned }} kcal</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if entry.note %}
+                            <span style="color: #6b7280; font-size: 13px;">{{ entry.note }}</span>
+                        {% else %}
+                            <span style="color: #d1d5db;">—</span>
+                        {% endif %}
+                    </td>
                     <td>
                         <a href="{{ url_for('delete_activity', id=entry.id) }}" 
                            class="btn btn-danger btn-small"
@@ -77,14 +171,76 @@
             </tbody>
         </table>
     {% else %}
-        <p style="color: #999; text-align: center; padding: 40px;">Aucune activité enregistrée pour le moment</p>
+        <div style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.3;">🏃</div>
+            <p style="color: #9ca3af; font-size: 18px; margin: 0;">Aucune activité enregistrée pour le moment</p>
+            <p style="color: #d1d5db; font-size: 14px; margin-top: 8px;">Enregistre ta première activité !</p>
+        </div>
     {% endif %}
 </div>
-{% endblock %}
 
-{% block extra_js %}
+<!-- Statistiques -->
+{% if entries %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total activités</h3>
+        <div class="value">{{ entries|length }}</div>
+        <div class="unit">jours actifs</div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>Cette semaine</h3>
+        <div class="value">{{ stats.week_count }}</div>
+        <div class="unit">activités</div>
+    </div>
+    
+    {% if stats.total_steps > 0 %}
+    <div class="stat-card">
+        <h3>Total de pas</h3>
+        <div class="value">{{ "{:,}".format(stats.total_steps).replace(',', ' ') }}</div>
+        <div class="unit">pas</div>
+    </div>
+    {% endif %}
+    
+    {% if stats.total_calories > 0 %}
+    <div class="stat-card">
+        <h3>Calories brûlées</h3>
+        <div class="value">{{ "{:,}".format(stats.total_calories).replace(',', ' ') }}</div>
+        <div class="unit">kcal</div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
 <script>
-    // Définir la date par défaut à aujourd'hui
-    document.getElementById('date').valueAsDate = new Date();
+    function toggleFields() {
+        const activityType = document.getElementById('activity_type').value;
+        const stepsField = document.getElementById('steps_field');
+        const durationField = document.getElementById('duration_field');
+        const caloriesField = document.getElementById('calories_field');
+        const stepsInput = document.getElementById('steps');
+        const durationInput = document.getElementById('duration');
+        
+        if (activityType === 'Pas') {
+            // Mode "Pas quotidiens"
+            stepsField.style.display = 'block';
+            durationField.style.display = 'none';
+            caloriesField.style.display = 'none';
+            
+            stepsInput.required = true;
+            durationInput.required = false;
+            durationInput.value = '0';
+        } else if (activityType) {
+            // Mode activité normale
+            stepsField.style.display = 'none';
+            durationField.style.display = 'block';
+            caloriesField.style.display = 'block';
+            
+            stepsInput.required = false;
+            stepsInput.value = '';
+            durationInput.required = true;
+        }
+    }
 </script>
+
 {% endblock %}

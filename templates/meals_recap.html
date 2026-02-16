@@ -1,0 +1,560 @@
+{% extends "base.html" %}
+
+{% block title %}Récap - NutriStep{% endblock %}
+
+{% block extra_css %}
+<style>
+    .period-selector {
+        display: flex;
+        gap: 20px;
+        align-items: end;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+    }
+
+    .period-selector .form-group {
+        margin-bottom: 0;
+    }
+
+    .summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+        color: white;
+        padding: 20px;
+        border-radius: 16px;
+        text-align: center;
+    }
+
+    .summary-card h3 {
+        font-size: 12px;
+        opacity: 0.9;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .summary-card .value {
+        font-size: 32px;
+        font-weight: 800;
+    }
+
+    .recap-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 20px;
+        font-size: 14px;
+    }
+
+    .recap-table thead th {
+        background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+        color: white;
+        padding: 16px 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .recap-table thead th:first-child {
+        border-radius: 12px 0 0 0;
+    }
+
+    .recap-table thead th:last-child {
+        border-radius: 0 12px 0 0;
+    }
+
+    .recap-table tbody tr {
+        background: white;
+        border-bottom: 2px solid var(--bg-gradient-start);
+    }
+
+    .recap-table tbody tr:hover {
+        background: var(--bg-gradient-start);
+    }
+
+    .recap-table tbody td {
+        padding: 16px 12px;
+        vertical-align: top;
+    }
+
+    .date-cell {
+        font-weight: 700;
+        color: var(--text-primary);
+        white-space: nowrap;
+        min-width: 120px;
+    }
+
+    .date-cell .day-name {
+        font-size: 11px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        display: block;
+        margin-top: 4px;
+    }
+
+    .date-cell.today {
+        background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+        color: white;
+        border-radius: 8px;
+        padding: 8px 12px;
+    }
+
+    .date-cell.today .day-name {
+        color: rgba(255,255,255,0.9);
+    }
+
+    .meal-cell {
+        line-height: 1.6;
+    }
+
+    .meal-name {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .meal-foods {
+        color: #6b7280;
+        font-size: 13px;
+        margin-left: 24px;
+    }
+
+    .meal-foods li {
+        margin-bottom: 2px;
+    }
+
+    .meal-none {
+        color: #9ca3af;
+        font-style: italic;
+        font-size: 13px;
+        margin-left: 24px;
+    }
+
+    .qualification-badge-small {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: bold;
+    }
+
+    .qualification-badge-small.exception {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .qualification-badge-small.equilibrage {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #9ca3af;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+        opacity: 0.3;
+    }
+
+    .actions-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    @media print {
+        .navbar, .actions-bar, .btn {
+            display: none !important;
+        }
+
+        body {
+            background: white;
+            padding: 0;
+        }
+
+        .card {
+            box-shadow: none;
+            border: 1px solid #e5e7eb;
+        }
+
+        .recap-table thead th {
+            background: #f3f4f6 !important;
+            color: #1f2937 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    }
+
+    /* RESPONSIVE MOBILE */
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 24px !important;
+        }
+
+        .period-selector {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .period-selector button {
+            width: 100%;
+        }
+
+        .summary-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .summary-card .value {
+            font-size: 24px;
+        }
+
+        .recap-table {
+            font-size: 12px;
+        }
+
+        .recap-table thead th {
+            padding: 10px 6px;
+            font-size: 10px;
+        }
+
+        .recap-table tbody td {
+            padding: 10px 6px;
+        }
+
+        .date-cell {
+            min-width: 80px;
+            font-size: 12px;
+        }
+
+        .date-cell .day-name {
+            font-size: 9px;
+        }
+
+        .meal-name {
+            font-size: 12px;
+        }
+
+        .meal-foods {
+            font-size: 11px;
+            margin-left: 16px;
+        }
+
+        /* Mode scroll horizontal pour le tableau sur mobile */
+        .card > div {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 16px;">
+    <h1 style="margin: 0; color: var(--text-primary); font-size: 32px; font-weight: 700;">📊 Récap</h1>
+    <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimer / PDF</button>
+</div>
+
+<div class="card">
+    <form method="GET" action="{{ url_for('meals_recap') }}">
+        <div class="period-selector">
+            <div class="form-group">
+                <label for="start_date">Date de début</label>
+                <input type="date" class="form-control" id="start_date" name="start_date"
+                       value="{{ start_date.isoformat() }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="end_date">Date de fin</label>
+                <input type="date" class="form-control" id="end_date" name="end_date"
+                       value="{{ end_date.isoformat() }}" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
+                🔍 Afficher
+            </button>
+
+            <button type="button" class="btn" style="background: var(--text-secondary); color: white; padding: 12px 24px;"
+                    onclick="resetToDefault()">
+                ↻ 2 dernières semaines
+            </button>
+        </div>
+    </form>
+
+    <!-- Statistiques résumées -->
+    <div class="summary-stats">
+        <div class="summary-card">
+            <h3>Jours avec repas</h3>
+            <div class="value">{{ stats.days_with_meals }}</div>
+        </div>
+        <div class="summary-card">
+            <h3>Repas complets</h3>
+            <div class="value">{{ stats.complete_days }}</div>
+        </div>
+        <div class="summary-card">
+            <h3>Exceptions</h3>
+            <div class="value">{{ stats.total_exceptions }}</div>
+        </div>
+        <div class="summary-card">
+            <h3>Équilibrages</h3>
+            <div class="value">{{ stats.total_equilibrages }}</div>
+        </div>
+    </div>
+
+
+    {% if days_data %}
+    <div style="overflow-x: auto;">
+        <table class="recap-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>🌅 Petit-déj</th>
+                    {% if has_snack_morning %}
+                    <th>☕ Encas</th>
+                    {% endif %}
+                    <th>🌞 Déjeuner</th>
+                    {% if has_snack_afternoon %}
+                    <th>🍪 Goûter</th>
+                    {% endif %}
+                    <th>🌙 Dîner</th>
+                    <th>🏃 Activités</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in days_data %}
+                <tr>
+                    <td class="date-cell {% if day.is_today %}today{% endif %}">
+                        {{ day.date.strftime('%d/%m/%Y') }}
+                        <span class="day-name">{{ day.day_name }}</span>
+                    </td>
+
+                    <!-- Petit-déjeuner -->
+                    <td class="meal-cell">
+                        {% if day.meals['breakfast'] %}
+                            {% if day.meals['breakfast'].is_none %}
+                                <span style="color: #d1d5db;">—</span>
+                            {% else %}
+                                <div class="meal-name">
+                                    {% if day.meals['breakfast'].qualification != 'normal' %}
+                                        <span class="qualification-badge-small {{ day.meals['breakfast'].qualification }}">
+                                            {% if day.meals['breakfast'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
+                                        </span>
+                                    {% endif %}
+                                    <span style="color: #10b981;">✓</span>
+                                </div>
+
+                                {% if day.meals['breakfast'].foods %}
+                                    <ul class="meal-foods" style="list-style: none; padding: 0;">
+                                        {% for food in day.meals['breakfast'].foods %}
+                                            <li>• {{ food }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <span style="color: #d1d5db;">—</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Encas (matin) - si existe dans la période ET pas que des "rien" -->
+                    {% if has_snack_morning %}
+                    <td class="meal-cell">
+                        {% if day.meals['snack_morning'] %}
+                            <div class="meal-name">
+                                {% if day.meals['snack_morning'].qualification != 'normal' %}
+                                    <span class="qualification-badge-small {{ day.meals['snack_morning'].qualification }}">
+                                        {% if day.meals['snack_morning'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
+                                    </span>
+                                {% endif %}
+
+                                {% if day.meals['snack_morning'].is_none %}
+                                     <span style="color: #d1d5db;">—</span>
+                                {% else %}
+                                    <span style="color: #10b981;">✓</span>
+                                {% endif %}
+                            </div>
+
+                            {% if not day.meals['snack_morning'].is_none and day.meals['snack_morning'].foods %}
+                                <ul class="meal-foods" style="list-style: none; padding: 0;">
+                                    {% for food in day.meals['snack_morning'].foods %}
+                                        <li>• {{ food }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% else %}
+                            <span style="color: #d1d5db;">—</span>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+
+                    <!-- Déjeuner -->
+                    <td class="meal-cell">
+                        {% if day.meals['lunch'] %}
+                            <div class="meal-name">
+                                {% if day.meals['lunch'].qualification != 'normal' %}
+                                    <span class="qualification-badge-small {{ day.meals['lunch'].qualification }}">
+                                        {% if day.meals['lunch'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
+                                    </span>
+                                {% endif %}
+
+                                {% if day.meals['lunch'].is_none %}
+                                     <span style="color: #d1d5db;">—</span>
+                                {% else %}
+                                    <span style="color: #10b981;">✓</span>
+                                {% endif %}
+                            </div>
+
+                            {% if not day.meals['lunch'].is_none and day.meals['lunch'].foods %}
+                                <ul class="meal-foods" style="list-style: none; padding: 0;">
+                                    {% for food in day.meals['lunch'].foods %}
+                                        <li>• {{ food }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% else %}
+                            <span style="color: #d1d5db;">—</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Goûter - si existe dans la période ET pas que des "rien" -->
+                    {% if has_snack_afternoon %}
+                    <td class="meal-cell">
+                        {% if day.meals['snack_afternoon'] %}
+                            <div class="meal-name">
+                                {% if day.meals['snack_afternoon'].qualification != 'normal' %}
+                                    <span class="qualification-badge-small {{ day.meals['snack_afternoon'].qualification }}">
+                                        {% if day.meals['snack_afternoon'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
+                                    </span>
+                                {% endif %}
+
+                                {% if day.meals['snack_afternoon'].is_none %}
+                                     <span style="color: #d1d5db;">—</span>
+                                {% else %}
+                                    <span style="color: #10b981;">✓</span>
+                                {% endif %}
+                            </div>
+
+                            {% if not day.meals['snack_afternoon'].is_none and day.meals['snack_afternoon'].foods %}
+                                <ul class="meal-foods" style="list-style: none; padding: 0;">
+                                    {% for food in day.meals['snack_afternoon'].foods %}
+                                        <li>• {{ food }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% else %}
+                            <span style="color: #d1d5db;">—</span>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+
+                    <!-- Dîner -->
+                    <td class="meal-cell">
+                        {% if day.meals['dinner'] %}
+                            <div class="meal-name">
+                                {% if day.meals['dinner'].qualification != 'normal' %}
+                                    <span class="qualification-badge-small {{ day.meals['dinner'].qualification }}">
+                                        {% if day.meals['dinner'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
+                                    </span>
+                                {% endif %}
+
+                                {% if day.meals['dinner'].is_none %}
+                                     <span style="color: #d1d5db;">—</span>
+                                {% else %}
+                                    <span style="color: #10b981;">✓</span>
+                                {% endif %}
+                            </div>
+
+                            {% if not day.meals['dinner'].is_none and day.meals['dinner'].foods %}
+                                <ul class="meal-foods" style="list-style: none; padding: 0;">
+                                    {% for food in day.meals['dinner'].foods %}
+                                        <li>• {{ food }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% else %}
+                            <span style="color: #d1d5db;">—</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Activités du jour -->
+                    <td class="meal-cell">
+                        {% if day.activities %}
+                            {% for activity in day.activities %}
+                                <div style="margin-bottom: 8px;">
+                                    <div style="font-weight: 600; color: var(--text-primary); font-size: 13px;">
+                                        {% if activity.activity_type == 'Marche' %}🚶
+                                        {% elif activity.activity_type == 'Course' %}🏃
+                                        {% elif activity.activity_type == 'Vélo' %}🚴
+                                        {% elif activity.activity_type == 'Natation' %}🏊
+                                        {% elif activity.activity_type == 'Musculation' %}💪
+                                        {% elif activity.activity_type == 'Yoga' %}🧘
+                                        {% elif activity.activity_type == 'Pas' %}👣
+                                        {% else %}🎯
+                                        {% endif %}
+                                        {{ activity.activity_type }}
+                                    </div>
+                                    <div style="color: #6b7280; font-size: 12px; margin-left: 20px;">
+                                        {% if activity.activity_type == 'Pas' %}
+                                            {{ "{:,}".format(activity.steps).replace(',', ' ') }} pas
+                                        {% else %}
+                                            {% if activity.duration > 0 %}⏱️ {{ activity.duration }}min{% endif %}
+                                            {% if activity.calories_burned %} • 🔥 {{ activity.calories_burned }}kcal{% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <span style="color: #d1d5db;">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📅</div>
+        <p style="font-size: 18px; margin: 0;">Aucune donnée enregistrée sur cette période</p>
+        <p style="font-size: 14px; margin-top: 8px; color: #d1d5db;">Commence à saisir tes repas et activités !</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function resetToDefault() {
+        const today = new Date();
+        const twoWeeksAgo = new Date(today);
+        twoWeeksAgo.setDate(today.getDate() - 14);
+
+        document.getElementById('start_date').value = twoWeeksAgo.toISOString().split('T')[0];
+        document.getElementById('end_date').value = today.toISOString().split('T')[0];
+
+        document.querySelector('form').submit();
+    }
+</script>
+
+{% endblock %}

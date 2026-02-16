@@ -107,6 +107,7 @@ class ActivityEntry(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     activity_type = db.Column(db.String(100), nullable=False)
     duration = db.Column(db.Integer, nullable=False)  # en minutes
+    steps = db.Column(db.Integer, nullable=True)  # Nombre de pas (pour type "Pas")
     calories_burned = db.Column(db.Integer)
     date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
     note = db.Column(db.Text)
@@ -281,7 +282,6 @@ def dashboard():
     today_activities = ActivityEntry.query.filter_by(user_id=user_id, date=datetime.utcnow().date()).all()
 
     # Statistiques
-    total_calories_today = sum(meal.calories or 0 for meal in today_meals)
     total_calories_burned = sum(activity.calories_burned or 0 for activity in today_activities)
 
     # Poids des 30 derniers jours pour le graphique
@@ -295,7 +295,6 @@ def dashboard():
                          latest_weight=latest_weight,
                          today_meals=today_meals,
                          today_activities=today_activities,
-                         total_calories_today=total_calories_today,
                          total_calories_burned=total_calories_burned,
                          weight_history=weight_history,
                          theme=user.theme)
@@ -523,6 +522,146 @@ def meals():
                          food_history=list(food_history),
                          theme=user.theme)
 
+@app.route('/meals/recap')
+@login_required
+def meals_recap():
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+
+    # Récupérer les dates depuis les paramètres (par défaut: 2 dernières semaines)
+    today = datetime.utcnow().date()
+    default_start = today - timedelta(days=14)
+
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+
+    if start_date_str:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+    else:
+        start_date = default_start
+
+    if end_date_str:
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    else:
+        end_date = today
+
+    # Récupérer tous les repas de la période
+    all_meals = MealEntry.query.filter(
+        MealEntry.user_id == user_id,
+        MealEntry.date >= start_date,
+        MealEntry.date <= end_date
+    ).all()
+
+    # Organiser par jour
+    meals_by_date = {}
+    for meal in all_meals:
+        if meal.date not in meals_by_date:
+            meals_by_date[meal.date] = {}
+        meals_by_date[meal.date][meal.meal_type] = {
+            'foods': meal.get_foods_list(),
+            'qualification': meal.qualification,
+            'is_none': meal.is_none
+        }
+
+    # Préparer les données jour par jour
+    days_data = []
+    current_date = start_date
+    day_names_fr = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+
+    while current_date <= end_date:
+        day_meals = meals_by_date.get(current_date, {})
+
+        # Organiser par type
+        meals_organized = {
+            'breakfast': day_meals.get('breakfast'),
+            'snack_morning': day_meals.get('snack_morning'),
+            'lunch': day_meals.get('lunch'),
+            'snack_afternoon': day_meals.get('snack_afternoon'),
+            'dinner': day_meals.get('dinner')
+        }
+
+        days_data.append({
+            'date': current_date,
+            'day_name': day_names_fr[current_date.weekday()],
+            'is_today': current_date == today,
+            'meals': meals_organized
+        })
+
+        current_date += timedelta(days=1)
+
+    # Calculer les statistiques
+    days_with_meals = sum(1 for day in days_data if any(day['meals'].values()))
+
+    complete_days = 0
+    for day in days_data:
+        main_meals = ['breakfast', 'lunch', 'dinner']
+        if all(day['meals'][t] is not None for t in main_meals):
+            complete_days += 1
+
+    total_exceptions = sum(1 for meal in all_meals if meal.qualification == 'exception')
+    total_equilibrages = sum(1 for meal in all_meals if meal.qualification == 'equilibrage')
+
+    # Détecter si on a des encas ou goûters AVEC DES ALIMENTS (pas juste "rien")
+    has_snack_morning = any(
+        meal.meal_type == 'snack_morning' and not meal.is_none and meal.foods
+        for meal in all_meals
+    )
+    has_snack_afternoon = any(
+        meal.meal_type == 'snack_afternoon' and not meal.is_none and meal.foods
+        for meal in all_meals
+    )
+
+    # ========================================
+    # RÉCUPÉRER LES ACTIVITÉS ET LES ORGANISER PAR JOUR
+    # ========================================
+    activities = ActivityEntry.query.filter(
+        ActivityEntry.user_id == user_id,
+        ActivityEntry.date >= start_date,
+        ActivityEntry.date <= end_date
+    ).order_by(ActivityEntry.date).all()
+
+    # Organiser les activités par date
+    activities_by_date = {}
+    for activity in activities:
+        if activity.date not in activities_by_date:
+            activities_by_date[activity.date] = []
+        activities_by_date[activity.date].append({
+            'activity_type': activity.activity_type,
+            'duration': activity.duration,
+            'steps': activity.steps or 0,
+            'calories_burned': activity.calories_burned,
+            'note': activity.note
+        })
+
+    # Ajouter les activités dans days_data
+    for day in days_data:
+        day['activities'] = activities_by_date.get(day['date'], [])
+
+    # Statistiques activités
+    activities_stats = {
+        'total_count': len(activities),
+        'total_steps': sum(a.steps or 0 for a in activities),
+        'total_calories': sum(a.calories_burned or 0 for a in activities)
+    }
+
+    stats = {
+        'days_with_meals': days_with_meals,
+        'complete_days': complete_days,
+        'total_exceptions': total_exceptions,
+        'total_equilibrages': total_equilibrages
+    }
+
+    return render_template('meals_recap.html',
+                         days_data=days_data,
+                         start_date=start_date,
+                         end_date=end_date,
+                         stats=stats,
+                         has_snack_morning=has_snack_morning,
+                         has_snack_afternoon=has_snack_afternoon,
+                         activities_stats=activities_stats,
+                         theme=user.theme)
+
+
 @app.route('/api/get-day-meals')
 @login_required
 def get_day_meals():
@@ -606,30 +745,76 @@ def save_day_meals():
 @login_required
 def activities():
     user_id = session['user_id']
-    entries = ActivityEntry.query.filter_by(user_id=user_id).order_by(ActivityEntry.date.desc(), ActivityEntry.created_at.desc()).all()
-    user = User.query.get(session['user_id'])
-    return render_template('activities.html', entries=entries,theme=user.theme)
+    user = User.query.get(user_id)
+    today = datetime.utcnow().date()
+
+    entries = ActivityEntry.query.filter_by(user_id=user_id).order_by(
+        ActivityEntry.date.desc(),
+        ActivityEntry.created_at.desc()
+    ).all()
+
+    # Calculer des statistiques
+    week_ago = today - timedelta(days=7)
+    week_count = ActivityEntry.query.filter(
+        ActivityEntry.user_id == user_id,
+        ActivityEntry.date >= week_ago
+    ).count()
+
+    total_steps = sum(entry.steps or 0 for entry in entries)
+    total_calories = sum(entry.calories_burned or 0 for entry in entries)
+
+    stats = {
+        'week_count': week_count,
+        'total_steps': total_steps,
+        'total_calories': total_calories
+    }
+
+    return render_template('activities.html',
+                         entries=entries,
+                         today=today,
+                         stats=stats,
+                         theme=user.theme)
 
 @app.route('/activities/add', methods=['POST'])
 @login_required
 def add_activity():
     user_id = session['user_id']
     activity_type = request.form.get('activity_type')
-    duration = int(request.form.get('duration'))
-    calories_burned = request.form.get('calories_burned')
     date_str = request.form.get('date')
     note = request.form.get('note', '')
 
     date = datetime.strptime(date_str, '%Y-%m-%d').date()
 
-    new_entry = ActivityEntry(
-        user_id=user_id,
-        activity_type=activity_type,
-        duration=duration,
-        calories_burned=int(calories_burned) if calories_burned else None,
-        date=date,
-        note=note
-    )
+    # Pour le type "Pas"
+    if activity_type == 'Pas':
+        steps = int(request.form.get('steps', 0))
+        duration = 0
+        calories_burned = None
+
+        new_entry = ActivityEntry(
+            user_id=user_id,
+            activity_type=activity_type,
+            duration=duration,
+            steps=steps,
+            calories_burned=calories_burned,
+            date=date,
+            note=note
+        )
+    else:
+        # Pour les autres activités
+        duration = int(request.form.get('duration', 0))
+        calories_burned = request.form.get('calories_burned')
+
+        new_entry = ActivityEntry(
+            user_id=user_id,
+            activity_type=activity_type,
+            duration=duration,
+            steps=None,
+            calories_burned=int(calories_burned) if calories_burned else None,
+            date=date,
+            note=note
+        )
+
     db.session.add(new_entry)
     db.session.commit()
 
