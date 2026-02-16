@@ -527,12 +527,12 @@
 
     <div class="month-grid">
         {% for day_data in month_days %}
-        <div class="day-card 
+        <div class="day-card
                     {% if day_data.other_month %}other-month{% endif %}
-                    {% if day_data.is_complete %}complete{% elif day_data.has_meals %}incomplete{% endif %} 
+                    {% if day_data.is_complete %}complete{% elif day_data.has_meals %}incomplete{% endif %}
                     {% if day_data.is_today %}today{% endif %}"
              {% if not day_data.other_month %}onclick="openDayModal('{{ day_data.date.isoformat() }}')"{% endif %}>
-            
+
             <!-- Badges de qualification -->
             {% if day_data.exception_count > 0 or day_data.equilibrage_count > 0 %}
             <div class="qualification-badges">
@@ -558,7 +558,7 @@
 
             {% if not day_data.other_month %}
             <div class="meal-indicators">
-                <!-- Afficher uniquement les repas remplis -->
+                <!-- Afficher uniquement les repas remplis ET pas "rien" -->
                 {% for meal_type, meal_label, emoji in [
                     ('breakfast', 'P.déj', '🌅'),
                     ('snack_morning', 'Encas', '☕'),
@@ -566,13 +566,10 @@
                     ('snack_afternoon', 'Goûter', '🍪'),
                     ('dinner', 'Dîner', '🌙')
                 ] %}
-                    {% if day_data.meals[meal_type] %}
-                        <div class="meal-indicator {% if day_data.meals[meal_type].is_none %}none{% endif %}">
+                    {% if day_data.meals[meal_type] and not day_data.meals[meal_type].is_none %}
+                        <div class="meal-indicator">
                             <span>{{ emoji }}</span>
                             <span>{{ meal_label }}</span>
-                            {% if day_data.meals[meal_type].is_none %}
-                                <span style="margin-left: auto; font-size: 10px;">rien</span>
-                            {% endif %}
                         </div>
                     {% endif %}
                 {% endfor %}
@@ -611,6 +608,17 @@
     let userFoodHistory = {{ food_history|tojson }};
     let hasUnsavedChanges = false;
 
+    const allMeals = [
+        { type: 'breakfast', label: 'Petit-déjeuner', emoji: '🌅' },
+        { type: 'snack_morning', label: 'Encas (matin)', emoji: '☕' },
+        { type: 'lunch', label: 'Déjeuner', emoji: '🌞' },
+        { type: 'snack_afternoon', label: 'Goûter', emoji: '🍪' },
+        { type: 'dinner', label: 'Dîner', emoji: '🌙' }
+    ];
+
+    let currentDayData = null;
+    let visibleMeals = [];
+
     function changeMonth(offset) {
         if (offset === 0) {
             window.location.href = '{{ url_for("meals") }}';
@@ -623,23 +631,22 @@
     function openDayModal(date) {
         const modal = document.getElementById('dayModal');
         const dateObj = new Date(date + 'T00:00:00');
-        const formattedDate = dateObj.toLocaleDateString('fr-FR', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        const formattedDate = dateObj.toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
-        
+
         document.getElementById('modalTitle').textContent = 'Repas du ' + formattedDate;
         document.getElementById('formDate').value = date;
-        
-        // Réinitialiser le flag
+
         hasUnsavedChanges = false;
-        
-        // Charger les repas existants
+
         fetch(`/api/get-day-meals?date=${date}`)
             .then(response => response.json())
             .then(data => {
+                currentDayData = data;
                 renderMealForm(data);
                 modal.classList.add('active');
             });
@@ -660,66 +667,132 @@
     }
 
     function renderMealForm(dayData) {
-        const meals = [
-            { type: 'breakfast', label: 'Petit-déjeuner', emoji: '🌅' },
-            { type: 'snack_morning', label: 'Encas (matin)', emoji: '☕' },
-            { type: 'lunch', label: 'Déjeuner', emoji: '🌞' },
-            { type: 'snack_afternoon', label: 'Goûter', emoji: '🍪' },
-            { type: 'dinner', label: 'Dîner', emoji: '🌙' }
-        ];
+        // Déterminer quels repas afficher
+        visibleMeals = [];
+        allMeals.forEach(meal => {
+            const mealData = dayData.meals[meal.type];
+            if (mealData && (mealData.is_none || mealData.foods.length > 0)) {
+                visibleMeals.push(meal.type);
+            }
+        });
 
+        // Si aucun repas, afficher juste le petit-déj par défaut
+        if (visibleMeals.length === 0) {
+            visibleMeals = ['breakfast'];
+        }
+
+        renderVisibleMeals(dayData);
+        updateAddMealMenu();
+    }
+
+    function renderVisibleMeals(dayData) {
         let html = '';
-        
-        meals.forEach(meal => {
-            const mealData = dayData.meals[meal.type] || { foods: [], qualification: 'normal', is_none: false };
-            
+
+        visibleMeals.forEach(mealType => {
+            const meal = allMeals.find(m => m.type === mealType);
+            const mealData = dayData.meals[mealType] || { foods: [], qualification: 'normal', is_none: false };
+
             html += `
-                <div class="meal-section">
+                <div class="meal-section" id="meal_section_${mealType}">
                     <div class="meal-section-header">
                         <div class="meal-title">${meal.emoji} ${meal.label}</div>
-                        <div class="qualification-selector">
-                            <button type="button" class="qualification-btn ${mealData.qualification === 'normal' ? 'active normal' : ''}" 
-                                    onclick="setQualification('${meal.type}', 'normal')">Normal</button>
-                            <button type="button" class="qualification-btn ${mealData.qualification === 'exception' ? 'active exception' : ''}" 
-                                    onclick="setQualification('${meal.type}', 'exception')">Exception</button>
-                            <button type="button" class="qualification-btn ${mealData.qualification === 'equilibrage' ? 'active equilibrage' : ''}" 
-                                    onclick="setQualification('${meal.type}', 'equilibrage')">Équilibrage</button>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <div class="qualification-selector">
+                                <button type="button" class="qualification-btn ${mealData.qualification === 'normal' ? 'active normal' : ''}"
+                                        onclick="setQualification('${mealType}', 'normal')">Normal</button>
+                                <button type="button" class="qualification-btn ${mealData.qualification === 'exception' ? 'active exception' : ''}"
+                                        onclick="setQualification('${mealType}', 'exception')">Exception</button>
+                                <button type="button" class="qualification-btn ${mealData.qualification === 'equilibrage' ? 'active equilibrage' : ''}"
+                                        onclick="setQualification('${mealType}', 'equilibrage')">Équilibrage</button>
+                            </div>
+                            <button type="button" class="btn-remove" style="padding: 8px 12px; font-size: 12px;" onclick="removeMeal('${mealType}'); markChanged();">
+                                🗑️ Suppr
+                            </button>
                         </div>
                     </div>
-                    <input type="hidden" name="${meal.type}_qualification" id="${meal.type}_qualification" value="${mealData.qualification}">
-                    
+                    <input type="hidden" name="${mealType}_qualification" id="${mealType}_qualification" value="${mealData.qualification}">
+
                     <div class="none-checkbox">
-                        <input type="checkbox" id="${meal.type}_none" name="${meal.type}_none" 
-                               ${mealData.is_none ? 'checked' : ''} onchange="toggleNone('${meal.type}'); markChanged();">
-                        <label for="${meal.type}_none" style="cursor: pointer; font-weight: 600;">Rien mangé pour ce repas</label>
+                        <input type="checkbox" id="${mealType}_none" name="${mealType}_none"
+                               ${mealData.is_none ? 'checked' : ''} onchange="toggleNone('${mealType}'); markChanged();">
+                        <label for="${mealType}_none" style="cursor: pointer; font-weight: 600;">Rien mangé pour ce repas</label>
                     </div>
-                    
-                    <div id="${meal.type}_foods" class="food-items" ${mealData.is_none ? 'style="display:none;"' : ''}>
+
+                    <div id="${mealType}_foods" class="food-items" ${mealData.is_none ? 'style="display:none;"' : ''}>
                         ${mealData.foods.length > 0 ? mealData.foods.map((food, idx) => `
                             <div class="food-item">
-                                <input type="text" class="form-control" name="${meal.type}_food[]" 
-                                       value="${food}" placeholder="Ex: Yaourt nature" 
+                                <input type="text" class="form-control" name="${mealType}_food[]"
+                                       value="${food}" placeholder="Ex: Yaourt nature"
                                        oninput="showAutocomplete(this); markChanged();">
                                 <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();">✕</button>
                             </div>
                         `).join('') : `
                             <div class="food-item">
-                                <input type="text" class="form-control" name="${meal.type}_food[]" 
+                                <input type="text" class="form-control" name="${mealType}_food[]"
                                        placeholder="Ex: Yaourt nature" oninput="showAutocomplete(this); markChanged();">
                                 <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();">✕</button>
                             </div>
                         `}
                     </div>
-                    
-                    <button type="button" class="btn-add" onclick="addFood('${meal.type}'); markChanged();" 
-                            id="${meal.type}_add_btn" ${mealData.is_none ? 'style="display:none;"' : ''}>
+
+                    <button type="button" class="btn-add" onclick="addFood('${mealType}'); markChanged();"
+                            id="${mealType}_add_btn" ${mealData.is_none ? 'style="display:none;"' : ''}>
                         ➕ Ajouter un aliment
                     </button>
                 </div>
             `;
         });
-        
+
         document.getElementById('modalBody').innerHTML = html;
+    }
+
+    function updateAddMealMenu() {
+        const availableMeals = allMeals.filter(meal => !visibleMeals.includes(meal.type));
+        const container = document.getElementById('addMealContainer');
+        const menu = document.getElementById('addMealMenu');
+
+        if (availableMeals.length === 0) {
+            container.style.display = 'none';
+        } else {
+            container.style.display = 'block';
+            let menuHtml = '';
+            availableMeals.forEach(meal => {
+                menuHtml += `
+                    <button type="button" class="btn"
+                            style="display: block; width: 100%; text-align: left; margin-bottom: 8px; background: white; padding: 12px;"
+                            onclick="addMealType('${meal.type}')">
+                        ${meal.emoji} ${meal.label}
+                    </button>
+                `;
+            });
+            menu.innerHTML = menuHtml;
+        }
+    }
+
+    function showAddMealMenu() {
+        const menu = document.getElementById('addMealMenu');
+        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function addMealType(mealType) {
+        visibleMeals.push(mealType);
+        renderVisibleMeals(currentDayData);
+        updateAddMealMenu();
+        document.getElementById('addMealMenu').style.display = 'none';
+        markChanged();
+    }
+
+    function removeMeal(mealType) {
+        if (!confirm('Supprimer ce repas ?')) return;
+
+        visibleMeals = visibleMeals.filter(t => t !== mealType);
+
+        if (visibleMeals.length === 0) {
+            visibleMeals = ['breakfast'];
+        }
+
+        renderVisibleMeals(currentDayData);
+        updateAddMealMenu();
     }
 
     function markChanged() {
@@ -728,7 +801,7 @@
 
     function setQualification(mealType, qualification) {
         document.getElementById(`${mealType}_qualification`).value = qualification;
-        
+
         const buttons = document.querySelectorAll(`[onclick*="setQualification('${mealType}'"]`);
         buttons.forEach(btn => {
             btn.classList.remove('active', 'normal', 'exception', 'equilibrage');
@@ -741,7 +814,7 @@
         const isNone = document.getElementById(`${mealType}_none`).checked;
         const foodsDiv = document.getElementById(`${mealType}_foods`);
         const addBtn = document.getElementById(`${mealType}_add_btn`);
-        
+
         if (isNone) {
             foodsDiv.style.display = 'none';
             addBtn.style.display = 'none';
@@ -756,7 +829,7 @@
         const newItem = document.createElement('div');
         newItem.className = 'food-item';
         newItem.innerHTML = `
-            <input type="text" class="form-control" name="${mealType}_food[]" 
+            <input type="text" class="form-control" name="${mealType}_food[]"
                    placeholder="Ex: Pomme" oninput="showAutocomplete(this); markChanged();">
             <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();">✕</button>
         `;
@@ -770,13 +843,13 @@
     function showAutocomplete(input) {
         const value = input.value.toLowerCase();
         if (value.length < 2) return;
-        
-        const matches = userFoodHistory.filter(food => 
+
+        const matches = userFoodHistory.filter(food =>
             food.toLowerCase().includes(value)
         ).slice(0, 5);
-        
+
         if (matches.length === 0) return;
-        
+
         let dropdown = input.nextElementSibling;
         if (!dropdown || !dropdown.classList.contains('autocomplete-dropdown')) {
             dropdown = document.createElement('div');
@@ -784,12 +857,12 @@
             input.parentElement.style.position = 'relative';
             input.after(dropdown);
         }
-        
-        dropdown.innerHTML = matches.map(food => 
+
+        dropdown.innerHTML = matches.map(food =>
             `<div class="autocomplete-item" onclick="selectFood(this, '${food.replace(/'/g, "\\'")}')">${food}</div>`
         ).join('');
         dropdown.classList.add('active');
-        
+
         document.addEventListener('click', function closeDropdown(e) {
             if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.classList.remove('active');
@@ -807,9 +880,9 @@
 
     document.getElementById('mealForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const formData = new FormData(this);
-        
+
         fetch(this.action, {
             method: 'POST',
             body: formData
@@ -830,7 +903,6 @@
         }
     });
 
-    // Avertir si l'utilisateur quitte la page avec des modifications non enregistrées
     window.addEventListener('beforeunload', function(e) {
         if (hasUnsavedChanges) {
             e.preventDefault();
