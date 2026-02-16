@@ -592,6 +592,20 @@
             <div class="modal-body" id="modalBody">
                 <!-- Le contenu sera chargé dynamiquement -->
             </div>
+            
+            <!-- Bouton pour ajouter un repas -->
+            <div style="padding: 0 32px 24px 32px;">
+                <div id="addMealContainer">
+                    <button type="button" class="btn" style="background: var(--text-secondary); color: white; width: 100%;" 
+                            onclick="showAddMealMenu()">
+                        ➕ Ajouter un repas
+                    </button>
+                    <div id="addMealMenu" style="display: none; margin-top: 12px; background: var(--bg-gradient-start); border-radius: 12px; padding: 12px;">
+                        <!-- Menu dynamique -->
+                    </div>
+                </div>
+            </div>
+            
             <div class="modal-footer">
                 <button type="button" class="btn" style="background: #6b7280; color: white;" onclick="cancelModal()">Annuler</button>
                 <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
