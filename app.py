@@ -291,7 +291,6 @@ def dashboard():
         WeightEntry.date >= thirty_days_ago
     ).order_by(WeightEntry.date).all()
 
-    user = User.query.get(session['user_id'])
     return render_template('dashboard.html',
                          latest_weight=latest_weight,
                          today_meals=today_meals,
