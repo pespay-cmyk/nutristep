@@ -3,9 +3,10 @@
 {% block title %}Dashboard - NutriStep{% endblock %}
 
 {% block content %}
-<h1 style="margin-bottom: 30px; color: #333;">👋 Bonjour {{ session.username }} !</h1>
+<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">👋 Bonjour {{ session.username }} !</h1>
 
-<div class="stats-grid">
+<!-- Stat unique : Poids actuel -->
+<div class="stats-grid" style="grid-template-columns: 1fr;">
     <div class="stat-card">
         <h3>Poids actuel</h3>
         <div class="value">
@@ -17,92 +18,141 @@
         </div>
         <div class="unit">kg</div>
     </div>
-    
-    <div class="stat-card">
-        <h3>Calories consommées aujourd'hui</h3>
-        <div class="value">{{ total_calories_today }}</div>
-        <div class="unit">kcal</div>
-    </div>
-    
-    <div class="stat-card">
-        <h3>Calories brûlées aujourd'hui</h3>
-        <div class="value">{{ total_calories_burned }}</div>
-        <div class="unit">kcal</div>
-    </div>
 </div>
 
+<!-- Graphique Poids -->
 <div class="card">
     <h2>📈 Évolution du poids (30 derniers jours)</h2>
     <canvas id="weightChart" height="80"></canvas>
 </div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+<!-- Graphique des pas (pleine largeur) -->
+<div class="card">
+    <h2>👣 Nombre de pas (30 derniers jours)</h2>
+    <canvas id="stepsChart" height="100"></canvas>
+    {% if steps_stats.average > 0 %}
+    <div style="margin-top: 16px; text-align: center; padding: 12px; background: var(--bg-gradient-start); border-radius: 8px;">
+        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Moyenne quotidienne</div>
+        <div style="font-size: 24px; font-weight: 700; color: var(--primary-start);">
+            {{ "{:,}".format(steps_stats.average|int).replace(',', ' ') }} pas
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Repas d'aujourd'hui + Activités du mois (2 colonnes) -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px;">
+    
+    <!-- Repas d'aujourd'hui -->
     <div class="card">
         <h2>🍽️ Repas d'aujourd'hui</h2>
         {% if today_meals %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Description</th>
-                        <th>Calories</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for meal in today_meals %}
-                    <tr>
-                        <td>
-                            {% if meal.meal_type == 'breakfast' %}🌅 Petit-déj
-                            {% elif meal.meal_type == 'lunch' %}🌞 Déjeuner
-                            {% elif meal.meal_type == 'dinner' %}🌙 Dîner
-                            {% else %}🍪 Snack
+            <div style="display: grid; gap: 16px; margin-bottom: 20px;">
+                {% for meal in today_meals %}
+                <div style="padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; border-left: 4px solid var(--primary-start);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                        <span style="font-size: 24px;">
+                            {% if meal.meal_type == 'breakfast' %}🌅
+                            {% elif meal.meal_type == 'snack_morning' %}☕
+                            {% elif meal.meal_type == 'lunch' %}🌞
+                            {% elif meal.meal_type == 'snack_afternoon' %}🍪
+                            {% elif meal.meal_type == 'dinner' %}🌙
+                            {% else %}🍽️
                             {% endif %}
-                        </td>
-                        <td>{{ meal.description }}</td>
-                        <td>{{ meal.calories or '--' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                        </span>
+                        <div>
+                            <div style="font-weight: 700; color: var(--text-primary); font-size: 16px;">
+                                {% if meal.meal_type == 'breakfast' %}Petit-déjeuner
+                                {% elif meal.meal_type == 'snack_morning' %}Encas (matin)
+                                {% elif meal.meal_type == 'lunch' %}Déjeuner
+                                {% elif meal.meal_type == 'snack_afternoon' %}Goûter
+                                {% elif meal.meal_type == 'dinner' %}Dîner
+                                {% else %}Repas
+                                {% endif %}
+                            </div>
+                            {% if meal.is_none %}
+                                <div style="color: #9ca3af; font-style: italic; font-size: 14px;">Rien mangé</div>
+                            {% else %}
+                                <div style="color: var(--text-secondary); font-size: 14px;">
+                                    {% for food in meal.get_foods_list() %}
+                                        {{ food }}{% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if meal.qualification != 'normal' %}
+                                <span style="display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+                                    {% if meal.qualification == 'exception' %}background: #fef3c7; color: #92400e;
+                                    {% else %}background: #dbeafe; color: #1e3a8a;
+                                    {% endif %}">
+                                    {% if meal.qualification == 'exception' %}⚠️ Exception{% else %}⚖️ Équilibrage{% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         {% else %}
-            <p style="color: #999; text-align: center; padding: 20px;">Aucun repas enregistré aujourd'hui</p>
+            <div style="text-align: center; padding: 40px 20px;">
+                <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.3;">🍽️</div>
+                <p style="color: #9ca3af; font-size: 16px; margin: 0;">Aucun repas enregistré aujourd'hui</p>
+            </div>
         {% endif %}
-        <a href="{{ url_for('meals') }}" class="btn btn-primary" style="margin-top: 15px;">Ajouter un repas</a>
+        <a href="{{ url_for('meals') }}" class="btn btn-primary">➕ Ajouter un repas</a>
     </div>
-    
+
+    <!-- Activités du mois -->
     <div class="card">
-        <h2>🏃 Activités d'aujourd'hui</h2>
-        {% if today_activities %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Activité</th>
-                        <th>Durée</th>
-                        <th>Calories</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for activity in today_activities %}
-                    <tr>
-                        <td>{{ activity.activity_type }}</td>
-                        <td>{{ activity.duration }} min</td>
-                        <td>{{ activity.calories_burned or '--' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <h2>🏃 Activités du mois</h2>
+        {% if month_activities %}
+            <div style="max-height: 400px; overflow-y: auto;">
+                {% for activity in month_activities %}
+                <div style="padding: 12px; margin-bottom: 8px; background: var(--bg-gradient-start); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary);">
+                            {% if activity.activity_type == 'Marche' %}🚶
+                            {% elif activity.activity_type == 'Course' %}🏃
+                            {% elif activity.activity_type == 'Vélo' %}🚴
+                            {% elif activity.activity_type == 'Natation' %}🏊
+                            {% elif activity.activity_type == 'Musculation' %}💪
+                            {% elif activity.activity_type == 'Yoga' %}🧘
+                            {% elif activity.activity_type == 'Pas' %}👣
+                            {% else %}🎯
+                            {% endif %}
+                            {{ activity.activity_type }}
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            {{ activity.date.strftime('%d/%m/%Y') }}
+                        </div>
+                    </div>
+                    <div style="text-align: right; font-size: 13px; color: var(--text-secondary);">
+                        {% if activity.activity_type == 'Pas' %}
+                            {{ "{:,}".format(activity.steps).replace(',', ' ') }} pas
+                        {% else %}
+                            {% if activity.duration > 0 %}{{ activity.duration }} min{% endif %}
+                            {% if activity.calories_burned %} • {{ activity.calories_burned }} kcal{% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         {% else %}
-            <p style="color: #999; text-align: center; padding: 20px;">Aucune activité enregistrée aujourd'hui</p>
+            <div style="text-align: center; padding: 40px 20px;">
+                <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.3;">🏃</div>
+                <p style="color: #9ca3af; font-size: 16px; margin: 0;">Aucune activité ce mois-ci</p>
+            </div>
         {% endif %}
-        <a href="{{ url_for('activities') }}" class="btn btn-primary" style="margin-top: 15px;">Ajouter une activité</a>
+        <a href="{{ url_for('activities') }}" class="btn btn-primary" style="margin-top: 15px;">➕ Ajouter une activité</a>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    const ctx = document.getElementById('weightChart').getContext('2d');
+    // Graphique Poids
+    const ctxWeight = document.getElementById('weightChart').getContext('2d');
     
     const weightData = {
         labels: [
@@ -117,16 +167,18 @@
                     {{ entry.weight }}{% if not loop.last %},{% endif %}
                 {% endfor %}
             ],
-            borderColor: '#667eea',
-            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            borderColor: 'rgb(16, 185, 129)',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
             tension: 0.4,
             fill: true,
             pointRadius: 4,
-            pointBackgroundColor: '#667eea'
+            pointBackgroundColor: 'rgb(16, 185, 129)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
         }]
     };
     
-    new Chart(ctx, {
+    new Chart(ctxWeight, {
         type: 'line',
         data: weightData,
         options: {
@@ -135,6 +187,15 @@
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toFixed(1) + ' kg';
+                        }
+                    }
                 }
             },
             scales: {
@@ -142,12 +203,159 @@
                     beginAtZero: false,
                     ticks: {
                         callback: function(value) {
-                            return value + ' kg';
+                            return value.toFixed(1) + ' kg';
                         }
                     }
                 }
             }
         }
     });
+
+    // Graphique des pas avec icônes d'activités
+    const ctxSteps = document.getElementById('stepsChart').getContext('2d');
+    
+    // Données des activités par date (pour afficher les icônes)
+    const activitiesByDate = {{ activities_by_date|tojson }};
+    
+    const stepsData = {
+        labels: {{ steps_data.dates|tojson }},
+        datasets: [
+            {
+                label: 'Pas quotidiens',
+                data: {{ steps_data.steps|tojson }},
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: function(context) {
+                    const date = context.label;
+                    // Si activité ce jour-là → point plus gros
+                    return activitiesByDate[date] && activitiesByDate[date].length > 0 ? 10 : 6;
+                },
+                pointBackgroundColor: function(context) {
+                    const date = context.label;
+                    // Si activité ce jour-là → couleur différente
+                    return activitiesByDate[date] && activitiesByDate[date].length > 0 ? 
+                        'rgb(16, 185, 129)' : 'rgb(59, 130, 246)';
+                },
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 12,
+                pointStyle: function(context) {
+                    const date = context.label;
+                    const activities = activitiesByDate[date];
+                    
+                    // Si une seule activité → afficher son icône
+                    if (activities && activities.length === 1) {
+                        const emoji = getActivityEmoji(activities[0].type);
+                        // Créer une image avec l'emoji
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 32;
+                        canvas.height = 32;
+                        const ctx = canvas.getContext('2d');
+                        ctx.font = '24px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(emoji, 16, 16);
+                        
+                        const img = new Image();
+                        img.src = canvas.toDataURL();
+                        return img;
+                    }
+                    return 'circle';
+                }
+            },
+            {
+                label: 'Moyenne',
+                data: Array({{ steps_data.dates|length }}).fill({{ steps_stats.average }}),
+                borderColor: 'rgba(239, 68, 68, 0.5)',
+                borderDash: [5, 5],
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false
+            }
+        ]
+    };
+    
+    new Chart(ctxSteps, {
+        type: 'line',
+        data: stepsData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
+                        label: function(context) {
+                            if (context.datasetIndex === 0) {
+                                const steps = context.parsed.y;
+                                const formattedSteps = steps.toLocaleString('fr-FR');
+                                return '👣 ' + formattedSteps + ' pas';
+                            }
+                            return 'Moyenne : ' + context.parsed.y.toLocaleString('fr-FR') + ' pas';
+                        },
+                        afterLabel: function(context) {
+                            if (context.datasetIndex === 0) {
+                                const date = context.label;
+                                const activities = activitiesByDate[date] || [];
+                                
+                                if (activities.length > 0) {
+                                    let lines = ['\nActivités :'];
+                                    activities.forEach(act => {
+                                        const emoji = getActivityEmoji(act.type);
+                                        let line = emoji + ' ' + act.type;
+                                        if (act.duration) line += ' (' + act.duration + 'min)';
+                                        if (act.calories) line += ' - ' + act.calories + 'kcal';
+                                        lines.push(line);
+                                    });
+                                    return lines;
+                                }
+                            }
+                            return [];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('fr-FR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    function getActivityEmoji(type) {
+        const emojis = {
+            'Marche': '🚶',
+            'Course': '🏃',
+            'Vélo': '🚴',
+            'Natation': '🏊',
+            'Musculation': '💪',
+            'Yoga': '🧘',
+            'Pas': '👣',
+            'Ski': '⛷️'
+        };
+        return emojis[type] || '🎯';
+    }
 </script>
 {% endblock %}

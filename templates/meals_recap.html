@@ -190,17 +190,17 @@
         .navbar, .actions-bar, .btn {
             display: none !important;
         }
-
+        
         body {
             background: white;
             padding: 0;
         }
-
+        
         .card {
             box-shadow: none;
             border: 1px solid #e5e7eb;
         }
-
+        
         .recap-table thead th {
             background: #f3f4f6 !important;
             color: #1f2937 !important;
@@ -269,6 +269,30 @@
             -webkit-overflow-scrolling: touch;
         }
     }
+    
+    /* Scrollbar discrète (ne s'affiche que si nécessaire) */
+    .card > div::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .card > div::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .card > div::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+    }
+    
+    .card > div::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Masquer scrollbar si pas nécessaire */
+    .card > div {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
 </style>
 {% endblock %}
 
@@ -283,21 +307,21 @@
         <div class="period-selector">
             <div class="form-group">
                 <label for="start_date">Date de début</label>
-                <input type="date" class="form-control" id="start_date" name="start_date"
+                <input type="date" class="form-control" id="start_date" name="start_date" 
                        value="{{ start_date.isoformat() }}" required>
             </div>
-
+            
             <div class="form-group">
                 <label for="end_date">Date de fin</label>
-                <input type="date" class="form-control" id="end_date" name="end_date"
+                <input type="date" class="form-control" id="end_date" name="end_date" 
                        value="{{ end_date.isoformat() }}" required>
             </div>
-
+            
             <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
                 🔍 Afficher
             </button>
-
-            <button type="button" class="btn" style="background: var(--text-secondary); color: white; padding: 12px 24px;"
+            
+            <button type="button" class="btn" style="background: var(--text-secondary); color: white; padding: 12px 24px;" 
                     onclick="resetToDefault()">
                 ↻ 2 dernières semaines
             </button>
@@ -305,15 +329,7 @@
     </form>
 
     <!-- Statistiques résumées -->
-    <div class="summary-stats">
-        <div class="summary-card">
-            <h3>Jours avec repas</h3>
-            <div class="value">{{ stats.days_with_meals }}</div>
-        </div>
-        <div class="summary-card">
-            <h3>Repas complets</h3>
-            <div class="value">{{ stats.complete_days }}</div>
-        </div>
+    <div class="summary-stats" style="grid-template-columns: repeat(2, 1fr);">
         <div class="summary-card">
             <h3>Exceptions</h3>
             <div class="value">{{ stats.total_exceptions }}</div>
@@ -326,8 +342,7 @@
 
 
     {% if days_data %}
-    <div style="overflow-x: auto;">
-        <table class="recap-table">
+        <table class="recap-table" style="display: block; overflow-x: auto; overflow-y: hidden;">
             <thead>
                 <tr>
                     <th>Date</th>
@@ -350,7 +365,7 @@
                         {{ day.date.strftime('%d/%m/%Y') }}
                         <span class="day-name">{{ day.day_name }}</span>
                     </td>
-
+                    
                     <!-- Petit-déjeuner -->
                     <td class="meal-cell">
                         {% if day.meals['breakfast'] %}
@@ -365,7 +380,7 @@
                                     {% endif %}
                                     <span style="color: #10b981;">✓</span>
                                 </div>
-
+                                
                                 {% if day.meals['breakfast'].foods %}
                                     <ul class="meal-foods" style="list-style: none; padding: 0;">
                                         {% for food in day.meals['breakfast'].foods %}
@@ -378,7 +393,7 @@
                             <span style="color: #d1d5db;">—</span>
                         {% endif %}
                     </td>
-
+                    
                     <!-- Encas (matin) - si existe dans la période ET pas que des "rien" -->
                     {% if has_snack_morning %}
                     <td class="meal-cell">
@@ -389,14 +404,14 @@
                                         {% if day.meals['snack_morning'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
                                     </span>
                                 {% endif %}
-
+                                
                                 {% if day.meals['snack_morning'].is_none %}
-                                     <span style="color: #d1d5db;">—</span>
+                                    <span style="color: #9ca3af; font-style: italic;">Rien</span>
                                 {% else %}
                                     <span style="color: #10b981;">✓</span>
                                 {% endif %}
                             </div>
-
+                            
                             {% if not day.meals['snack_morning'].is_none and day.meals['snack_morning'].foods %}
                                 <ul class="meal-foods" style="list-style: none; padding: 0;">
                                     {% for food in day.meals['snack_morning'].foods %}
@@ -409,7 +424,7 @@
                         {% endif %}
                     </td>
                     {% endif %}
-
+                    
                     <!-- Déjeuner -->
                     <td class="meal-cell">
                         {% if day.meals['lunch'] %}
@@ -419,14 +434,14 @@
                                         {% if day.meals['lunch'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
                                     </span>
                                 {% endif %}
-
+                                
                                 {% if day.meals['lunch'].is_none %}
-                                     <span style="color: #d1d5db;">—</span>
+                                    <span style="color: #9ca3af; font-style: italic;">Rien</span>
                                 {% else %}
                                     <span style="color: #10b981;">✓</span>
                                 {% endif %}
                             </div>
-
+                            
                             {% if not day.meals['lunch'].is_none and day.meals['lunch'].foods %}
                                 <ul class="meal-foods" style="list-style: none; padding: 0;">
                                     {% for food in day.meals['lunch'].foods %}
@@ -438,7 +453,7 @@
                             <span style="color: #d1d5db;">—</span>
                         {% endif %}
                     </td>
-
+                    
                     <!-- Goûter - si existe dans la période ET pas que des "rien" -->
                     {% if has_snack_afternoon %}
                     <td class="meal-cell">
@@ -449,14 +464,14 @@
                                         {% if day.meals['snack_afternoon'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
                                     </span>
                                 {% endif %}
-
+                                
                                 {% if day.meals['snack_afternoon'].is_none %}
-                                     <span style="color: #d1d5db;">—</span>
+                                    <span style="color: #9ca3af; font-style: italic;">Rien</span>
                                 {% else %}
                                     <span style="color: #10b981;">✓</span>
                                 {% endif %}
                             </div>
-
+                            
                             {% if not day.meals['snack_afternoon'].is_none and day.meals['snack_afternoon'].foods %}
                                 <ul class="meal-foods" style="list-style: none; padding: 0;">
                                     {% for food in day.meals['snack_afternoon'].foods %}
@@ -469,7 +484,7 @@
                         {% endif %}
                     </td>
                     {% endif %}
-
+                    
                     <!-- Dîner -->
                     <td class="meal-cell">
                         {% if day.meals['dinner'] %}
@@ -479,14 +494,14 @@
                                         {% if day.meals['dinner'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
                                     </span>
                                 {% endif %}
-
+                                
                                 {% if day.meals['dinner'].is_none %}
-                                     <span style="color: #d1d5db;">—</span>
+                                    <span style="color: #9ca3af; font-style: italic;">Rien</span>
                                 {% else %}
                                     <span style="color: #10b981;">✓</span>
                                 {% endif %}
                             </div>
-
+                            
                             {% if not day.meals['dinner'].is_none and day.meals['dinner'].foods %}
                                 <ul class="meal-foods" style="list-style: none; padding: 0;">
                                     {% for food in day.meals['dinner'].foods %}
@@ -534,7 +549,6 @@
                 {% endfor %}
             </tbody>
         </table>
-    </div>
     {% else %}
     <div class="empty-state">
         <div class="empty-state-icon">📅</div>
@@ -549,10 +563,10 @@
         const today = new Date();
         const twoWeeksAgo = new Date(today);
         twoWeeksAgo.setDate(today.getDate() - 14);
-
+        
         document.getElementById('start_date').value = twoWeeksAgo.toISOString().split('T')[0];
         document.getElementById('end_date').value = today.toISOString().split('T')[0];
-
+        
         document.querySelector('form').submit();
     }
 </script>
