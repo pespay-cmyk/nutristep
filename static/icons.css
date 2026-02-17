@@ -1,0 +1,92 @@
+/* ========================================
+   ICÔNES SVG - Styles et couleurs
+   ======================================== */
+
+.icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+}
+
+.icon-sm {
+    width: 16px;
+    height: 16px;
+}
+
+.icon-md {
+    width: 24px;
+    height: 24px;
+}
+
+.icon-lg {
+    width: 32px;
+    height: 32px;
+}
+
+.icon-xl {
+    width: 48px;
+    height: 48px;
+}
+
+/* Icônes avec dégradés */
+.icon-gradient {
+    background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Couleurs spécifiques par icône */
+.icon-home { color: #667eea; }
+.icon-weight { color: #10b981; }
+.icon-meal { color: #f59e0b; }
+.icon-activity { color: #ef4444; }
+.icon-report { color: #3b82f6; }
+.icon-calendar { color: #8b5cf6; }
+
+.icon-exception { color: #f59e0b; }     /* Orange alerte */
+.icon-equilibrage { color: #3b82f6; }   /* Bleu équilibre */
+.icon-save { color: #10b981; }          /* Vert enregistrer */
+.icon-history { color: #6366f1; }       /* Indigo historique */
+.icon-delete { color: #ef4444; }        /* Rouge supprimer */
+.icon-print { color: #6b7280; }         /* Gris imprimer */
+.icon-search { color: #667eea; }        /* Violet loupe */
+.icon-target { color: #f59e0b; }        /* Orange cible */
+.icon-fire { color: #ef4444; }          /* Rouge feu */
+.icon-alert { color: #f59e0b; }         /* Orange alerte */
+.icon-check-circle { color: #10b981; }  /* Vert validé */
+.icon-trend-up { color: #ef4444; }      /* Rouge hausse */
+.icon-trend-stable { color: #6b7280; }  /* Gris stable */
+.icon-trend-down { color: #10b981; }    /* Vert baisse (bonne nouvelle !) */
+
+.icon-breakfast { color: #f59e0b; }
+.icon-snack { color: #8b5cf6; }
+.icon-lunch { color: #ef4444; }
+.icon-gouter { color: #ec4899; }
+.icon-dinner { color: #6366f1; }
+
+.icon-walk { color: #10b981; }
+.icon-run { color: #f59e0b; }
+.icon-bike { color: #3b82f6; }
+.icon-swim { color: #06b6d4; }
+.icon-gym { color: #ef4444; }
+.icon-yoga { color: #8b5cf6; }
+.icon-steps { color: #6366f1; }
+.icon-ski { color: #06b6d4; }
+
+.icon-check { color: #10b981; }
+.icon-plus { color: #667eea; }
+
+/* Animation au survol */
+.icon:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+/* Icône dans navbar */
+.navbar .icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}

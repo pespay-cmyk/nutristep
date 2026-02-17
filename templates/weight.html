@@ -3,14 +3,14 @@
 {% block title %}Suivi du poids - NutriStep{% endblock %}
 
 {% block content %}
-<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">⚖️ Suivi du poids</h1>
+<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;"><svg class="icon icon-xl"><use href="#icon-weight"/></svg> Suivi du poids</h1>
 
 <!-- Message si pas saisi depuis X jours -->
 {% if days_since_last_entry and days_since_last_entry > 0 %}
 <div class="card" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid #f59e0b; margin-bottom: 24px;">
     <p style="margin: 0; font-size: 16px; color: #92400e; font-weight: 600;">
-        ⏰ Tu n'as pas saisi ton poids depuis {{ days_since_last_entry }} jour{{ 's' if days_since_last_entry > 1 else '' }} ! 
-        C'est le moment de te peser 💪
+        <svg class="icon"><use href="#icon-alert"/></svg> Tu n'as pas saisi ton poids depuis {{ days_since_last_entry }} jour{{ 's' if days_since_last_entry > 1 else '' }} !
+        C'est le moment de te peser <svg class="icon icon-gym"><use href="#icon-gym"/></svg>
     </p>
 </div>
 {% endif %}
@@ -27,25 +27,25 @@
 <!-- Formulaire de saisie (seulement si pas déjà saisi aujourd'hui) -->
 {% if not weight_today %}
 <div class="card">
-    <h2>➕ Enregistrer mon poids aujourd'hui</h2>
+    <h2><svg class="icon"><use href="#icon-plus"/></svg> Enregistrer mon poids aujourd'hui</h2>
     <form method="POST" action="{{ url_for('add_weight') }}">
         <div style="display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: end;">
             <div class="form-group" style="margin-bottom: 0;">
                 <label for="weight">Poids (kg)</label>
-                <input type="number" 
-                       step="0.1" 
-                       class="form-control" 
-                       id="weight" 
-                       name="weight" 
+                <input type="number"
+                       step="0.1"
+                       class="form-control"
+                       id="weight"
+                       name="weight"
                        value="{{ last_weight }}"
-                       required 
+                       required
                        autofocus
                        min="30"
                        max="300">
             </div>
-            
+
             <button type="submit" class="btn btn-primary" style="padding: 14px 32px;">
-                💾 Enregistrer
+                <svg class="icon"><use href="#icon-save"/></svg> Enregistrer
             </button>
         </div>
     </form>
@@ -53,10 +53,10 @@
 {% else %}
 <div class="card" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0); border-left: 4px solid #10b981;">
     <p style="margin: 0; font-size: 16px; color: #065f46; font-weight: 600;">
-        ✅ Tu as déjà enregistré ton poids aujourd'hui : <strong>{{ weight_today.weight }} kg</strong>
+        <svg class="icon"><use href="#icon-check-circle"/></svg>Tu as déjà enregistré ton poids aujourd'hui : <strong>{{ weight_today.weight }} kg</strong>
     </p>
     <p style="margin-top: 12px; margin-bottom: 0; font-size: 14px; color: #047857;">
-        Reviens demain pour enregistrer ton nouveau poids ! 😊
+        Reviens demain pour enregistrer ton nouveau poids !
     </p>
 </div>
 {% endif %}
@@ -64,7 +64,7 @@
 <!-- Sélecteur de période et options graphique -->
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">📈 Évolution du poids</h2>
+        <h2 style="margin: 0;"><svg class="icon"><use href="#icon-activity"/></svg> Évolution du poids</h2>
         <div style="display: flex; gap: 12px; align-items: center;">
             <!-- Sélecteur de période -->
             <select id="periodSelector" class="form-control" style="width: auto; padding: 10px 16px;" onchange="updateChart()">
@@ -74,7 +74,7 @@
                 <option value="240">8 mois</option>
                 <option value="all">Depuis le début</option>
             </select>
-            
+
             <!-- Option axe Y -->
             <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer;">
                 <input type="checkbox" id="yAxisFromZero" onchange="updateChart()" style="cursor: pointer;">
@@ -87,7 +87,7 @@
 
 <!-- Historique -->
 <div class="card">
-    <h2>📋 Historique</h2>
+    <h2><svg class="icon"><use href="#icon-history"/></svg> Historique</h2>
     {% if entries %}
         <table>
             <thead>
@@ -116,15 +116,15 @@
                             {% set diff = entry.weight - prev_weight %}
                             {% if diff < 0 %}
                                 <span style="color: #10b981; font-weight: 600;">
-                                    📉 {{ "%.1f"|format(diff|abs) }} kg
+                                    <svg class="icon"><use href="#icon-trend-down"/></svg> {{ "%.1f"|format(diff|abs) }} kg
                                 </span>
                             {% elif diff > 0 %}
                                 <span style="color: #ef4444; font-weight: 600;">
-                                    📈 +{{ "%.1f"|format(diff) }} kg
+                                    <svg class="icon"><use href="#icon-trend-up"/></svg> +{{ "%.1f"|format(diff) }} kg
                                 </span>
                             {% else %}
                                 <span style="color: #6b7280; font-weight: 600;">
-                                    ➡️ Stable
+                                    <svg class="icon"><use href="#icon-trend-stable"/></svg> Stable
                                 </span>
                             {% endif %}
                         {% else %}
@@ -132,10 +132,10 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{{ url_for('delete_weight', id=entry.id) }}" 
+                        <a href="{{ url_for('delete_weight', id=entry.id) }}"
                            class="btn btn-danger btn-small"
                            onclick="return confirm('Supprimer cette entrée ?')">
-                            🗑️ Supprimer
+                            <svg class="icon"><use href="#icon-delete"/></svg>️ Supprimer
                         </a>
                     </td>
                 </tr>
@@ -144,7 +144,7 @@
         </table>
     {% else %}
         <div style="text-align: center; padding: 60px 20px;">
-            <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.3;">⚖️</div>
+            <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.3;"><svg class="icon"><use href="#icon-weight"/></svg></div>
             <p style="color: #9ca3af; font-size: 18px; margin: 0;">Aucune pesée enregistrée pour le moment</p>
             <p style="color: #d1d5db; font-size: 14px; margin-top: 8px;">Commence dès maintenant ton suivi !</p>
         </div>
@@ -159,13 +159,13 @@
         <div class="value">{{ entries[-1].weight }}</div>
         <div class="unit">kg</div>
     </div>
-    
+
     <div class="stat-card">
         <h3>Poids actuel</h3>
         <div class="value">{{ entries[0].weight }}</div>
         <div class="unit">kg</div>
     </div>
-    
+
     <div class="stat-card">
         <h3>Évolution totale</h3>
         <div class="value">
@@ -173,8 +173,15 @@
             {{ "%.1f"|format(total_diff|abs) }}
         </div>
         <div class="unit">
-            kg {{ '📉' if total_diff < 0 else '📈' if total_diff > 0 else '➡️' }}
-        </div>
+    kg
+    {% if total_diff < 0 %}
+        <svg class="icon icon-trend-down" style="width:20px;height:20px;color:#10b981"><use href="#icon-trend-down"/></svg>
+    {% elif total_diff > 0 %}
+        <svg class="icon icon-trend-up" style="width:20px;height:20px;color:#ef4444"><use href="#icon-trend-up"/></svg>
+    {% else %}
+        <svg class="icon icon-trend-stable" style="width:20px;height:20px;color:#6b7280"><use href="#icon-trend-stable"/></svg>
+    {% endif %}
+</div>
     </div>
 
     <div class="stat-card">
@@ -195,16 +202,16 @@
         dates: {{ all_dates|tojson }},
         weights: {{ all_weights|tojson }}
     };
-    
+
     let chartInstance = null;
 
     function updateChart() {
         const period = document.getElementById('periodSelector').value;
         const fromZero = document.getElementById('yAxisFromZero').checked;
-        
+
         // Filtrer les données selon la période
         let filteredData = { dates: [], weights: [] };
-        
+
         if (period === 'all') {
             filteredData = allWeightData;
         } else {
@@ -213,11 +220,11 @@
             filteredData.dates = allWeightData.dates.slice(startIndex);
             filteredData.weights = allWeightData.weights.slice(startIndex);
         }
-        
+
         // Calculer les limites de l'axe Y
         let minWeight = Math.min(...filteredData.weights);
         let maxWeight = Math.max(...filteredData.weights);
-        
+
         // Assurer une envergure minimale de 10kg
         const range = maxWeight - minWeight;
         if (range < 10) {
@@ -225,10 +232,10 @@
             minWeight = midPoint - 5;
             maxWeight = midPoint + 5;
         }
-        
+
         // Ajouter une marge de 5%
         const margin = (maxWeight - minWeight) * 0.05;
-        
+
         // Configurer les limites Y
         const yAxisConfig = fromZero ? {
             beginAtZero: true
@@ -236,12 +243,12 @@
             min: Math.max(0, minWeight - margin),
             max: maxWeight + margin
         };
-        
+
         // Détruire l'ancien graphique s'il existe
         if (chartInstance) {
             chartInstance.destroy();
         }
-        
+
         // Créer le nouveau graphique
         const ctx = document.getElementById('weightChart').getContext('2d');
         chartInstance = new Chart(ctx, {
@@ -319,7 +326,7 @@
             }
         });
     }
-    
+
     // Initialiser le graphique au chargement
     {% if entries %}
     updateChart();

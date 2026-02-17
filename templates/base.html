@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}NutriStep{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.svg') }}">
+
+    <!-- CSS Icônes -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='icons.css') }}">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -554,14 +561,28 @@
         {% if session.user_id %}
         <div class="navbar">
             <h1><span class="logo">🌱</span> NutriStep</h1>
-            <nav>
-                <a href="{{ url_for('dashboard') }}">📊 Dashboard</a>
-                <a href="{{ url_for('weight') }}">⚖️ Poids</a>
-                <a href="{{ url_for('meals') }}">🍽️ Repas</a>
-                <a href="{{ url_for('meals_recap') }}">📋 Récap</a>
-                <a href="{{ url_for('activities') }}">🏃 Activités</a>
-                <a href="{{ url_for('logout') }}">🚪 Déconnexion</a>
-            </nav>
+                <nav>
+                    <a href="{{ url_for('dashboard') }}">
+                        <svg class="icon icon-home"><use href="#icon-home"/></svg>
+                        Dashboard
+                    </a>
+                    <a href="{{ url_for('weight') }}">
+                        <svg class="icon icon-weight"><use href="#icon-weight"/></svg>
+                        Poids
+                    </a>
+                    <a href="{{ url_for('meals') }}">
+                        <svg class="icon icon-meal"><use href="#icon-meal"/></svg>
+                        Repas
+                    </a>
+                    <a href="{{ url_for('activities') }}">
+                        <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
+                        Activités
+                    </a>
+                    <a href="{{ url_for('meals_recap') }}">
+                        <svg class="icon icon-report"><use href="#icon-report"/></svg>
+                        Récap
+                    </a>
+                </nav>
         </div>
         {% endif %}
 
@@ -603,5 +624,7 @@
     </script>
 
     {% block extra_js %}{% endblock %}
+    <!-- Sprite SVG des icônes -->
+    {% include 'icons.svg' %}
 </body>
 </html>

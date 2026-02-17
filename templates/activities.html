@@ -46,60 +46,61 @@
     }
 </style>
 
-<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">🏃 Suivi des activités</h1>
+<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;"><svg class="icon icon-xl icon-activity"><use href="#icon-activity"/></svg> Suivi des activités</h1>
 
 <!-- Formulaire d'ajout -->
 <div class="card">
-    <h2>➕ Enregistrer une activité</h2>
+    <h2><svg class="icon"><use href="#icon-plus"/></svg> Enregistrer une activité</h2>
     <form method="POST" action="{{ url_for('add_activity') }}">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
             <div class="form-group">
                 <label for="date">Date</label>
-                <input type="date" class="form-control" id="date" name="date" 
+                <input type="date" class="form-control" id="date" name="date"
                        value="{{ today.isoformat() }}" required>
             </div>
-            
+
             <div class="form-group">
                 <label for="activity_type">Type d'activité</label>
                 <select class="form-control" id="activity_type" name="activity_type" required onchange="toggleFields()">
                     <option value="">-- Choisir --</option>
-                    <option value="Marche">🚶 Marche</option>
-                    <option value="Course">🏃 Course</option>
-                    <option value="Vélo">🚴 Vélo</option>
-                    <option value="Natation">🏊 Natation</option>
-                    <option value="Musculation">💪 Musculation</option>
-                    <option value="Yoga">🧘 Yoga</option>
-                    <option value="Pas">👣 Pas quotidiens</option>
-                    <option value="Autre">🎯 Autre</option>
+                    <option value="Marche"><svg class="icon"><use href="#icon-walk"/></svg> Marche</option>
+                    <option value="Course"><svg class="icon"><use href="#icon-run"/></svg> Course</option>
+                    <option value="Vélo"><svg class="icon"><use href="#icon-bike"/></svg> Vélo</option>
+                    <option value="Natation"><svg class="icon"><use href="#icon-swim"/></svg> Natation</option>
+                    <option value="Musculation"><svg class="icon"><use href="#icon-gym"/></svg> Musculation</option>
+                    <option value="Yoga"><svg class="icon"><use href="#icon-yoga"/></svg> Yoga</option>
+                    <option value="Ski"><svg class="icon"><use href="#icon-ski"/></svg> Ski</option>
+                    <option value="Pas"><svg class="icon"><use href="#icon-steps"/></svg> Pas quotidiens</option>
+                    <option value="Autre"><svg class="icon"><use href="#icon-target"/></svg> Autre</option>
                 </select>
             </div>
 
             <div class="form-group" id="steps_field" style="display: none;">
                 <label for="steps">Nombre de pas</label>
-                <input type="number" class="form-control" id="steps" name="steps" 
+                <input type="number" class="form-control" id="steps" name="steps"
                        placeholder="Ex: 8500" min="0">
             </div>
-            
+
             <div class="form-group" id="duration_field">
                 <label for="duration">Durée (minutes)</label>
-                <input type="number" class="form-control" id="duration" name="duration" 
+                <input type="number" class="form-control" id="duration" name="duration"
                        placeholder="Ex: 30" min="0">
             </div>
-            
+
             <div class="form-group" id="calories_field">
                 <label for="calories_burned">Calories brûlées (optionnel)</label>
-                <input type="number" class="form-control" id="calories_burned" name="calories_burned" 
+                <input type="number" class="form-control" id="calories_burned" name="calories_burned"
                        placeholder="Ex: 250" min="0">
             </div>
         </div>
-        
+
         <div class="form-group" id="note_field">
             <label for="note">Note (optionnel)</label>
-            <input type="text" class="form-control" id="note" name="note" 
+            <input type="text" class="form-control" id="note" name="note"
                    placeholder="Ex: Parcours en forêt, bon rythme">
         </div>
-        
-        <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+
+        <button type="submit" class="btn btn-primary"><svg class="icon"><use href="#icon-save"/></svg> Enregistrer</button>
     </form>
 </div>
 
@@ -128,14 +129,15 @@
                     </td>
                     <td>
                         <strong style="color: var(--text-primary);">
-                            {% if entry.activity_type == 'Marche' %}🚶
-                            {% elif entry.activity_type == 'Course' %}🏃
-                            {% elif entry.activity_type == 'Vélo' %}🚴
-                            {% elif entry.activity_type == 'Natation' %}🏊
-                            {% elif entry.activity_type == 'Musculation' %}💪
-                            {% elif entry.activity_type == 'Yoga' %}🧘
-                            {% elif entry.activity_type == 'Pas' %}👣
-                            {% else %}🎯
+                            {% if entry.activity_type == 'Marche' %}<svg class="icon"><use href="#icon-walk"/>
+                            {% elif entry.activity_type == 'Course' %}<svg class="icon"><use href="#icon-run"/>
+                            {% elif entry.activity_type == 'Vélo' %}<svg class="icon"><use href="#icon-bike"/>
+                            {% elif entry.activity_type == 'Natation' %}<svg class="icon"><use href="#icon-swim"/>
+                            {% elif entry.activity_type == 'Musculation' %}<svg class="icon"><use href="#icon-gym"/>
+                            {% elif entry.activity_type == 'Yoga' %}<svg class="icon"><use href="#icon-yoga"/>
+                            {% elif entry.activity_type == 'Pas' %}<svg class="icon"><use href="#icon-steps"/>
+                            {% elif entry.activity_type == 'Ski' %}<svg class="icon"><use href="#icon-ski"/>
+                            {% else %}<svg class="icon"><use href="#icon-target"/>
                             {% endif %}
                             {{ entry.activity_type }}
                         </strong>
@@ -145,10 +147,10 @@
                             <strong style="color: #10b981; font-size: 18px;">{{ entry.steps or 0 }}</strong> pas
                         {% else %}
                             {% if entry.duration %}
-                                <span style="color: var(--text-secondary);">⏱️ {{ entry.duration }} min</span>
+                                <span style="color: var(--text-secondary);"><svg class="icon"><use href="#icon-alert"/></svg> {{ entry.duration }} min</span>
                             {% endif %}
                             {% if entry.calories_burned %}
-                                <span style="color: #ef4444; margin-left: 12px;">🔥 {{ entry.calories_burned }} kcal</span>
+                                <span style="color: #ef4444; margin-left: 12px;"><svg class="icon"><use href="#icon-fire"/></svg> {{ entry.calories_burned }} kcal</span>
                             {% endif %}
                         {% endif %}
                     </td>
@@ -160,10 +162,10 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{{ url_for('delete_activity', id=entry.id) }}" 
+                        <a href="{{ url_for('delete_activity', id=entry.id) }}"
                            class="btn btn-danger btn-small"
                            onclick="return confirm('Supprimer cette activité ?')">
-                            🗑️ Supprimer
+                            <svg class="icon icon-sm"><use href="#icon-delete"/></svg>️ Supprimer
                         </a>
                     </td>
                 </tr>
@@ -172,7 +174,7 @@
         </table>
     {% else %}
         <div style="text-align: center; padding: 60px 20px;">
-            <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.3;">🏃</div>
+            <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.3;"><svg class="icon"><use href="#icon-activity"/></svg></div>
             <p style="color: #9ca3af; font-size: 18px; margin: 0;">Aucune activité enregistrée pour le moment</p>
             <p style="color: #d1d5db; font-size: 14px; margin-top: 8px;">Enregistre ta première activité !</p>
         </div>
@@ -187,13 +189,13 @@
         <div class="value">{{ entries|length }}</div>
         <div class="unit">jours actifs</div>
     </div>
-    
+
     <div class="stat-card">
         <h3>Cette semaine</h3>
         <div class="value">{{ stats.week_count }}</div>
         <div class="unit">activités</div>
     </div>
-    
+
     {% if stats.total_steps > 0 %}
     <div class="stat-card">
         <h3>Total de pas</h3>
@@ -201,7 +203,7 @@
         <div class="unit">pas</div>
     </div>
     {% endif %}
-    
+
     {% if stats.total_calories > 0 %}
     <div class="stat-card">
         <h3>Calories brûlées</h3>
@@ -220,13 +222,13 @@
         const caloriesField = document.getElementById('calories_field');
         const stepsInput = document.getElementById('steps');
         const durationInput = document.getElementById('duration');
-        
+
         if (activityType === 'Pas') {
             // Mode "Pas quotidiens"
             stepsField.style.display = 'block';
             durationField.style.display = 'none';
             caloriesField.style.display = 'none';
-            
+
             stepsInput.required = true;
             durationInput.required = false;
             durationInput.value = '0';
@@ -235,7 +237,7 @@
             stepsField.style.display = 'none';
             durationField.style.display = 'block';
             caloriesField.style.display = 'block';
-            
+
             stepsInput.required = false;
             stepsInput.value = '';
             durationInput.required = true;

@@ -502,11 +502,11 @@
 {% endblock %}
 
 {% block content %}
-<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">🍽️ Suivi des repas</h1>
+<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;"><svg class="icon icon-xl"><use href="#icon-meal"/></svg> Suivi des repas</h1>
 
 <div class="card">
     <div class="calendar-header">
-        <h2 class="month-title">📅 {{ month_name }} {{ year }}</h2>
+        <h2 class="month-title"><svg class="icon icon-lg"><use href="#icon-calendar"/></svg> {{ month_name }} {{ year }}</h2>
         <div class="month-navigator">
             <button onclick="changeMonth(-1)">← Mois précédent</button>
             <button onclick="changeMonth(0)">Ce mois</button>
@@ -538,12 +538,12 @@
             <div class="qualification-badges">
                 {% if day_data.exception_count > 0 %}
                 <div class="qualification-badge exception" title="Exception">
-                    {{ day_data.exception_count }}⚠️
+                    {{ day_data.exception_count }}<svg class="icon icon-sm"><use href="#icon-exception"/></svg>
                 </div>
                 {% endif %}
                 {% if day_data.equilibrage_count > 0 %}
                 <div class="qualification-badge equilibrage" title="Équilibrage">
-                    {{ day_data.equilibrage_count }}⚖️
+                    {{ day_data.equilibrage_count }}<svg class="icon icon-sm"><use href="#icon-equilibrage"/></svg>
                 </div>
                 {% endif %}
             </div>
@@ -559,16 +559,16 @@
             {% if not day_data.other_month %}
             <div class="meal-indicators">
                 <!-- Afficher uniquement les repas remplis ET pas "rien" -->
-                {% for meal_type, meal_label, emoji in [
-                    ('breakfast', 'P.déj', '🌅'),
-                    ('snack_morning', 'Encas', '☕'),
-                    ('lunch', 'Déj', '🌞'),
-                    ('snack_afternoon', 'Goûter', '🍪'),
-                    ('dinner', 'Dîner', '🌙')
+                {% for meal_type, meal_label, icon_id, icon_color in [
+                    ('breakfast',       'P.déj',  'icon-breakfast', '#f59e0b'),
+                    ('snack_morning',   'Encas',  'icon-snack',     '#8b5cf6'),
+                    ('lunch',           'Déj',    'icon-lunch',     '#ef4444'),
+                    ('snack_afternoon', 'Goûter', 'icon-gouter',    '#ec4899'),
+                    ('dinner',          'Dîner',  'icon-dinner',    '#6366f1')
                 ] %}
                     {% if day_data.meals[meal_type] and not day_data.meals[meal_type].is_none %}
                         <div class="meal-indicator">
-                            <span>{{ emoji }}</span>
+                            <svg class="icon" style="width:14px;height:14px;color:{{ icon_color }}"><use href="#{{ icon_id }}"/></svg>
                             <span>{{ meal_label }}</span>
                         </div>
                     {% endif %}
@@ -592,23 +592,23 @@
             <div class="modal-body" id="modalBody">
                 <!-- Le contenu sera chargé dynamiquement -->
             </div>
-            
+
             <!-- Bouton pour ajouter un repas -->
             <div style="padding: 0 32px 24px 32px;">
                 <div id="addMealContainer">
-                    <button type="button" class="btn" style="background: var(--text-secondary); color: white; width: 100%;" 
+                    <button type="button" class="btn" style="background: var(--text-secondary); color: white; width: 100%;"
                             onclick="showAddMealMenu()">
-                        ➕ Ajouter un repas
+                        <svg class="icon"><use href="#icon-plus"/></svg> Ajouter un repas
                     </button>
                     <div id="addMealMenu" style="display: none; margin-top: 12px; background: var(--bg-gradient-start); border-radius: 12px; padding: 12px;">
                         <!-- Menu dynamique -->
                     </div>
                 </div>
             </div>
-            
+
             <div class="modal-footer">
                 <button type="button" class="btn" style="background: #6b7280; color: white;" onclick="cancelModal()">Annuler</button>
-                <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+                <button type="submit" class="btn btn-primary"><svg class="icon"><use href="#icon-save"/></svg> Enregistrer</button>
             </div>
         </form>
     </div>
@@ -622,13 +622,13 @@
     let userFoodHistory = {{ food_history|tojson }};
     let hasUnsavedChanges = false;
 
-    const allMeals = [
-        { type: 'breakfast', label: 'Petit-déjeuner', emoji: '🌅' },
-        { type: 'snack_morning', label: 'Encas (matin)', emoji: '☕' },
-        { type: 'lunch', label: 'Déjeuner', emoji: '🌞' },
-        { type: 'snack_afternoon', label: 'Goûter', emoji: '🍪' },
-        { type: 'dinner', label: 'Dîner', emoji: '🌙' }
-    ];
+const allMeals = [
+    { type: 'breakfast',       label: 'Petit-déjeuner', icon: '<svg class="icon" style="width:22px;height:22px;color:#f59e0b"><use href="#icon-breakfast"/></svg>' },
+    { type: 'snack_morning',   label: 'Encas (matin)',  icon: '<svg class="icon" style="width:22px;height:22px;color:#8b5cf6"><use href="#icon-snack"/></svg>' },
+    { type: 'lunch',           label: 'Déjeuner',       icon: '<svg class="icon" style="width:22px;height:22px;color:#ef4444"><use href="#icon-lunch"/></svg>' },
+    { type: 'snack_afternoon', label: 'Goûter',         icon: '<svg class="icon" style="width:22px;height:22px;color:#ec4899"><use href="#icon-gouter"/></svg>' },
+    { type: 'dinner',          label: 'Dîner',          icon: '<svg class="icon" style="width:22px;height:22px;color:#6366f1"><use href="#icon-dinner"/></svg>' }
+];
 
     let currentDayData = null;
     let visibleMeals = [];
@@ -709,7 +709,7 @@
             html += `
                 <div class="meal-section" id="meal_section_${mealType}">
                     <div class="meal-section-header">
-                        <div class="meal-title">${meal.emoji} ${meal.label}</div>
+                        <div class="meal-title">${meal.icon} ${meal.label}</div>
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                             <div class="qualification-selector">
                                 <button type="button" class="qualification-btn ${mealData.qualification === 'normal' ? 'active normal' : ''}"
@@ -720,7 +720,7 @@
                                         onclick="setQualification('${mealType}', 'equilibrage')">Équilibrage</button>
                             </div>
                             <button type="button" class="btn-remove" style="padding: 8px 12px; font-size: 12px;" onclick="removeMeal('${mealType}'); markChanged();">
-                                🗑️ Suppr
+                                <svg class="icon"><use href="#icon-delete"/></svg>️ Suppr
                             </button>
                         </div>
                     </div>
@@ -751,7 +751,7 @@
 
                     <button type="button" class="btn-add" onclick="addFood('${mealType}'); markChanged();"
                             id="${mealType}_add_btn" ${mealData.is_none ? 'style="display:none;"' : ''}>
-                        ➕ Ajouter un aliment
+                        <svg class="icon"><use href="#icon-plus"/></svg> Ajouter un aliment
                     </button>
                 </div>
             `;
@@ -775,7 +775,7 @@
                     <button type="button" class="btn"
                             style="display: block; width: 100%; text-align: left; margin-bottom: 8px; background: white; padding: 12px;"
                             onclick="addMealType('${meal.type}')">
-                        ${meal.emoji} ${meal.label}
+                        ${meal.icon} ${meal.label}
                     </button>
                 `;
             });

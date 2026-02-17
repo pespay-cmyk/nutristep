@@ -3,7 +3,7 @@
 {% block title %}Dashboard - NutriStep{% endblock %}
 
 {% block content %}
-<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">👋 Bonjour {{ session.username }} !</h1>
+<h1><svg class="icon icon-xl" style="color: #f59e0b;"><use href="#icon-home"/></svg> Bonjour {{ session.username }} !</h1>
 
 <!-- Stat unique : Poids actuel -->
 <div class="stats-grid" style="grid-template-columns: 1fr;">
@@ -22,13 +22,13 @@
 
 <!-- Graphique Poids -->
 <div class="card">
-    <h2>📈 Évolution du poids (30 derniers jours)</h2>
-    <canvas id="weightChart" height="80"></canvas>
+    <h2><svg class="icon"><use href="#icon-weight"/></svg> Évolution du poids (30 derniers jours)</h2>
+<canvas id="weightChart" height="80"></canvas>
 </div>
 
 <!-- Graphique des pas (pleine largeur) -->
 <div class="card">
-    <h2>👣 Nombre de pas (30 derniers jours)</h2>
+    <h2><svg class="icon icon-steps"><use href="#icon-steps"/></svg> Nombre de pas (30 derniers jours)</h2>
     <canvas id="stepsChart" height="100"></canvas>
     {% if steps_stats.average > 0 %}
     <div style="margin-top: 16px; text-align: center; padding: 12px; background: var(--bg-gradient-start); border-radius: 8px;">
@@ -42,22 +42,22 @@
 
 <!-- Repas d'aujourd'hui + Activités du mois (2 colonnes) -->
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px;">
-    
+
     <!-- Repas d'aujourd'hui -->
     <div class="card">
-        <h2>🍽️ Repas d'aujourd'hui</h2>
+        <h2><svg class="icon icon-meal"><use href="#icon-meal"/></svg> Repas d'aujourd'hui</h2>
         {% if today_meals %}
             <div style="display: grid; gap: 16px; margin-bottom: 20px;">
                 {% for meal in today_meals %}
                 <div style="padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; border-left: 4px solid var(--primary-start);">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
                         <span style="font-size: 24px;">
-                            {% if meal.meal_type == 'breakfast' %}🌅
-                            {% elif meal.meal_type == 'snack_morning' %}☕
-                            {% elif meal.meal_type == 'lunch' %}🌞
-                            {% elif meal.meal_type == 'snack_afternoon' %}🍪
-                            {% elif meal.meal_type == 'dinner' %}🌙
-                            {% else %}🍽️
+                            {% if meal.meal_type == 'breakfast' %}<svg class="icon icon-lg icon-breakfast"><use href="#icon-breakfast"/></svg>
+                            {% elif meal.meal_type == 'snack_morning' %}<svg class="icon icon-lg icon-snack"><use href="#icon-snack"/></svg>
+                            {% elif meal.meal_type == 'lunch' %}<svg class="icon icon-lg icon-lunch"><use href="#icon-lunch"/></svg>
+                            {% elif meal.meal_type == 'snack_afternoon' %}<svg class="icon icon-lg icon-gouter"><use href="#icon-gouter"/></svg>
+                            {% elif meal.meal_type == 'dinner' %}<svg class="icon icon-lg icon-dinner"><use href="#icon-dinner"/></svg>
+                            {% else %}<svg class="icon icon-lg icon-meal"><use href="#icon-meal"/></svg>
                             {% endif %}
                         </span>
                         <div>
@@ -84,7 +84,7 @@
                                     {% if meal.qualification == 'exception' %}background: #fef3c7; color: #92400e;
                                     {% else %}background: #dbeafe; color: #1e3a8a;
                                     {% endif %}">
-                                    {% if meal.qualification == 'exception' %}⚠️ Exception{% else %}⚖️ Équilibrage{% endif %}
+                                    {% if meal.qualification == 'exception' %}<svg class="icon"><use href="#icon-exception"/></svg> Exception{% else %}<svg class="icon"><use href="#icon-equilibrage"/></svg> Équilibrage{% endif %}
                                 </span>
                             {% endif %}
                         </div>
@@ -94,30 +94,31 @@
             </div>
         {% else %}
             <div style="text-align: center; padding: 40px 20px;">
-                <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.3;">🍽️</div>
+                <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.3;"><svg class="icon"><use href="#icon-meal"/></svg>️</div>
                 <p style="color: #9ca3af; font-size: 16px; margin: 0;">Aucun repas enregistré aujourd'hui</p>
             </div>
         {% endif %}
-        <a href="{{ url_for('meals') }}" class="btn btn-primary">➕ Ajouter un repas</a>
+        <a href="{{ url_for('meals') }}" class="btn btn-primary"><svg class="icon icon-plus"><use href="#icon-plus"/></svg> Ajouter un repas</a>
     </div>
 
     <!-- Activités du mois -->
     <div class="card">
-        <h2>🏃 Activités du mois</h2>
+        <h2><svg class="icon icon-activity"><use href="#icon-activity"/></svg> Activités du mois</h2>
         {% if month_activities %}
             <div style="max-height: 400px; overflow-y: auto;">
                 {% for activity in month_activities %}
                 <div style="padding: 12px; margin-bottom: 8px; background: var(--bg-gradient-start); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <div style="font-weight: 600; color: var(--text-primary);">
-                            {% if activity.activity_type == 'Marche' %}🚶
-                            {% elif activity.activity_type == 'Course' %}🏃
-                            {% elif activity.activity_type == 'Vélo' %}🚴
-                            {% elif activity.activity_type == 'Natation' %}🏊
-                            {% elif activity.activity_type == 'Musculation' %}💪
-                            {% elif activity.activity_type == 'Yoga' %}🧘
-                            {% elif activity.activity_type == 'Pas' %}👣
-                            {% else %}🎯
+                            {% if activity.activity_type == 'Marche' %}<svg class="icon icon-walk"><use href="#icon-walk"/></svg>
+                            {% elif activity.activity_type == 'Course' %}<svg class="icon icon-run"><use href="#icon-run"/></svg>
+                            {% elif activity.activity_type == 'Vélo' %}<svg class="icon icon-bike"><use href="#icon-bike"/></svg>
+                            {% elif activity.activity_type == 'Natation' %}<svg class="icon icon-swim"><use href="#icon-swim"/></svg>
+                            {% elif activity.activity_type == 'Musculation' %}<svg class="icon icon-gym"><use href="#icon-gym"/></svg>
+                            {% elif activity.activity_type == 'Yoga' %}<svg class="icon icon-yoga"><use href="#icon-yoga"/></svg>
+                            {% elif activity.activity_type == 'Pas' %}<svg class="icon icon-steps"><use href="#icon-steps"/></svg>
+                            {% elif activity.activity_type == 'Ski' %}<svg class="icon icon-ski"><use href="#icon-ski"/></svg>
+                            {% else %}<svg class="icon icon-activity"><use href="#icon-activity"/></svg>
                             {% endif %}
                             {{ activity.activity_type }}
                         </div>
@@ -138,11 +139,11 @@
             </div>
         {% else %}
             <div style="text-align: center; padding: 40px 20px;">
-                <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.3;">🏃</div>
+                <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.3;"><svg class="icon"><use href="#icon-activity"/></svg></div>
                 <p style="color: #9ca3af; font-size: 16px; margin: 0;">Aucune activité ce mois-ci</p>
             </div>
         {% endif %}
-        <a href="{{ url_for('activities') }}" class="btn btn-primary" style="margin-top: 15px;">➕ Ajouter une activité</a>
+        <a href="{{ url_for('activities') }}" class="btn btn-primary" style="margin-top: 15px;"><svg class="icon icon-plus"><use href="#icon-plus"/></svg>Ajouter une activité</a>
     </div>
 </div>
 
@@ -153,7 +154,7 @@
 <script>
     // Graphique Poids
     const ctxWeight = document.getElementById('weightChart').getContext('2d');
-    
+
     const weightData = {
         labels: [
             {% for entry in weight_history %}
@@ -177,7 +178,7 @@
             pointBorderWidth: 2
         }]
     };
-    
+
     new Chart(ctxWeight, {
         type: 'line',
         data: weightData,
@@ -213,10 +214,10 @@
 
     // Graphique des pas avec icônes d'activités
     const ctxSteps = document.getElementById('stepsChart').getContext('2d');
-    
+
     // Données des activités par date (pour afficher les icônes)
     const activitiesByDate = {{ activities_by_date|tojson }};
-    
+
     const stepsData = {
         labels: {{ steps_data.dates|tojson }},
         datasets: [
@@ -235,7 +236,7 @@
                 pointBackgroundColor: function(context) {
                     const date = context.label;
                     // Si activité ce jour-là → couleur différente
-                    return activitiesByDate[date] && activitiesByDate[date].length > 0 ? 
+                    return activitiesByDate[date] && activitiesByDate[date].length > 0 ?
                         'rgb(16, 185, 129)' : 'rgb(59, 130, 246)';
                 },
                 pointBorderColor: '#fff',
@@ -244,7 +245,7 @@
                 pointStyle: function(context) {
                     const date = context.label;
                     const activities = activitiesByDate[date];
-                    
+
                     // Si une seule activité → afficher son icône
                     if (activities && activities.length === 1) {
                         const emoji = getActivityEmoji(activities[0].type);
@@ -257,7 +258,7 @@
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
                         ctx.fillText(emoji, 16, 16);
-                        
+
                         const img = new Image();
                         img.src = canvas.toDataURL();
                         return img;
@@ -276,7 +277,7 @@
             }
         ]
     };
-    
+
     new Chart(ctxSteps, {
         type: 'line',
         data: stepsData,
@@ -313,7 +314,7 @@
                             if (context.datasetIndex === 0) {
                                 const date = context.label;
                                 const activities = activitiesByDate[date] || [];
-                                
+
                                 if (activities.length > 0) {
                                     let lines = ['\nActivités :'];
                                     activities.forEach(act => {
@@ -343,7 +344,7 @@
             }
         }
     });
-    
+
     function getActivityEmoji(type) {
         const emojis = {
             'Marche': '🚶',

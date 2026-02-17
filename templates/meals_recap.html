@@ -190,17 +190,17 @@
         .navbar, .actions-bar, .btn {
             display: none !important;
         }
-        
+
         body {
             background: white;
             padding: 0;
         }
-        
+
         .card {
             box-shadow: none;
             border: 1px solid #e5e7eb;
         }
-        
+
         .recap-table thead th {
             background: #f3f4f6 !important;
             color: #1f2937 !important;
@@ -269,25 +269,25 @@
             -webkit-overflow-scrolling: touch;
         }
     }
-    
+
     /* Scrollbar discrète (ne s'affiche que si nécessaire) */
     .card > div::-webkit-scrollbar {
         height: 8px;
     }
-    
+
     .card > div::-webkit-scrollbar-track {
         background: transparent;
     }
-    
+
     .card > div::-webkit-scrollbar-thumb {
         background: rgba(0, 0, 0, 0.2);
         border-radius: 4px;
     }
-    
+
     .card > div::-webkit-scrollbar-thumb:hover {
         background: rgba(0, 0, 0, 0.3);
     }
-    
+
     /* Masquer scrollbar si pas nécessaire */
     .card > div {
         scrollbar-width: thin;
@@ -298,8 +298,8 @@
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 16px;">
-    <h1 style="margin: 0; color: var(--text-primary); font-size: 32px; font-weight: 700;">📊 Récap</h1>
-    <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimer / PDF</button>
+    <h1 style="margin: 0; color: var(--text-primary); font-size: 32px; font-weight: 700;"><svg class="icon icon-xl"><use href="#icon-activity"/></svg> Récap</h1>
+    <button onclick="window.print()" class="btn btn-primary"><svg class="icon"><use href="#icon-print"/></svg>️ Imprimer / PDF</button>
 </div>
 
 <div class="card">
@@ -307,21 +307,21 @@
         <div class="period-selector">
             <div class="form-group">
                 <label for="start_date">Date de début</label>
-                <input type="date" class="form-control" id="start_date" name="start_date" 
+                <input type="date" class="form-control" id="start_date" name="start_date"
                        value="{{ start_date.isoformat() }}" required>
             </div>
-            
+
             <div class="form-group">
                 <label for="end_date">Date de fin</label>
-                <input type="date" class="form-control" id="end_date" name="end_date" 
+                <input type="date" class="form-control" id="end_date" name="end_date"
                        value="{{ end_date.isoformat() }}" required>
             </div>
-            
+
             <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
-                🔍 Afficher
+                <svg class="icon"><use href="#icon-search"/></svg> Afficher
             </button>
-            
-            <button type="button" class="btn" style="background: var(--text-secondary); color: white; padding: 12px 24px;" 
+
+            <button type="button" class="btn" style="background: var(--text-secondary); color: white; padding: 12px 24px;"
                     onclick="resetToDefault()">
                 ↻ 2 dernières semaines
             </button>
@@ -346,16 +346,16 @@
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>🌅 Petit-déj</th>
+                    <th><svg class="icon icon-breakfast"><use href="#icon-breakfast"/></svg> Petit-déj</th>
                     {% if has_snack_morning %}
-                    <th>☕ Encas</th>
+                    <th><svg class="icon icon-snack"><use href="#icon-snack"/></svg> Encas</th>
                     {% endif %}
-                    <th>🌞 Déjeuner</th>
+                    <th><svg class="icon icon-lunch"><use href="#icon-lunch"/></svg> Déjeuner</th>
                     {% if has_snack_afternoon %}
-                    <th>🍪 Goûter</th>
+                    <th><svg class="icon icon-gouter"><use href="#icon-gouter"/></svg> Goûter</th>
                     {% endif %}
-                    <th>🌙 Dîner</th>
-                    <th>🏃 Activités</th>
+                    <th><svg class="icon icon-dinner"><use href="#icon-dinner"/></svg> Dîner</th>
+                    <th><svg class="icon"><use href="#icon-activity"/></svg> Activités</th>
                 </tr>
             </thead>
             <tbody>
@@ -365,7 +365,7 @@
                         {{ day.date.strftime('%d/%m/%Y') }}
                         <span class="day-name">{{ day.day_name }}</span>
                     </td>
-                    
+
                     <!-- Petit-déjeuner -->
                     <td class="meal-cell">
                         {% if day.meals['breakfast'] %}
@@ -375,12 +375,12 @@
                                 <div class="meal-name">
                                     {% if day.meals['breakfast'].qualification != 'normal' %}
                                         <span class="qualification-badge-small {{ day.meals['breakfast'].qualification }}">
-                                            {% if day.meals['breakfast'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
+                                            {% if day.meals['breakfast'].qualification == 'exception' %}<svg class="icon icon-sm"><use href="#icon-exception"/></svg>{% else %}<svg class="icon icon-sm"><use href="#icon-equilibrage"/></svg>{% endif %}
                                         </span>
                                     {% endif %}
                                     <span style="color: #10b981;">✓</span>
                                 </div>
-                                
+
                                 {% if day.meals['breakfast'].foods %}
                                     <ul class="meal-foods" style="list-style: none; padding: 0;">
                                         {% for food in day.meals['breakfast'].foods %}
@@ -393,7 +393,7 @@
                             <span style="color: #d1d5db;">—</span>
                         {% endif %}
                     </td>
-                    
+
                     <!-- Encas (matin) - si existe dans la période ET pas que des "rien" -->
                     {% if has_snack_morning %}
                     <td class="meal-cell">
@@ -401,17 +401,17 @@
                             <div class="meal-name">
                                 {% if day.meals['snack_morning'].qualification != 'normal' %}
                                     <span class="qualification-badge-small {{ day.meals['snack_morning'].qualification }}">
-                                        {% if day.meals['snack_morning'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
+                                        {% if day.meals['snack_morning'].qualification == 'exception' %}<svg class="icon icon-sm"><use href="#icon-exception"/></svg>{% else %}<svg class="icon icon-sm"><use href="#icon-equilibrage"/></svg>{% endif %}
                                     </span>
                                 {% endif %}
-                                
+
                                 {% if day.meals['snack_morning'].is_none %}
                                     <span style="color: #9ca3af; font-style: italic;">Rien</span>
                                 {% else %}
                                     <span style="color: #10b981;">✓</span>
                                 {% endif %}
                             </div>
-                            
+
                             {% if not day.meals['snack_morning'].is_none and day.meals['snack_morning'].foods %}
                                 <ul class="meal-foods" style="list-style: none; padding: 0;">
                                     {% for food in day.meals['snack_morning'].foods %}
@@ -424,24 +424,24 @@
                         {% endif %}
                     </td>
                     {% endif %}
-                    
+
                     <!-- Déjeuner -->
                     <td class="meal-cell">
                         {% if day.meals['lunch'] %}
                             <div class="meal-name">
                                 {% if day.meals['lunch'].qualification != 'normal' %}
                                     <span class="qualification-badge-small {{ day.meals['lunch'].qualification }}">
-                                        {% if day.meals['lunch'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
+                                        {% if day.meals['lunch'].qualification == 'exception' %}<svg class="icon icon-sm"><use href="#icon-exception"/></svg>{% else %}<svg class="icon icon-sm"><use href="#icon-equilibrage"/></svg>{% endif %}
                                     </span>
                                 {% endif %}
-                                
+
                                 {% if day.meals['lunch'].is_none %}
                                     <span style="color: #9ca3af; font-style: italic;">Rien</span>
                                 {% else %}
                                     <span style="color: #10b981;">✓</span>
                                 {% endif %}
                             </div>
-                            
+
                             {% if not day.meals['lunch'].is_none and day.meals['lunch'].foods %}
                                 <ul class="meal-foods" style="list-style: none; padding: 0;">
                                     {% for food in day.meals['lunch'].foods %}
@@ -453,7 +453,7 @@
                             <span style="color: #d1d5db;">—</span>
                         {% endif %}
                     </td>
-                    
+
                     <!-- Goûter - si existe dans la période ET pas que des "rien" -->
                     {% if has_snack_afternoon %}
                     <td class="meal-cell">
@@ -461,17 +461,17 @@
                             <div class="meal-name">
                                 {% if day.meals['snack_afternoon'].qualification != 'normal' %}
                                     <span class="qualification-badge-small {{ day.meals['snack_afternoon'].qualification }}">
-                                        {% if day.meals['snack_afternoon'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
+                                        {% if day.meals['snack_afternoon'].qualification == 'exception' %}<svg class="icon icon-sm"><use href="#icon-exception"/></svg>{% else %}<svg class="icon icon-sm"><use href="#icon-equilibrage"/></svg>{% endif %}
                                     </span>
                                 {% endif %}
-                                
+
                                 {% if day.meals['snack_afternoon'].is_none %}
                                     <span style="color: #9ca3af; font-style: italic;">Rien</span>
                                 {% else %}
                                     <span style="color: #10b981;">✓</span>
                                 {% endif %}
                             </div>
-                            
+
                             {% if not day.meals['snack_afternoon'].is_none and day.meals['snack_afternoon'].foods %}
                                 <ul class="meal-foods" style="list-style: none; padding: 0;">
                                     {% for food in day.meals['snack_afternoon'].foods %}
@@ -484,24 +484,24 @@
                         {% endif %}
                     </td>
                     {% endif %}
-                    
+
                     <!-- Dîner -->
                     <td class="meal-cell">
                         {% if day.meals['dinner'] %}
                             <div class="meal-name">
                                 {% if day.meals['dinner'].qualification != 'normal' %}
                                     <span class="qualification-badge-small {{ day.meals['dinner'].qualification }}">
-                                        {% if day.meals['dinner'].qualification == 'exception' %}⚠{% else %}⚖{% endif %}
+                                        {% if day.meals['dinner'].qualification == 'exception' %}<svg class="icon icon-sm"><use href="#icon-exception"/></svg>{% else %}<svg class="icon icon-sm"><use href="#icon-equilibrage"/></svg>{% endif %}
                                     </span>
                                 {% endif %}
-                                
+
                                 {% if day.meals['dinner'].is_none %}
                                     <span style="color: #9ca3af; font-style: italic;">Rien</span>
                                 {% else %}
                                     <span style="color: #10b981;">✓</span>
                                 {% endif %}
                             </div>
-                            
+
                             {% if not day.meals['dinner'].is_none and day.meals['dinner'].foods %}
                                 <ul class="meal-foods" style="list-style: none; padding: 0;">
                                     {% for food in day.meals['dinner'].foods %}
@@ -520,14 +520,15 @@
                             {% for activity in day.activities %}
                                 <div style="margin-bottom: 8px;">
                                     <div style="font-weight: 600; color: var(--text-primary); font-size: 13px;">
-                                        {% if activity.activity_type == 'Marche' %}🚶
-                                        {% elif activity.activity_type == 'Course' %}🏃
-                                        {% elif activity.activity_type == 'Vélo' %}🚴
-                                        {% elif activity.activity_type == 'Natation' %}🏊
-                                        {% elif activity.activity_type == 'Musculation' %}💪
-                                        {% elif activity.activity_type == 'Yoga' %}🧘
-                                        {% elif activity.activity_type == 'Pas' %}👣
-                                        {% else %}🎯
+                                        {% if activity.activity_type == 'Marche' %}<svg class="icon icon-walk"><use href="#icon-walk"/></svg>
+                                        {% elif activity.activity_type == 'Course' %}<svg class="icon icon-run"><use href="#icon-run"/></svg>
+                                        {% elif activity.activity_type == 'Vélo' %}<svg class="icon icon-bike"><use href="#icon-bike"/></svg>
+                                        {% elif activity.activity_type == 'Natation' %}<svg class="icon icon-swim"><use href="#icon-swim"/></svg>
+                                        {% elif activity.activity_type == 'Musculation' %}<svg class="icon icon-gym"><use href="#icon-gym"/></svg>
+                                        {% elif activity.activity_type == 'Yoga' %}<svg class="icon icon-yoga"><use href="#icon-yoga"/></svg>
+                                        {% elif activity.activity_type == 'Pas' %}<svg class="icon"><use href="#icon-steps"/></svg>
+                                        {% elif activity.activity_type == 'Ski' %}<svg class="icon icon-ski"><use href="#icon-ski"/></svg>
+                                        {% else %}<svg class="icon"><use href="#icon-target"/></svg>
                                         {% endif %}
                                         {{ activity.activity_type }}
                                     </div>
@@ -535,8 +536,8 @@
                                         {% if activity.activity_type == 'Pas' %}
                                             {{ "{:,}".format(activity.steps).replace(',', ' ') }} pas
                                         {% else %}
-                                            {% if activity.duration > 0 %}⏱️ {{ activity.duration }}min{% endif %}
-                                            {% if activity.calories_burned %} • 🔥 {{ activity.calories_burned }}kcal{% endif %}
+                                            {% if activity.duration > 0 %}<svg class="icon"><use href="#icon-alert"/></svg> {{ activity.duration }}min{% endif %}
+                                            {% if activity.calories_burned %} • <svg class="icon"><use href="#icon-fire"/></svg> {{ activity.calories_burned }}kcal{% endif %}
                                         {% endif %}
                                     </div>
                                 </div>
@@ -551,7 +552,7 @@
         </table>
     {% else %}
     <div class="empty-state">
-        <div class="empty-state-icon">📅</div>
+        <div class="empty-state-icon"><svg class="icon"><use href="#icon-calendar"/></svg></div>
         <p style="font-size: 18px; margin: 0;">Aucune donnée enregistrée sur cette période</p>
         <p style="font-size: 14px; margin-top: 8px; color: #d1d5db;">Commence à saisir tes repas et activités !</p>
     </div>
@@ -563,10 +564,10 @@
         const today = new Date();
         const twoWeeksAgo = new Date(today);
         twoWeeksAgo.setDate(today.getDate() - 14);
-        
+
         document.getElementById('start_date').value = twoWeeksAgo.toISOString().split('T')[0];
         document.getElementById('end_date').value = today.toISOString().split('T')[0];
-        
+
         document.querySelector('form').submit();
     }
 </script>
