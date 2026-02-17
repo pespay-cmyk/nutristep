@@ -18,35 +18,21 @@
         Comment exporter depuis Garmin Connect ?
     </h2>
     
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-        
-        <!-- Pas quotidiens -->
-        <div style="background: var(--bg-gradient-start); padding: 16px; border-radius: 12px;">
-            <h3 style="margin-bottom: 12px; color: var(--text-primary);">
-                <svg class="icon icon-steps"><use href="#icon-steps"/></svg>
-                Pas quotidiens
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 2;">
-                <li>Va sur <strong>Garmin Connect</strong> (connect.garmin.com)</li>
-                <li>Clique sur <strong>Santé</strong> → <strong>Pas</strong></li>
-                <li>Choisis la période souhaitée</li>
-                <li>Clique sur l'icône <strong>↓ Exporter</strong> (en haut à droite)</li>
-                <li>Choisis <strong>CSV</strong></li>
-            </ol>
-        </div>
-
-        <!-- Activités -->
-        <div style="background: var(--bg-gradient-start); padding: 16px; border-radius: 12px;">
-            <h3 style="margin-bottom: 12px; color: var(--text-primary);">
-                <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
-                Activités sportives
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 2;">
-                <li>Va sur <strong>Garmin Connect</strong> (connect.garmin.com)</li>
-                <li>Clique sur <strong>Activités</strong> → <strong>Toutes les activités</strong></li>
-                <li>Clique sur l'icône <strong>↓ Exporter</strong> (en haut à droite)</li>
-                <li>Choisis <strong>CSV</strong></li>
-            </ol>
+    <div style="background: var(--bg-gradient-start); padding: 16px; border-radius: 12px;">
+        <h3 style="margin-bottom: 12px; color: var(--text-primary);">
+            <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
+            Activités sportives
+        </h3>
+        <ol style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 2;">
+            <li>Va sur <strong>Garmin Connect</strong> → <a href="https://connect.garmin.com/modern/activities" target="_blank" style="color: var(--primary-start);">connect.garmin.com/modern/activities</a></li>
+            <li>Clique sur <strong>Activités</strong> → <strong>Toutes les activités</strong></li>
+            <li>En haut à droite, clique sur l'icône <strong>↓ Exporter</strong></li>
+            <li>Choisis <strong>CSV</strong></li>
+            <li>Importe le fichier ci-dessous !</li>
+        </ol>
+        <div style="margin-top: 12px; padding: 10px; background: #fef3c7; border-radius: 8px; font-size: 13px; color: #92400e;">
+            ⚠️ Les <strong>pas quotidiens</strong> ne sont pas exportables facilement depuis Garmin Connect. Saisis-les manuellement depuis la page 
+            <a href="{{ url_for('activities') }}" style="color: #92400e; font-weight: 700;">Activités</a>.
         </div>
     </div>
 </div>
@@ -55,39 +41,26 @@
 <div class="card">
     <h2>
         <svg class="icon icon-save"><use href="#icon-save"/></svg>
-        Importer tes fichiers CSV
+        Importer ton fichier CSV Activités
     </h2>
     <p style="color: var(--text-secondary); margin-bottom: 24px;">
-        Tu peux importer un seul fichier ou les deux à la fois.
+        Sélectionne le fichier <strong>activities.csv</strong> exporté depuis Garmin Connect.
     </p>
 
     <form method="POST" action="{{ url_for('garmin_csv_parse') }}" enctype="multipart/form-data">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            
-            <div class="form-group">
-                <label for="steps_csv">
-                    <svg class="icon icon-steps"><use href="#icon-steps"/></svg>
-                    Fichier Pas quotidiens (CSV)
-                </label>
-                <input type="file" class="form-control" id="steps_csv" name="steps_csv" 
-                       accept=".csv" style="padding: 10px;">
-                <small style="color: var(--text-secondary);">Fichier de pas exporté depuis Garmin</small>
-            </div>
-
-            <div class="form-group">
-                <label for="activities_csv">
-                    <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
-                    Fichier Activités (CSV)
-                </label>
-                <input type="file" class="form-control" id="activities_csv" name="activities_csv" 
-                       accept=".csv" style="padding: 10px;">
-                <small style="color: var(--text-secondary);">Fichier activities.csv exporté depuis Garmin</small>
-            </div>
+        <div class="form-group">
+            <label for="activities_csv">
+                <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
+                Fichier Activités (CSV)
+            </label>
+            <input type="file" class="form-control" id="activities_csv" name="activities_csv" 
+                   accept=".csv" style="padding: 10px;" required>
+            <small style="color: var(--text-secondary);">Fichier activities.csv exporté depuis Garmin Connect</small>
         </div>
 
         <button type="submit" class="btn btn-primary" style="margin-top: 8px;">
             <svg class="icon" style="color:white"><use href="#icon-search"/></svg>
-            Analyser les fichiers
+            Analyser le fichier
         </button>
     </form>
 </div>
@@ -105,70 +78,7 @@
 
     <form method="POST" action="{{ url_for('garmin_csv_confirm') }}">
 
-        <!-- PAS QUOTIDIENS -->
-        {% if pending_data.steps %}
-        <div style="margin-bottom: 32px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 style="color: var(--text-primary); margin: 0;">
-                    <svg class="icon icon-steps"><use href="#icon-steps"/></svg>
-                    Pas quotidiens ({{ pending_data.steps|length }} jours)
-                </h3>
-                <div style="display: flex; gap: 8px;">
-                    <button type="button" onclick="checkAll('steps')" 
-                            style="font-size:12px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--primary-start); background: transparent; color: var(--primary-start); cursor: pointer;">
-                        Tout cocher
-                    </button>
-                    <button type="button" onclick="uncheckAll('steps')" 
-                            style="font-size:12px; padding: 4px 10px; border-radius: 6px; border: 1px solid #6b7280; background: transparent; color: #6b7280; cursor: pointer;">
-                        Tout décocher
-                    </button>
-                </div>
-            </div>
-            
-            <div style="max-height: 400px; overflow-y: auto; border-radius: 12px; border: 1px solid var(--bg-gradient-start);">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead style="position: sticky; top: 0; z-index: 1;">
-                        <tr style="background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: white;">
-                            <th style="padding: 12px; text-align: left; border-radius: 12px 0 0 0;">✓</th>
-                            <th style="padding: 12px; text-align: left;">Date</th>
-                            <th style="padding: 12px; text-align: left;">Pas</th>
-                            <th style="padding: 12px; text-align: left; border-radius: 0 12px 0 0;">Statut</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in pending_data.steps %}
-                        <tr style="border-bottom: 1px solid var(--bg-gradient-start); 
-                                   {% if item.already_exists %}opacity: 0.5;{% endif %}">
-                            <td style="padding: 12px;">
-                                {% if not item.already_exists %}
-                                <input type="checkbox" class="steps-check" 
-                                       name="steps_{{ item.date }}" value="{{ item.steps }}" 
-                                       checked style="width: 16px; height: 16px; cursor: pointer;">
-                                {% endif %}
-                            </td>
-                            <td style="padding: 12px; font-weight: 600;">{{ item.date }}</td>
-                            <td style="padding: 12px; color: #10b981; font-weight: 700; font-size: 18px;">
-                                {{ "{:,}".format(item.steps).replace(',', '\u00a0') }}
-                            </td>
-                            <td style="padding: 12px;">
-                                {% if item.already_exists %}
-                                    <span style="color: #10b981; font-size: 13px;">
-                                        <svg class="icon" style="width:14px;height:14px;color:#10b981"><use href="#icon-check-circle"/></svg>
-                                        Déjà importé
-                                    </span>
-                                {% else %}
-                                    <span style="color: #6b7280; font-size: 13px;">Nouveau</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- ACTIVITÉS -->
+        <!-- ACTIVITÉS uniquement -->
         {% if pending_data.activities %}
         <div style="margin-bottom: 32px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
