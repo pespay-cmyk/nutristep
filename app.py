@@ -1,3 +1,5 @@
+import csv
+import io
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,6 +8,7 @@ from datetime import datetime, timedelta
 import os
 from functools import wraps
 from dotenv import load_dotenv
+from garminconnect import Garmin
 import json
 
 # Charger les variables d'environnement depuis .env
@@ -42,6 +45,46 @@ google = oauth.register(
 )
 
 db = SQLAlchemy(app)
+
+# ----------------------------------------
+#  CORRESPONDANCE TYPES GARMIN → NUTRISTEP
+# ----------------------------------------
+
+GARMIN_ACTIVITY_MAP = {
+    'running':          'Course',
+    'course à pied':    'Course',
+    'trail_running':    'Course',
+    'cycling':          'Vélo',
+    'mountain_biking':  'Vélo',
+    'swimming':         'Natation',
+    'open_water_swimming': 'Natation',
+    'walking':          'Marche',
+    'hiking':           'Marche',
+    'strength_training': 'Musculation',
+    'yoga':             'Yoga',
+    'skiing':           'Ski',
+    'ski en station':   'Ski',
+    'ski alpin':                      'Ski',
+    'ski de fond':                    'Ski',
+    'snowboard':                      'Ski',
+    'resort_skiing_snowboarding': 'Ski',
+    'backcountry_skiing': 'Ski',
+    'cardio':                         'Autre',
+    'elliptical':                     'Autre',
+}
+
+def map_garmin_activity(garmin_type):
+    if not garmin_type:
+        return 'Autre'
+    garmin_lower = garmin_type.lower().strip()
+    # Chercher d'abord une correspondance exacte
+    if garmin_lower in GARMIN_ACTIVITY_MAP:
+        return GARMIN_ACTIVITY_MAP[garmin_lower]
+    # Sinon chercher si une clé est contenue dans le type
+    for key, value in GARMIN_ACTIVITY_MAP.items():
+        if key in garmin_lower or garmin_lower in key:
+            return value
+    return 'Autre'
 
 # ========================================
 # MODÈLES DE BASE DE DONNÉES
@@ -904,6 +947,438 @@ def delete_activity(id):
     db.session.delete(entry)
     db.session.commit()
     flash('Activité supprimée.', 'info')
+    return redirect(url_for('activities'))
+
+
+
+# ----------------------------------------
+# ROUTE : PAGE D'IMPORT GARMIN
+# ----------------------------------------
+
+@app.route('/garmin')
+@login_required
+def garmin_import():
+    user = User.query.get(session['user_id'])
+    return render_template('garmin_import.html',
+                         pending_data=None,
+                         theme=user.theme)
+
+
+@app.route('/garmin/fetch', methods=['POST'])
+@login_required
+def garmin_fetch():
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+
+    email = request.form.get('garmin_email')
+    password = request.form.get('garmin_password')
+    import_days = int(request.form.get('import_days', 14))
+
+    today = datetime.utcnow().date()
+    start_date = today - timedelta(days=import_days)
+
+    try:
+        # Connexion à Garmin Connect
+        api = Garmin(email, password)
+        api.login()
+
+        pending_data = {
+            'steps': [],
+            'activities': []
+        }
+
+        # ---- RÉCUPÉRER LES PAS QUOTIDIENS ----
+        current = start_date
+        while current <= today:
+            try:
+                steps_data = api.get_steps_data(current.isoformat())
+                # Sommer tous les pas de la journée
+                total_steps = sum(
+                    item.get('steps', 0)
+                    for item in steps_data
+                    if item.get('steps')
+                )
+
+                if total_steps > 0:
+                    # Vérifier si déjà importé
+                    already_exists = ActivityEntry.query.filter_by(
+                        user_id=user_id,
+                        activity_type='Pas',
+                        date=current
+                    ).first() is not None
+
+                    pending_data['steps'].append({
+                        'date': current.isoformat(),
+                        'steps': total_steps,
+                        'already_exists': already_exists
+                    })
+            except Exception:
+                pass
+            current += timedelta(days=1)
+
+        # ---- RÉCUPÉRER LES ACTIVITÉS ----
+        try:
+            activities = api.get_activities_by_date(
+                start_date.isoformat(),
+                today.isoformat()
+            )
+
+            for act in activities:
+                garmin_id = str(act.get('activityId', ''))
+
+                # Type d'activité
+                activity_type_raw = act.get('activityType', {}).get('typeKey', 'other')
+                activity_type = map_garmin_activity(activity_type_raw)
+
+                # Durée en minutes
+                duration_seconds = act.get('duration', 0)
+                duration_minutes = round(duration_seconds / 60) if duration_seconds else 0
+
+                # Calories
+                calories = act.get('calories', None)
+                if calories:
+                    calories = round(calories)
+
+                # Date
+                start_time = act.get('startTimeLocal', '')
+                activity_date = start_time[:10] if start_time else today.isoformat()
+
+                # Vérifier si déjà importé (même date + même type + même durée)
+                act_date = datetime.strptime(activity_date, '%Y-%m-%d').date()
+                already_exists = ActivityEntry.query.filter_by(
+                    user_id=user_id,
+                    activity_type=activity_type,
+                    date=act_date,
+                    duration=duration_minutes
+                ).first() is not None
+
+                pending_data['activities'].append({
+                    'garmin_id': garmin_id,
+                    'date': activity_date,
+                    'activity_type': activity_type,
+                    'activity_type_raw': activity_type_raw,
+                    'duration': duration_minutes,
+                    'calories': calories,
+                    'already_exists': already_exists
+                })
+        except Exception as e:
+            flash(f'Erreur lors de la récupération des activités : {str(e)}', 'warning')
+
+        return render_template('garmin_import.html',
+                             pending_data=pending_data,
+                             theme=user.theme)
+
+    except Exception as e:
+        flash(f'Erreur de connexion Garmin : {str(e)}', 'error')
+        return render_template('garmin_import.html',
+                             pending_data=None,
+                             theme=user.theme)
+
+@app.route('/garmin-csv')
+@login_required
+def garmin_csv_import():
+    user = User.query.get(session['user_id'])
+    return render_template('garmin_csv_import.html',
+                         pending_data=None,
+                         theme=user.theme)
+
+
+@app.route('/garmin-csv/parse', methods=['POST'])
+@login_required
+def garmin_csv_parse():
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+
+    pending_data = {'steps': [], 'activities': []}
+
+    # ---- PARSING DU CSV DES PAS ----
+    steps_file = request.files.get('steps_csv')
+    if steps_file and steps_file.filename:
+        try:
+            content = steps_file.read().decode('utf-8-sig')  # utf-8-sig gère le BOM
+            reader = csv.DictReader(io.StringIO(content))
+
+            for row in reader:
+                # Garmin utilise différents noms de colonnes selon la langue
+                date_val = (row.get('Date') or row.get('CalendarDate') or
+                           row.get('date') or '').strip()
+                steps_val = (row.get('Steps') or row.get('Pas') or
+                            row.get('steps') or '0').strip()
+
+                if not date_val:
+                    continue
+
+                try:
+                    # Nettoyer le nombre de pas (enlever virgules/espaces)
+                    steps_clean = int(steps_val.replace(',', '').replace(' ', '').replace('\xa0', ''))
+                    if steps_clean <= 0:
+                        continue
+
+                    # Parser la date (formats possibles : YYYY-MM-DD ou DD/MM/YYYY)
+                    try:
+                        date_obj = datetime.strptime(date_val, '%Y-%m-%d').date()
+                    except ValueError:
+                        date_obj = datetime.strptime(date_val, '%d/%m/%Y').date()
+
+                    # Vérifier si déjà importé
+                    already_exists = ActivityEntry.query.filter_by(
+                        user_id=user_id,
+                        activity_type='Pas',
+                        date=date_obj
+                    ).first() is not None
+
+                    pending_data['steps'].append({
+                        'date': date_obj.isoformat(),
+                        'steps': steps_clean,
+                        'already_exists': already_exists
+                    })
+                except (ValueError, AttributeError):
+                    continue
+
+            # Trier par date décroissante
+            pending_data['steps'].sort(key=lambda x: x['date'], reverse=True)
+
+        except Exception as e:
+            flash(f'Erreur lecture fichier pas : {str(e)}', 'warning')
+
+    # ---- PARSING DU CSV DES ACTIVITÉS ----
+    activities_file = request.files.get('activities_csv')
+    if activities_file and activities_file.filename:
+        try:
+            content = activities_file.read().decode('utf-8-sig')
+            reader = csv.DictReader(io.StringIO(content))
+
+            for row in reader:
+                # Colonnes Garmin activités (EN/FR)
+                # Chercher la colonne type peu importe le nom exact
+                activity_name = ''
+                for col_name in row.keys():
+                    if 'type' in col_name.lower() and 'activit' in col_name.lower():
+                        activity_name = row[col_name].strip()
+                        break
+                if not activity_name:
+                    activity_name = (row.get('Activity Type') or row.get('activityType') or '').strip()
+                date_val = (row.get('Date') or row.get('date') or '').strip()
+                duration_val = (row.get('Time') or row.get('Durée') or
+                               row.get('duration') or '0').strip()
+                calories_val = (row.get('Calories') or row.get('calories') or '').strip()
+
+                if not date_val or not activity_name:
+                    continue
+
+                try:
+                    # Parser la date
+                    try:
+                        date_obj = datetime.strptime(date_val[:10], '%Y-%m-%d').date()
+                    except ValueError:
+                        date_obj = datetime.strptime(date_val[:10], '%d/%m/%Y').date()
+
+                    # Parser la durée (format HH:MM:SS ou minutes)
+                    duration_minutes = 0
+                    if ':' in duration_val:
+                        parts = duration_val.split(':')
+                        if len(parts) == 3:
+                            duration_minutes = int(parts[0]) * 60 + int(parts[1])
+                        elif len(parts) == 2:
+                            duration_minutes = int(parts[0])
+                    else:
+                        try:
+                            duration_minutes = int(float(duration_val.replace(',', '.')))
+                        except (ValueError, AttributeError):
+                            duration_minutes = 0
+
+                    # Parser les calories
+                    calories = None
+                    if calories_val:
+                        try:
+                            calories = int(float(calories_val.replace(',', '').replace(' ', '')))
+                        except (ValueError, AttributeError):
+                            calories = None
+
+                    # Mapper le type d'activité
+                    activity_type = map_garmin_activity(activity_name)
+
+                    # Vérifier si déjà importé
+                    already_exists = ActivityEntry.query.filter_by(
+                        user_id=user_id,
+                        activity_type=activity_type,
+                        date=date_obj,
+                        duration=duration_minutes
+                    ).first() is not None
+
+                    pending_data['activities'].append({
+                        'date': date_obj.isoformat(),
+                        'activity_type': activity_type,
+                        'activity_type_raw': activity_name,
+                        'duration': duration_minutes,
+                        'calories': calories,
+                        'already_exists': already_exists
+                    })
+                except (ValueError, AttributeError):
+                    continue
+
+            # Trier par date décroissante
+            pending_data['activities'].sort(key=lambda x: x['date'], reverse=True)
+
+        except Exception as e:
+            flash(f'Erreur lecture fichier activités : {str(e)}', 'warning')
+
+    if not pending_data['steps'] and not pending_data['activities']:
+        flash('Aucune donnée trouvée dans les fichiers. Vérifie le format CSV.', 'warning')
+
+    return render_template('garmin_csv_import.html',
+                         pending_data=pending_data,
+                         theme=user.theme)
+
+
+@app.route('/garmin-csv/confirm', methods=['POST'])
+@login_required
+def garmin_csv_confirm():
+    user_id = session['user_id']
+
+    imported_steps = 0
+    imported_activities = 0
+
+    # Importer les pas cochés
+    for key, value in request.form.items():
+        if key.startswith('steps_'):
+            date_str = key.replace('steps_', '')
+            try:
+                steps = int(value)
+                date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+                existing = ActivityEntry.query.filter_by(
+                    user_id=user_id,
+                    activity_type='Pas',
+                    date=date
+                ).first()
+
+                if not existing:
+                    new_entry = ActivityEntry(
+                        user_id=user_id,
+                        activity_type='Pas',
+                        duration=0,
+                        steps=steps,
+                        date=date,
+                        note='Import Garmin CSV'
+                    )
+                    db.session.add(new_entry)
+                    imported_steps += 1
+            except (ValueError, AttributeError):
+                continue
+
+    # Importer les activités cochées
+    total_acts = int(request.form.get('total_acts', 0))
+    for i in range(1, total_acts + 1):
+        if request.form.get(f'act_{i}_import'):
+            try:
+                date_str = request.form.get(f'act_{i}_date', '')
+                activity_type = request.form.get(f'act_{i}_type', '')
+                duration = int(request.form.get(f'act_{i}_duration', 0))
+                calories_str = request.form.get(f'act_{i}_calories', '')
+                calories = int(calories_str) if calories_str else None
+
+                date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+                new_entry = ActivityEntry(
+                    user_id=user_id,
+                    activity_type=activity_type,
+                    duration=duration,
+                    calories_burned=calories,
+                    date=date,
+                    note='Import Garmin CSV'
+                )
+                db.session.add(new_entry)
+                imported_activities += 1
+            except (ValueError, AttributeError):
+                continue
+
+    db.session.commit()
+
+    msg = []
+    if imported_steps > 0:
+        msg.append(f'{imported_steps} jour(s) de pas')
+    if imported_activities > 0:
+        msg.append(f'{imported_activities} activité(s)')
+
+    if msg:
+        flash(f'✅ Import réussi : {" et ".join(msg)} importés depuis Garmin !', 'success')
+    else:
+        flash('Aucune nouvelle donnée importée.', 'info')
+
+    return redirect(url_for('activities'))
+
+
+
+@app.route('/garmin/import', methods=['POST'])
+@login_required
+def garmin_import_confirm():
+    user_id = session['user_id']
+
+    imported_steps = 0
+    imported_activities = 0
+
+    # Traiter les pas cochés
+    for key, value in request.form.items():
+        if key.startswith('steps_'):
+            date_str = key.replace('steps_', '')
+            steps = int(value)
+            date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+            # Vérifier qu'il n'existe pas déjà
+            existing = ActivityEntry.query.filter_by(
+                user_id=user_id,
+                activity_type='Pas',
+                date=date
+            ).first()
+
+            if not existing:
+                new_entry = ActivityEntry(
+                    user_id=user_id,
+                    activity_type='Pas',
+                    duration=0,
+                    steps=steps,
+                    date=date,
+                    note='Import Garmin'
+                )
+                db.session.add(new_entry)
+                imported_steps += 1
+
+    # Traiter les activités cochées
+    for key, value in request.form.items():
+        if key.startswith('activity_') and not key.startswith('activity_data_'):
+            garmin_id = key.replace('activity_', '')
+
+            # Récupérer les données de l'activité
+            data_key = f'activity_data_{garmin_id}'
+            if data_key in request.form:
+                act_data = json.loads(request.form[data_key])
+                date = datetime.strptime(act_data['date'], '%Y-%m-%d').date()
+
+                new_entry = ActivityEntry(
+                    user_id=user_id,
+                    activity_type=act_data['activity_type'],
+                    duration=act_data['duration'],
+                    calories_burned=act_data['calories'],
+                    date=date,
+                    note=f"Import Garmin ({act_data['activity_type_raw']})"
+                )
+                db.session.add(new_entry)
+                imported_activities += 1
+
+    db.session.commit()
+
+    msg = []
+    if imported_steps > 0:
+        msg.append(f'{imported_steps} jour(s) de pas')
+    if imported_activities > 0:
+        msg.append(f'{imported_activities} activité(s)')
+
+    if msg:
+        flash(f'✅ Import réussi : {" et ".join(msg)} importés depuis Garmin !', 'success')
+    else:
+        flash('Aucune nouvelle donnée à importer.', 'info')
+
     return redirect(url_for('activities'))
 
 # ========================================

@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Import Garmin CSV - NutriStep{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 8px; color: var(--text-primary); font-size: 32px; font-weight: 700;">
+    <svg class="icon icon-xl" style="color:#10b981"><use href="#icon-activity"/></svg>
+    Import Garmin Connect
+</h1>
+<p style="color: var(--text-secondary); margin-bottom: 32px;">
+    Importe tes données Garmin Connect via export CSV
+</p>
+
+<!-- Instructions -->
+<div class="card" style="border-left: 4px solid #3b82f6; margin-bottom: 24px;">
+    <h2 style="color: #3b82f6; margin-bottom: 16px;">
+        <svg class="icon" style="color:#3b82f6"><use href="#icon-search"/></svg>
+        Comment exporter depuis Garmin Connect ?
+    </h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        
+        <!-- Pas quotidiens -->
+        <div style="background: var(--bg-gradient-start); padding: 16px; border-radius: 12px;">
+            <h3 style="margin-bottom: 12px; color: var(--text-primary);">
+                <svg class="icon icon-steps"><use href="#icon-steps"/></svg>
+                Pas quotidiens
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 2;">
+                <li>Va sur <strong>Garmin Connect</strong> (connect.garmin.com)</li>
+                <li>Clique sur <strong>Santé</strong> → <strong>Pas</strong></li>
+                <li>Choisis la période souhaitée</li>
+                <li>Clique sur l'icône <strong>↓ Exporter</strong> (en haut à droite)</li>
+                <li>Choisis <strong>CSV</strong></li>
+            </ol>
+        </div>
+
+        <!-- Activités -->
+        <div style="background: var(--bg-gradient-start); padding: 16px; border-radius: 12px;">
+            <h3 style="margin-bottom: 12px; color: var(--text-primary);">
+                <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
+                Activités sportives
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 2;">
+                <li>Va sur <strong>Garmin Connect</strong> (connect.garmin.com)</li>
+                <li>Clique sur <strong>Activités</strong> → <strong>Toutes les activités</strong></li>
+                <li>Clique sur l'icône <strong>↓ Exporter</strong> (en haut à droite)</li>
+                <li>Choisis <strong>CSV</strong></li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<!-- Formulaire upload -->
+<div class="card">
+    <h2>
+        <svg class="icon icon-save"><use href="#icon-save"/></svg>
+        Importer tes fichiers CSV
+    </h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        Tu peux importer un seul fichier ou les deux à la fois.
+    </p>
+
+    <form method="POST" action="{{ url_for('garmin_csv_parse') }}" enctype="multipart/form-data">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            
+            <div class="form-group">
+                <label for="steps_csv">
+                    <svg class="icon icon-steps"><use href="#icon-steps"/></svg>
+                    Fichier Pas quotidiens (CSV)
+                </label>
+                <input type="file" class="form-control" id="steps_csv" name="steps_csv" 
+                       accept=".csv" style="padding: 10px;">
+                <small style="color: var(--text-secondary);">Fichier de pas exporté depuis Garmin</small>
+            </div>
+
+            <div class="form-group">
+                <label for="activities_csv">
+                    <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
+                    Fichier Activités (CSV)
+                </label>
+                <input type="file" class="form-control" id="activities_csv" name="activities_csv" 
+                       accept=".csv" style="padding: 10px;">
+                <small style="color: var(--text-secondary);">Fichier activities.csv exporté depuis Garmin</small>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 8px;">
+            <svg class="icon" style="color:white"><use href="#icon-search"/></svg>
+            Analyser les fichiers
+        </button>
+    </form>
+</div>
+
+<!-- Résultats à valider -->
+{% if pending_data %}
+<div class="card" style="margin-top: 24px;">
+    <h2>
+        <svg class="icon icon-check-circle"><use href="#icon-check-circle"/></svg>
+        Données trouvées — Choisis ce que tu veux importer
+    </h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        Coche les lignes à importer. Les données déjà existantes sont grisées.
+    </p>
+
+    <form method="POST" action="{{ url_for('garmin_csv_confirm') }}">
+
+        <!-- PAS QUOTIDIENS -->
+        {% if pending_data.steps %}
+        <div style="margin-bottom: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="color: var(--text-primary); margin: 0;">
+                    <svg class="icon icon-steps"><use href="#icon-steps"/></svg>
+                    Pas quotidiens ({{ pending_data.steps|length }} jours)
+                </h3>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="checkAll('steps')" 
+                            style="font-size:12px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--primary-start); background: transparent; color: var(--primary-start); cursor: pointer;">
+                        Tout cocher
+                    </button>
+                    <button type="button" onclick="uncheckAll('steps')" 
+                            style="font-size:12px; padding: 4px 10px; border-radius: 6px; border: 1px solid #6b7280; background: transparent; color: #6b7280; cursor: pointer;">
+                        Tout décocher
+                    </button>
+                </div>
+            </div>
+            
+            <div style="max-height: 400px; overflow-y: auto; border-radius: 12px; border: 1px solid var(--bg-gradient-start);">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="position: sticky; top: 0; z-index: 1;">
+                        <tr style="background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: white;">
+                            <th style="padding: 12px; text-align: left; border-radius: 12px 0 0 0;">✓</th>
+                            <th style="padding: 12px; text-align: left;">Date</th>
+                            <th style="padding: 12px; text-align: left;">Pas</th>
+                            <th style="padding: 12px; text-align: left; border-radius: 0 12px 0 0;">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in pending_data.steps %}
+                        <tr style="border-bottom: 1px solid var(--bg-gradient-start); 
+                                   {% if item.already_exists %}opacity: 0.5;{% endif %}">
+                            <td style="padding: 12px;">
+                                {% if not item.already_exists %}
+                                <input type="checkbox" class="steps-check" 
+                                       name="steps_{{ item.date }}" value="{{ item.steps }}" 
+                                       checked style="width: 16px; height: 16px; cursor: pointer;">
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px; font-weight: 600;">{{ item.date }}</td>
+                            <td style="padding: 12px; color: #10b981; font-weight: 700; font-size: 18px;">
+                                {{ "{:,}".format(item.steps).replace(',', '\u00a0') }}
+                            </td>
+                            <td style="padding: 12px;">
+                                {% if item.already_exists %}
+                                    <span style="color: #10b981; font-size: 13px;">
+                                        <svg class="icon" style="width:14px;height:14px;color:#10b981"><use href="#icon-check-circle"/></svg>
+                                        Déjà importé
+                                    </span>
+                                {% else %}
+                                    <span style="color: #6b7280; font-size: 13px;">Nouveau</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ACTIVITÉS -->
+        {% if pending_data.activities %}
+        <div style="margin-bottom: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="color: var(--text-primary); margin: 0;">
+                    <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
+                    Activités ({{ pending_data.activities|length }})
+                </h3>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="checkAll('activities')" 
+                            style="font-size:12px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--primary-start); background: transparent; color: var(--primary-start); cursor: pointer;">
+                        Tout cocher
+                    </button>
+                    <button type="button" onclick="uncheckAll('activities')" 
+                            style="font-size:12px; padding: 4px 10px; border-radius: 6px; border: 1px solid #6b7280; background: transparent; color: #6b7280; cursor: pointer;">
+                        Tout décocher
+                    </button>
+                </div>
+            </div>
+
+            <div style="max-height: 400px; overflow-y: auto; border-radius: 12px; border: 1px solid var(--bg-gradient-start);">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="position: sticky; top: 0; z-index: 1;">
+                        <tr style="background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: white;">
+                            <th style="padding: 12px; text-align: left; border-radius: 12px 0 0 0;">✓</th>
+                            <th style="padding: 12px; text-align: left;">Date</th>
+                            <th style="padding: 12px; text-align: left;">Type</th>
+                            <th style="padding: 12px; text-align: left;">Durée</th>
+                            <th style="padding: 12px; text-align: left;">Calories</th>
+                            <th style="padding: 12px; text-align: left; border-radius: 0 12px 0 0;">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in pending_data.activities %}
+                        <tr style="border-bottom: 1px solid var(--bg-gradient-start);
+                                   {% if item.already_exists %}opacity: 0.5;{% endif %}">
+                            <td style="padding: 12px;">
+                                {% if not item.already_exists %}
+                                <input type="checkbox" class="activities-check"
+                                       name="act_{{ loop.index }}_import" value="1" 
+                                       checked style="width: 16px; height: 16px; cursor: pointer;">
+                                <input type="hidden" name="act_{{ loop.index }}_date" value="{{ item.date }}">
+                                <input type="hidden" name="act_{{ loop.index }}_type" value="{{ item.activity_type }}">
+                                <input type="hidden" name="act_{{ loop.index }}_duration" value="{{ item.duration }}">
+                                <input type="hidden" name="act_{{ loop.index }}_calories" value="{{ item.calories or '' }}">
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px; font-weight: 600;">{{ item.date }}</td>
+                            <td style="padding: 12px;">
+                                <strong>{{ item.activity_type }}</strong>
+                                <div style="font-size: 11px; color: #9ca3af;">{{ item.activity_type_raw }}</div>
+                            </td>
+                            <td style="padding: 12px;">{{ item.duration }} min</td>
+                            <td style="padding: 12px; color: #ef4444;">
+                                {% if item.calories %}{{ item.calories }} kcal{% else %}—{% endif %}
+                            </td>
+                            <td style="padding: 12px;">
+                                {% if item.already_exists %}
+                                    <span style="color: #10b981; font-size: 13px;">
+                                        <svg class="icon" style="width:14px;height:14px;color:#10b981"><use href="#icon-check-circle"/></svg>
+                                        Déjà importé
+                                    </span>
+                                {% else %}
+                                    <span style="color: #6b7280; font-size: 13px;">Nouveau</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not pending_data.steps and not pending_data.activities %}
+        <div style="text-align: center; padding: 40px; color: #9ca3af;">
+            <svg class="icon icon-xl" style="opacity:0.3"><use href="#icon-alert"/></svg>
+            <p style="margin-top: 12px; font-size: 16px;">Aucune nouvelle donnée trouvée dans ces fichiers.</p>
+        </div>
+        {% else %}
+        <input type="hidden" name="total_acts" value="{{ pending_data.activities|length }}">
+        <div style="display: flex; gap: 12px; margin-top: 8px;">
+            <button type="submit" class="btn btn-primary">
+                <svg class="icon" style="color:white"><use href="#icon-save"/></svg>
+                Importer la sélection
+            </button>
+            <a href="{{ url_for('garmin_csv_import') }}" class="btn" style="background: #6b7280; color: white;">
+                Annuler
+            </a>
+        </div>
+        {% endif %}
+
+    </form>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function checkAll(type) {
+    document.querySelectorAll('.' + type + '-check').forEach(cb => cb.checked = true);
+}
+function uncheckAll(type) {
+    document.querySelectorAll('.' + type + '-check').forEach(cb => cb.checked = false);
+}
+</script>
+{% endblock %}

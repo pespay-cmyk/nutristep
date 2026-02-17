@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Import Garmin - NutriStep{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">
+    <svg class="icon icon-xl" style="color:#10b981"><use href="#icon-activity"/></svg>
+    Import Garmin Connect
+</h1>
+
+<!-- Connexion Garmin -->
+<div class="card">
+    <h2>🔗 Connexion à Garmin Connect</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        Entre tes identifiants Garmin Connect pour importer tes données.<br>
+        <strong>Tes identifiants ne sont jamais sauvegardés</strong>, ils servent uniquement à récupérer tes données.
+    </p>
+
+    <form method="POST" action="{{ url_for('garmin_fetch') }}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label for="garmin_email">Email Garmin Connect</label>
+                <input type="email" class="form-control" id="garmin_email" name="garmin_email" 
+                       placeholder="ton@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="garmin_password">Mot de passe</label>
+                <input type="password" class="form-control" id="garmin_password" name="garmin_password" 
+                       placeholder="••••••••" required>
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label for="import_days">Importer les X derniers jours</label>
+                <select class="form-control" id="import_days" name="import_days">
+                    <option value="7">7 derniers jours</option>
+                    <option value="14" selected>14 derniers jours</option>
+                    <option value="30">30 derniers jours</option>
+                    <option value="90">3 derniers mois</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <svg class="icon" style="color:white"><use href="#icon-search"/></svg>
+            Récupérer mes données
+        </button>
+    </form>
+</div>
+
+<!-- Résultats à valider -->
+{% if pending_data %}
+<div class="card" style="margin-top: 24px;">
+    <h2>✅ Données récupérées — Choisis ce que tu veux importer</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        Coche les lignes que tu veux importer. Les données déjà existantes sont marquées.
+    </p>
+
+    <form method="POST" action="{{ url_for('garmin_import_confirm') }}">
+        
+        <!-- Pas quotidiens -->
+        {% if pending_data.steps %}
+        <h3 style="margin-bottom: 16px; color: var(--text-primary);">
+            <svg class="icon icon-steps"><use href="#icon-steps"/></svg>
+            Pas quotidiens
+        </h3>
+        <div style="overflow-x: auto; margin-bottom: 32px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: var(--bg-gradient-start);">
+                        <th style="padding: 12px; text-align: left;">Importer</th>
+                        <th style="padding: 12px; text-align: left;">Date</th>
+                        <th style="padding: 12px; text-align: left;">Pas</th>
+                        <th style="padding: 12px; text-align: left;">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in pending_data.steps %}
+                    <tr style="border-bottom: 1px solid var(--bg-gradient-start);">
+                        <td style="padding: 12px;">
+                            {% if not item.already_exists %}
+                            <input type="checkbox" name="steps_{{ item.date }}" value="{{ item.steps }}" 
+                                   checked style="width: 18px; height: 18px;">
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px; font-weight: 600;">{{ item.date }}</td>
+                        <td style="padding: 12px; color: #10b981; font-weight: 700; font-size: 18px;">
+                            {{ "{:,}".format(item.steps).replace(',', ' ') }}
+                        </td>
+                        <td style="padding: 12px;">
+                            {% if item.already_exists %}
+                                <span style="color: #10b981; font-size: 13px;">
+                                    <svg class="icon" style="width:16px;height:16px;color:#10b981"><use href="#icon-check-circle"/></svg>
+                                    Déjà importé
+                                </span>
+                            {% else %}
+                                <span style="color: #6b7280; font-size: 13px;">Nouveau</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Activités -->
+        {% if pending_data.activities %}
+        <h3 style="margin-bottom: 16px; color: var(--text-primary);">
+            <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
+            Activités
+        </h3>
+        <div style="overflow-x: auto; margin-bottom: 32px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: var(--bg-gradient-start);">
+                        <th style="padding: 12px; text-align: left;">Importer</th>
+                        <th style="padding: 12px; text-align: left;">Date</th>
+                        <th style="padding: 12px; text-align: left;">Type</th>
+                        <th style="padding: 12px; text-align: left;">Durée</th>
+                        <th style="padding: 12px; text-align: left;">Calories</th>
+                        <th style="padding: 12px; text-align: left;">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in pending_data.activities %}
+                    <tr style="border-bottom: 1px solid var(--bg-gradient-start);">
+                        <td style="padding: 12px;">
+                            {% if not item.already_exists %}
+                            <input type="checkbox" name="activity_{{ item.garmin_id }}" value="1"
+                                   checked style="width: 18px; height: 18px;">
+                            <input type="hidden" name="activity_data_{{ item.garmin_id }}" 
+                                   value="{{ item|tojson }}">
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px; font-weight: 600;">{{ item.date }}</td>
+                        <td style="padding: 12px;">
+                            <strong>{{ item.activity_type }}</strong>
+                        </td>
+                        <td style="padding: 12px;">{{ item.duration }} min</td>
+                        <td style="padding: 12px; color: #ef4444;">
+                            {% if item.calories %}{{ item.calories }} kcal{% else %}—{% endif %}
+                        </td>
+                        <td style="padding: 12px;">
+                            {% if item.already_exists %}
+                                <span style="color: #10b981; font-size: 13px;">
+                                    <svg class="icon" style="width:16px;height:16px;color:#10b981"><use href="#icon-check-circle"/></svg>
+                                    Déjà importé
+                                </span>
+                            {% else %}
+                                <span style="color: #6b7280; font-size: 13px;">Nouveau</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <div style="display: flex; gap: 12px;">
+            <button type="submit" class="btn btn-primary">
+                <svg class="icon" style="color:white"><use href="#icon-save"/></svg>
+                Importer la sélection
+            </button>
+            <a href="{{ url_for('garmin_import') }}" class="btn" style="background: #6b7280; color: white;">
+                Annuler
+            </a>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+{% endblock %}
