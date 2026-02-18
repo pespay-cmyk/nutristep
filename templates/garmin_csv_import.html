@@ -53,8 +53,16 @@
                 <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
                 Fichier Activités (CSV)
             </label>
-            <input type="file" class="form-control" id="activities_csv" name="activities_csv" 
-                   accept=".csv" style="padding: 10px;" required>
+            <div style="position: relative;">
+                <input type="file" class="form-control" id="activities_csv" name="activities_csv" 
+                       accept=".csv" required
+                       style="position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer;"
+                       onchange="updateFileName(this)">
+                <div id="file-display" style="padding: 12px 16px; background: white; border: 2px dashed var(--primary-start); border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.3s;">
+                    <svg class="icon" style="color: var(--primary-start); width: 24px; height: 24px;"><use href="#icon-save"/></svg>
+                    <span id="file-name" style="margin-left: 8px; color: var(--text-secondary);">Choisir un fichier CSV</span>
+                </div>
+            </div>
             <small style="color: var(--text-secondary);">Fichier activities.csv exporté depuis Garmin Connect</small>
         </div>
 
@@ -183,6 +191,14 @@ function checkAll(type) {
 }
 function uncheckAll(type) {
     document.querySelectorAll('.' + type + '-check').forEach(cb => cb.checked = false);
+}
+function updateFileName(input) {
+    const fileName = input.files[0] ? input.files[0].name : 'Choisir un fichier CSV';
+    document.getElementById('file-name').textContent = fileName;
+    if (input.files[0]) {
+        document.getElementById('file-display').style.borderColor = '#10b981';
+        document.getElementById('file-display').style.background = '#f0fdf4';
+    }
 }
 </script>
 {% endblock %}

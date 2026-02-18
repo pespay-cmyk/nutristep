@@ -76,57 +76,47 @@
             color: var(--text-primary);
         }
 
-        .theme-selector {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: var(--card-bg);
-            padding: 15px 20px;
-            border-radius: 50px;
-            box-shadow: 0 4px 20px var(--card-shadow);
-            display: flex;
-            gap: 12px;
-            align-items: center;
+        /* Icônes adaptatives selon le thème - COULEURS CONTRASTÉES */
+        body[data-theme="healthy"] .icon-weight,
+        body[data-theme="healthy"] .icon-check,
+        body[data-theme="healthy"] .icon-check-circle,
+        body[data-theme="healthy"] .icon-save,
+        body[data-theme="healthy"] .icon-trend-down {
+            color: #047857 !important; /* Vert plus foncé */
         }
 
-        .theme-selector span {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        body[data-theme="healthy"] .icon-report,
+        body[data-theme="healthy"] .icon-activity,
+        body[data-theme="healthy"] .icon-calendar {
+            color: #065f46 !important; /* Vert très foncé */
         }
 
-        .theme-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 3px solid transparent;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
+        body[data-theme="ocean"] .icon-weight,
+        body[data-theme="ocean"] .icon-check,
+        body[data-theme="ocean"] .icon-check-circle,
+        body[data-theme="ocean"] .icon-save,
+        body[data-theme="ocean"] .icon-trend-down {
+            color: #0369a1 !important; /* Bleu plus foncé */
         }
 
-        .theme-btn:hover {
-            transform: scale(1.1);
+        body[data-theme="ocean"] .icon-report,
+        body[data-theme="ocean"] .icon-activity,
+        body[data-theme="ocean"] .icon-calendar {
+            color: #075985 !important; /* Bleu très foncé */
         }
 
-        .theme-btn.active {
-            border-color: var(--text-primary);
-            box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 4px var(--text-primary);
+        body[data-theme="sunset"] .icon-weight,
+        body[data-theme="sunset"] .icon-check,
+        body[data-theme="sunset"] .icon-check-circle,
+        body[data-theme="sunset"] .icon-save,
+        body[data-theme="sunset"] .icon-trend-down {
+            color: #be185d !important; /* Rose plus foncé */
         }
 
-        .theme-btn.green {
-            background: linear-gradient(135deg, #10b981, #059669);
-        }
-
-        .theme-btn.ocean {
-            background: linear-gradient(135deg, #06b6d4, #0891b2);
-        }
-
-        .theme-btn.sunset {
-            background: linear-gradient(135deg, #f472b6, #ec4899);
+        body[data-theme="sunset"] .icon-report,
+        body[data-theme="sunset"] .icon-activity,
+        body[data-theme="sunset"] .icon-calendar {
+            color: #9f1239 !important; /* Rose très foncé */
         }
 
         .container {
@@ -433,22 +423,6 @@
             padding: 0;
         }
 
-        .theme-selector {
-            top: 10px;
-            right: 10px;
-            padding: 10px 12px;
-            gap: 8px;
-        }
-
-        .theme-selector span {
-            display: none; /* Masquer le texte "Thème" */
-        }
-
-        .theme-btn {
-            width: 28px;
-            height: 28px;
-        }
-
         .navbar {
             flex-direction: column;
             padding: 16px 20px;
@@ -547,20 +521,12 @@
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body data-theme="{{ theme if theme else 'green' }}">
-    {% if session.user_id %}
-    <div class="theme-selector">
-        <span>Thème</span>
-        <button class="theme-btn green {% if not theme or theme == 'green' %}active{% endif %}" onclick="changeTheme('green')" title="Healthy Green"></button>
-        <button class="theme-btn ocean {% if theme == 'ocean' %}active{% endif %}" onclick="changeTheme('ocean')" title="Ocean Blue"></button>
-        <button class="theme-btn sunset {% if theme == 'sunset' %}active{% endif %}" onclick="changeTheme('sunset')" title="Sunset Pink"></button>
-    </div>
-    {% endif %}
+<body data-theme="{{ theme if theme else 'healthy' }}">
 
     <div class="container">
         {% if session.user_id %}
         <div class="navbar">
-            <h1><span class="logo">🌱</span> NutriStep</h1>
+            <h1>NutriStep</h1>
                 <nav>
                     <a href="{{ url_for('dashboard') }}">
                         <svg class="icon icon-home"><use href="#icon-home"/></svg>
@@ -586,6 +552,10 @@
                         <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
                         Garmin
                     </a>
+                    <a href="{{ url_for('profile') }}">
+                        <svg class="icon icon-settings"><use href="#icon-settings"/></svg>
+                        Profil
+                    </a>
                 </nav>
         </div>
         {% endif %}
@@ -606,25 +576,6 @@
     </div>
 
     <script>
-        function changeTheme(theme) {
-            // Envoyer au serveur pour sauvegarder en BDD
-            fetch('/api/change-theme', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ theme: theme })
-            }).then(() => {
-                // Changer le thème immédiatement
-                document.body.setAttribute('data-theme', theme);
-
-                // Mettre à jour les boutons actifs
-                document.querySelectorAll('.theme-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.querySelector(`.theme-btn.${theme}`).classList.add('active');
-            });
-        }
     </script>
 
     {% block extra_js %}{% endblock %}

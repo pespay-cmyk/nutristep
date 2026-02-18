@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}Mon Profil - NutriStep{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">
+    <svg class="icon icon-xl" style="color:#667eea"><use href="#icon-settings"/></svg>
+    Mon Profil
+</h1>
+
+<!-- Formulaire profil -->
+<div class="card">
+    <h2>📝 Informations personnelles</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        Ces informations sont utilisées pour calculer ton IMC et tes statistiques personnalisées.
+    </p>
+
+    <form method="POST" action="{{ url_for('profile_update') }}">
+        
+        <!-- Choix du thème -->
+        <div class="form-group" style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--bg-gradient-start);">
+            <label style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; display: block;">
+                🎨 Thème de l'application
+            </label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                
+                <!-- Healthy Green -->
+                <label class="theme-card {% if user.theme == 'healthy' %}active{% endif %}" 
+                       style="cursor: pointer; position: relative;">
+                    <input type="radio" name="theme" value="healthy" 
+                           {% if user.theme == 'healthy' %}checked{% endif %}
+                           style="position: absolute; opacity: 0;">
+                    <div style="padding: 20px; border-radius: 12px; border: 2px solid #10b981; 
+                                background: linear-gradient(135deg, #d1fae5, #a7f3d0); 
+                                transition: all 0.3s; text-align: center;">
+                        <div style="font-weight: 700; color: #065f46; margin-bottom: 4px;">Healthy Green</div>
+                        <div style="font-size: 11px; color: #047857;">Vert naturel</div>
+                    </div>
+                </label>
+
+                <!-- Ocean Blue -->
+                <label class="theme-card {% if user.theme == 'ocean' %}active{% endif %}" 
+                       style="cursor: pointer; position: relative;">
+                    <input type="radio" name="theme" value="ocean" 
+                           {% if user.theme == 'ocean' %}checked{% endif %}
+                           style="position: absolute; opacity: 0;">
+                    <div style="padding: 20px; border-radius: 12px; border: 2px solid #3b82f6; 
+                                background: linear-gradient(135deg, #dbeafe, #bfdbfe); 
+                                transition: all 0.3s; text-align: center;">
+                        <div style="font-weight: 700; color: #1e3a8a; margin-bottom: 4px;">Ocean Blue</div>
+                        <div style="font-size: 11px; color: #1e40af;">Bleu apaisant</div>
+                    </div>
+                </label>
+
+                <!-- Sunset Pink -->
+                <label class="theme-card {% if user.theme == 'sunset' %}active{% endif %}" 
+                       style="cursor: pointer; position: relative;">
+                    <input type="radio" name="theme" value="sunset" 
+                           {% if user.theme == 'sunset' %}checked{% endif %}
+                           style="position: absolute; opacity: 0;">
+                    <div style="padding: 20px; border-radius: 12px; border: 2px solid #ec4899; 
+                                background: linear-gradient(135deg, #fce7f3, #fbcfe8); 
+                                transition: all 0.3s; text-align: center;">
+                        <div style="font-weight: 700; color: #831843; margin-bottom: 4px;">Sunset Pink</div>
+                        <div style="font-size: 11px; color: #9f1239;">Rose chaleureux</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            
+            <div class="form-group">
+                <label for="birth_date">
+                    Date de naissance
+                </label>
+                <input type="date" class="form-control" id="birth_date" name="birth_date" 
+                       value="{{ user.birth_date.isoformat() if user.birth_date else '' }}">
+                <small style="color: var(--text-secondary);">Pour calculer ton âge</small>
+            </div>
+
+            <div class="form-group">
+                <label for="height">
+                    Taille (cm)
+                </label>
+                <input type="number" class="form-control" id="height" name="height" 
+                       value="{{ user.height if user.height else '' }}" 
+                       placeholder="170" step="0.1" min="100" max="250">
+                <small style="color: var(--text-secondary);">Pour calculer l'IMC</small>
+            </div>
+
+            <div class="form-group">
+                <label for="gender">
+                    Sexe
+                </label>
+                <select class="form-control" id="gender" name="gender">
+                    <option value="">Non spécifié</option>
+                    <option value="M" {% if user.gender == 'M' %}selected{% endif %}>Homme</option>
+                    <option value="F" {% if user.gender == 'F' %}selected{% endif %}>Femme</option>
+                </select>
+                <small style="color: var(--text-secondary);">Optionnel</small>
+            </div>
+
+            <div class="form-group">
+                <label for="target_weight">
+                    Poids cible (kg)
+                </label>
+                <input type="number" class="form-control" id="target_weight" name="target_weight" 
+                       value="{{ user.target_weight if user.target_weight else '' }}" 
+                       placeholder="70" step="0.1" min="30" max="300">
+                <small style="color: var(--text-secondary);">Ton objectif de poids</small>
+            </div>
+
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 8px;">
+            <svg class="icon" style="color:white"><use href="#icon-save"/></svg>
+            Enregistrer
+        </button>
+    </form>
+</div>
+
+<!-- Statistiques calculées -->
+{% if user.height and latest_weight %}
+<div class="card" style="margin-top: 24px;">
+    <h2>📊 Tes statistiques</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
+        
+        <!-- IMC avec jauge visuelle -->
+        {% set imc = (latest_weight.weight / ((user.height / 100) ** 2)) %}
+        <div style="padding: 20px; background: var(--bg-gradient-start); border-radius: 16px; grid-column: span 2;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div>
+                    <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 4px;">
+                        Indice de Masse Corporelle (IMC)
+                    </div>
+                    <div style="font-size: 42px; font-weight: 800; color: var(--text-primary);">
+                        {{ "%.1f"|format(imc) }}
+                    </div>
+                </div>
+                <div style="text-align: right; font-size: 13px; color: var(--text-secondary);">
+                    {% if imc < 18.5 %}Maigreur
+                    {% elif imc < 25 %}Corpulence normale
+                    {% elif imc < 30 %}Surpoids
+                    {% else %}Obésité{% endif %}
+                </div>
+            </div>
+            
+            <!-- Jauge IMC -->
+            <div style="position: relative; height: 40px; background: linear-gradient(to right, 
+                #3b82f6 0%, 
+                #10b981 18.5%, 
+                #10b981 25%, 
+                #fbbf24 30%, 
+                #f59e0b 35%, 
+                #ef4444 40%); 
+                border-radius: 20px; margin-bottom: 8px;">
+                
+                <!-- Curseur position IMC -->
+                {% set imc_percent = ((imc - 15) / 25 * 100)|int %}
+                {% if imc_percent < 0 %}{% set imc_percent = 0 %}{% endif %}
+                {% if imc_percent > 100 %}{% set imc_percent = 100 %}{% endif %}
+                
+                <div style="position: absolute; left: {{ imc_percent }}%; top: -8px; transform: translateX(-50%);">
+                    <div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 12px solid #1f2937;"></div>
+                    <div style="width: 4px; height: 56px; background: #1f2937; margin-left: 6px;"></div>
+                </div>
+            </div>
+            
+            <!-- Légendes -->
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); padding: 0 4px;">
+                <span>15</span>
+                <span style="margin-left: -20px;">18.5</span>
+                <span style="margin-left: -15px;">25</span>
+                <span style="margin-left: -10px;">30</span>
+                <span>40+</span>
+            </div>
+        </div>
+
+        <!-- Âge -->
+        {% if user.birth_date %}
+        {% set age = ((today - user.birth_date).days / 365.25)|int %}
+        <div style="padding: 20px; background: linear-gradient(135deg, #e0e7ff, #c7d2fe); border-radius: 16px; text-align: center;">
+            <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 8px;">
+                Âge
+            </div>
+            <div style="font-size: 32px; font-weight: 800; margin-bottom: 4px;">
+                {{ age }}
+            </div>
+            <div style="font-size: 12px; opacity: 0.8;">ans</div>
+        </div>
+        {% endif %}
+
+        <!-- Poids de départ -->
+        {% if first_weight %}
+        <div style="padding: 20px; background: linear-gradient(135deg, #fce7f3, #fbcfe8); border-radius: 16px; text-align: center;">
+            <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 8px;">
+                Poids de départ
+            </div>
+            <div style="font-size: 32px; font-weight: 800; margin-bottom: 4px;">
+                {{ first_weight.weight }}
+            </div>
+            <div style="font-size: 12px; opacity: 0.8;">kg</div>
+        </div>
+        {% endif %}
+
+        <!-- Objectif restant -->
+        {% if user.target_weight %}
+        {% set remaining = latest_weight.weight - user.target_weight %}
+        <div style="padding: 20px; background: linear-gradient(135deg, 
+            {% if remaining <= 0 %}#dcfce7, #bbf7d0{% else %}#fef3c7, #fde68a{% endif %}); 
+            border-radius: 16px; text-align: center;">
+            <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 8px;">
+                Objectif restant
+            </div>
+            <div style="font-size: 32px; font-weight: 800; margin-bottom: 4px;">
+                {{ "%.1f"|format(remaining|abs) }}
+            </div>
+            <div style="font-size: 12px; opacity: 0.8;">
+                {% if remaining <= 0 %}🎉 Objectif atteint !{% else %}kg à perdre{% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endif %}
+
+<!-- Stats avancées perte moyenne -->
+{% if weight_stats %}
+<div class="card" style="margin-top: 24px;">
+    <h2>📈 Évolution et tendances</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 24px;">
+        
+        <!-- Perte totale -->
+        {% if weight_stats.total_loss != 0 %}
+        <div style="padding: 20px; background: var(--bg-gradient-start); border-radius: 16px; border-left: 4px solid 
+            {% if weight_stats.total_loss < 0 %}#10b981{% else %}#ef4444{% endif %};">
+            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+                Évolution totale
+            </div>
+            <div style="font-size: 28px; font-weight: 700; color: 
+                {% if weight_stats.total_loss < 0 %}#10b981{% else %}#ef4444{% endif %};">
+                {{ "%.1f"|format(weight_stats.total_loss) }} kg
+                <svg class="icon" style="width:24px;height:24px;"><use href="
+                    {% if weight_stats.total_loss < 0 %}#icon-trend-down{% else %}#icon-trend-up{% endif %}
+                "/></svg>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                depuis {{ weight_stats.days_tracking }} jours
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Perte moyenne par semaine -->
+        {% if weight_stats.avg_per_week %}
+        <div style="padding: 20px; background: var(--bg-gradient-start); border-radius: 16px;">
+            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+                Perte moyenne / semaine
+            </div>
+            <div style="font-size: 28px; font-weight: 700; color: var(--text-primary);">
+                {{ "%.2f"|format(weight_stats.avg_per_week|abs) }} kg
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                {% if weight_stats.avg_per_week < 0 %}👍 Bonne progression{% else %}📊 Suivi{% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Perte moyenne par mois -->
+        {% if weight_stats.avg_per_month %}
+        <div style="padding: 20px; background: var(--bg-gradient-start); border-radius: 16px;">
+            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+                Perte moyenne / mois
+            </div>
+            <div style="font-size: 28px; font-weight: 700; color: var(--text-primary);">
+                {{ "%.2f"|format(weight_stats.avg_per_month|abs) }} kg
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                Estimation sur {{ weight_stats.days_tracking }} jours
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Temps estimé pour objectif -->
+        {% if user.target_weight and weight_stats.avg_per_week and weight_stats.avg_per_week < 0 %}
+        {% set remaining = latest_weight.weight - user.target_weight %}
+        {% if remaining > 0 %}
+        {% set weeks_needed = (remaining / (weight_stats.avg_per_week|abs))|int %}
+        {% set months_needed = (weeks_needed / 4.33)|int %}
+        <div style="padding: 20px; background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-radius: 16px;">
+            <div style="font-size: 13px; opacity: 0.8; margin-bottom: 8px;">
+                Objectif estimé dans
+            </div>
+            <div style="font-size: 28px; font-weight: 700;">
+                {% if months_needed > 0 %}{{ months_needed }} mois{% else %}{{ weeks_needed }} semaines{% endif %}
+            </div>
+            <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">
+                à ce rythme ({{ "%.2f"|format(weight_stats.avg_per_week|abs) }}kg/semaine)
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+// Aperçu du thème en temps réel
+document.querySelectorAll("input[name=\"theme\"]").forEach(radio => {
+    radio.addEventListener("change", function() {
+        document.body.setAttribute("data-theme", this.value);
+    });
+});
+</script>
+{% endblock %}

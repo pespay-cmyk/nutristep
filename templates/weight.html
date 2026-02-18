@@ -6,7 +6,7 @@
 <h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;"><svg class="icon icon-xl"><use href="#icon-weight"/></svg> Suivi du poids</h1>
 
 <!-- Message si pas saisi depuis X jours -->
-{% if days_since_last_entry and days_since_last_entry > 0 %}
+{% if days_since_last_entry and days_since_last_entry >= 7 %}
 <div class="card" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid #f59e0b; margin-bottom: 24px;">
     <p style="margin: 0; font-size: 16px; color: #92400e; font-weight: 600;">
         <svg class="icon"><use href="#icon-alert"/></svg> Tu n'as pas saisi ton poids depuis {{ days_since_last_entry }} jour{{ 's' if days_since_last_entry > 1 else '' }} !
@@ -132,11 +132,22 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{{ url_for('delete_weight', id=entry.id) }}"
-                           class="btn btn-danger btn-small"
-                           onclick="return confirm('Supprimer cette entrée ?')">
-                            <svg class="icon"><use href="#icon-delete"/></svg>️ Supprimer
-                        </a>
+                        {% if entry.date == today %}
+                        <form method="POST" action="{{ url_for('delete_weight', entry_id=entry.id) }}" 
+                              style="display: inline;" 
+                              onsubmit="return confirm('Supprimer la pesée du jour ?');">
+                            <button type="submit" 
+                                    class="btn btn-danger btn-small"
+                                    style="background: none; border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;"
+                                    onmouseover="this.style.background='#fee2e2'" 
+                                    onmouseout="this.style.background='transparent'">
+                                <svg class="icon" style="width:14px;height:14px;"><use href="#icon-delete"/></svg>
+                                Supprimer
+                            </button>
+                        </form>
+                        {% else %}
+                        <span style="color: #d1d5db; font-size: 13px;">—</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

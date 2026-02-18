@@ -7,24 +7,27 @@
 ## 🚀 **À FAIRE MAINTENANT**
 
 ### 🏠 Dashboard
-- [ ] ❌ Retirer pastille "Calories brûlées"
-- [ ] ❌ Retirer pastille "Calories consommées"
-- [ ] ❌ Retirer section "Activités du jour"
-- [ ] ✅ Améliorer affichage "Repas du jour" (style propre comme page meals avec emojis)
-- [ ] ✅ Ajouter section "Activités du mois" (même période que graphique poids)
-- [ ] ✅ Ajouter graphique "Nombre de pas" sur 1 mois
+- [x] ❌ Retirer pastille "Calories brûlées"
+- [x] ❌ Retirer pastille "Calories consommées"
+- [x] ❌ Retirer section "Activités du jour"
+- [x] ✅ Améliorer affichage "Repas du jour" (style propre comme page meals avec emojis)
+- [x] ✅ Ajouter section "Activités du mois" (même période que graphique poids)
+- [x] ✅ Ajouter graphique "Nombre de pas" sur 1 mois
   - Ligne de pas moyen
   - Petites icônes pour chaque activité (🏃🚴💪 etc.)
   - Au survol de l'icône → tooltip avec type + détails
+- [ ] 🎨 **FIGNOLAGE** : Améliorer affichage icônes activités sur graph (si besoin)
 
 ### 📊 Page Récap
-- [ ] ❌ Retirer scrollbar bizarre qui apparaît au survol
-- [ ] ❌ Retirer stat "Jours avec repas"
-- [ ] ❌ Retirer stat "Repas complets"
-- [ ] ✅ Garder uniquement : Exceptions + Équilibrages
+- [x] ❌ Retirer scrollbar bizarre qui apparaît au survol
+- [x] ❌ Retirer stat "Jours avec repas"
+- [x] ❌ Retirer stat "Repas complets"
+- [x] ✅ Garder uniquement : Exceptions + Équilibrages
+- [ ] 🎨 **FIGNOLAGE** : Aligner pastilles du haut avec le tableau
 
 ### 🎨 Design Général
-- [ ] ✅ Remplacer emojis par icônes SVG modernes
+- [x] ✅ Remplacer emojis par icônes SVG modernes
+- [x] ✅ Favicon pour raccourci mobile
 
 ---
 
@@ -39,30 +42,32 @@
 - [ ] ✅ Galerie de progression (comparaison avant/après)
 
 ### 📲 Import Garmin Connect
-- [ ] ✅ Connexion API Garmin Connect
-- [ ] ✅ Import automatique :
-  - Activités
-  - Pas quotidiens
-- [ ] ✅ **Validation manuelle** après import
-- [ ] ✅ Conserver possibilité d'ajout manuel
+- [x] ✅ Import CSV activités (fonctionne !)
+- [x] ✅ Validation manuelle ligne par ligne
+- [x] ✅ Mapping types activités FR/EN
+- [ ] 🔮 **À RÉFLÉCHIR** : Solution pour import automatique des pas quotidiens
+- [ ] 🔮 **À RÉFLÉCHIR** : Auto-hébergement derrière box avec mini PC (pour connexions externes)
 
 ---
 
 ## 📈 **PRIORITÉ 2**
 
 ### 👤 Profil Utilisateur
-- [ ] ✅ Ajouter dans le profil :
+- [x] ✅ Ajouter dans le profil :
   - Date de naissance
   - Taille
-  - Autres infos si nécessaire (sexe, etc.)
+  - Sexe
+  - Poids cible
 
 ### 📊 Statistiques Avancées
-- [ ] ✅ **IMC** (calcul automatique depuis poids + taille)
-- [ ] ✅ **Perte moyenne** :
+- [x] ✅ **IMC** (calcul automatique avec jauge visuelle dégradée)
+- [x] ✅ **Perte moyenne** :
   - Par semaine
   - Par mois
-- [ ] ✅ **Corrélation pas/poids** (sur long terme, pas jour par jour)
-- [ ] ✅ **Tendance générale** (courbe lissée)
+- [x] ✅ **Perte totale** depuis le début
+- [x] ✅ **Temps estimé** pour atteindre l'objectif
+- [ ] ❌ Corrélation pas/poids (graphique - à faire plus tard)
+- [ ] ❌ Tendance générale (courbe lissée - à faire plus tard)
 
 ### 📧 Rappels & Encouragements
 - [ ] ✅ Rappel si pas pesé depuis 7 jours
@@ -84,6 +89,11 @@
 ---
 
 ## 🔮 **PLUS TARD**
+
+### 🎨 Design & UX
+- [ ] 🎨 **Logo NutriStep** : Créer un vrai logo moderne (actuellement juste texte)
+- [ ] 🎨 **Fignolage graph activités** : Améliorer affichage icônes sur le graphique des pas
+- [ ] 🎨 **Fignolage récap** : Aligner pastilles stats avec le tableau
 
 ### 👥 Fonctionnalités Sociales
 - [ ] ✅ Système d'amis

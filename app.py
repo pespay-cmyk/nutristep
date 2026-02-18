@@ -98,7 +98,11 @@ class User(db.Model):
     google_id = db.Column(db.String(255), unique=True, nullable=True)  # ID Google
     theme = db.Column(db.String(20), default='green')  # Thème préféré de l'utilisateur
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    # Nouvelles colonnes profil
+    birth_date = db.Column(db.Date, nullable=True)
+    height = db.Column(db.Float, nullable=True)  # en cm
+    gender = db.Column(db.String(1), nullable=True)  # M/F
+    target_weight = db.Column(db.Float, nullable=True)  # en kg
     # Relations
     weight_entries = db.relationship('WeightEntry', backref='user', lazy=True, cascade='all, delete-orphan')
     meal_entries = db.relationship('MealEntry', backref='user', lazy=True, cascade='all, delete-orphan')
@@ -412,6 +416,7 @@ def dashboard():
                          steps_data=steps_data,
                          steps_stats=steps_stats,
                          activities_by_date=activities_by_date,
+                         user=user,
                          theme=user.theme)
 
 # ========================================
@@ -444,7 +449,7 @@ def weight():
     weight_evolution_message = None
     weight_evolution_style = None
 
-    if len(entries) >= 2:
+    if len(entries) >= 7:
         latest_weight = entries[0].weight
         previous_weight = entries[1].weight
         diff = latest_weight - previous_weight
@@ -507,18 +512,30 @@ def add_weight():
     flash('Poids enregistré avec succès ! 🎉', 'success')
     return redirect(url_for('weight'))
 
-@app.route('/weight/delete/<int:id>')
+@app.route('/weight/delete/<int:entry_id>', methods=['POST'])
 @login_required
-def delete_weight(id):
-    entry = WeightEntry.query.get_or_404(id)
-    if entry.user_id != session['user_id']:
-        flash('Action non autorisée.', 'danger')
+def delete_weight(entry_id):
+    user_id = session['user_id']
+    today = datetime.utcnow().date()
+
+    entry = WeightEntry.query.get_or_404(entry_id)
+
+    # Vérifier que c'est bien l'utilisateur
+    if entry.user_id != user_id:
+        flash('Erreur : cette pesée ne vous appartient pas.', 'error')
+        return redirect(url_for('weight'))
+
+    # Vérifier que c'est la pesée du jour
+    if entry.date != today:
+        flash('❌ Tu ne peux supprimer que la pesée du jour.', 'warning')
         return redirect(url_for('weight'))
 
     db.session.delete(entry)
     db.session.commit()
-    flash('Entrée supprimée.', 'info')
+
+    flash('✅ Pesée du jour supprimée.', 'success')
     return redirect(url_for('weight'))
+
 
 # ========================================
 # ROUTES REPAS
@@ -1381,6 +1398,105 @@ def garmin_import_confirm():
 
     return redirect(url_for('activities'))
 
+
+# ----------------------------------------
+# 3. ROUTE : PAGE PROFIL
+# ----------------------------------------
+
+@app.route('/profile')
+@login_required
+def profile():
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+
+    # Dernier poids
+    latest_weight = WeightEntry.query.filter_by(user_id=user_id).order_by(WeightEntry.date.desc()).first()
+
+    # Premier poids
+    first_weight = WeightEntry.query.filter_by(user_id=user_id).order_by(WeightEntry.date.asc()).first()
+
+    # Calculer les stats
+    weight_stats = None
+    if first_weight and latest_weight and first_weight.id != latest_weight.id:
+        total_loss = latest_weight.weight - first_weight.weight
+        days_tracking = (latest_weight.date - first_weight.date).days
+
+        if days_tracking > 0:
+            avg_per_day = total_loss / days_tracking
+            avg_per_week = avg_per_day * 7
+            avg_per_month = avg_per_day * 30
+
+            weight_stats = {
+                'total_loss': total_loss,
+                'days_tracking': days_tracking,
+                'avg_per_week': avg_per_week,
+                'avg_per_month': avg_per_month
+            }
+
+    today = datetime.utcnow().date()
+
+    return render_template('profile.html',
+                         user=user,
+                         latest_weight=latest_weight,
+                         first_weight=first_weight,
+                         weight_stats=weight_stats,
+                         today=today,
+                         theme=user.theme)
+
+
+# ----------------------------------------
+# 4. ROUTE : MISE À JOUR PROFIL
+# ----------------------------------------
+
+@app.route('/profile/update', methods=['POST'])
+@login_required
+def profile_update():
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+
+    # Thème (AJOUTER EN PREMIER)
+    theme = request.form.get('theme', '').strip()
+    if theme in ['healthy', 'ocean', 'sunset']:
+        user.theme = theme
+
+    # Date de naissance
+    birth_date_str = request.form.get('birth_date', '').strip()
+    if birth_date_str:
+        try:
+            user.birth_date = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+    else:
+        user.birth_date = None
+
+    # Taille
+    height_str = request.form.get('height', '').strip()
+    if height_str:
+        try:
+            user.height = float(height_str)
+        except ValueError:
+            pass
+    else:
+        user.height = None
+
+    # Sexe
+    gender = request.form.get('gender', '').strip()
+    user.gender = gender if gender in ['M', 'F'] else None
+
+    # Poids cible
+    target_weight_str = request.form.get('target_weight', '').strip()
+    if target_weight_str:
+        try:
+            user.target_weight = float(target_weight_str)
+        except ValueError:
+            pass
+    else:
+        user.target_weight = None
+
+    db.session.commit()
+
+    flash('✅ Profil mis à jour !', 'success')
+    return redirect(url_for('profile'))
 # ========================================
 # API POUR LES GRAPHIQUES
 # ========================================
