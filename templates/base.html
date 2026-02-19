@@ -537,29 +537,30 @@
                         Poids
                     </a>
 
-                    {% if current_user and current_user.track_meals %}
-                    <a href="{{ url_for('meals') }}">
+                    <a href="{{ url_for('meals') }}"
+                       style="{% if not (current_user and current_user.track_meals) %}display:none;{% endif %}">
                         <svg class="icon icon-meal"><use href="#icon-meal"/></svg>
                         Repas
                     </a>
-                    <a href="{{ url_for('meals_recap') }}">
+
+                    <a href="{{ url_for('meals_recap') }}"
+                       style="{% if not (current_user and current_user.track_meals) %}display:none;{% endif %}">
                         <svg class="icon icon-report"><use href="#icon-report"/></svg>
                         Récap
                     </a>
-                    {% endif %}
 
-                    {% if current_user and current_user.track_activities %}
-                    <a href="{{ url_for('activities') }}">
+
+                    <a href="{{ url_for('activities') }}"
+                       style="{% if not (current_user and current_user.track_activities) %}display:none;{% endif %}">
                         <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
                         Activités
                     </a>
-                    {% if current_user.enable_garmin_import %}
-                    <a href="{{ url_for('garmin_csv_import') }}">
+
+                    <a href="{{ url_for('garmin_csv_import') }}"
+                       style="{% if not (current_user and current_user.track_activities and current_user.enable_garmin_import) %}display:none;{% endif %}">
                         <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
                         Garmin
                     </a>
-                    {% endif %}
-                    {% endif %}
 
                     <a href="{{ url_for('profile') }}">
                         <svg class="icon icon-settings"><use href="#icon-settings"/></svg>

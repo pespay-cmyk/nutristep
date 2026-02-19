@@ -9,127 +9,21 @@
 </h1>
 
 <!-- Formulaire profil -->
+<form method="POST" action="{{ url_for('profile_update') }}">
+
 <div class="card">
-    <h2>📝 Informations personnelles</h2>
+    <h2><svg class="icon"><use href="#icon-report"/></svg> Informations personnelles</h2>
     <p style="color: var(--text-secondary); margin-bottom: 24px;">
         Ces informations sont utilisées pour calculer ton IMC et tes statistiques personnalisées.
     </p>
 
-    <form method="POST" action="{{ url_for('profile_update') }}">
-        
-        <!-- Choix du thème -->
-        <div class="form-group" style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--bg-gradient-start);">
-            <label style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; display: block;">
-                🎨 Thème de l'application
-            </label>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                
-                <!-- Healthy Green -->
-                <label class="theme-card {% if user.theme == 'healthy' %}active{% endif %}" 
-                       style="cursor: pointer; position: relative;">
-                    <input type="radio" name="theme" value="healthy" 
-                           {% if user.theme == 'healthy' %}checked{% endif %}
-                           style="position: absolute; opacity: 0;">
-                    <div style="padding: 20px; border-radius: 12px; border: 2px solid #10b981; 
-                                background: linear-gradient(135deg, #d1fae5, #a7f3d0); 
-                                transition: all 0.3s; text-align: center;">
-                        <div style="font-weight: 700; color: #065f46; margin-bottom: 4px;">Healthy Green</div>
-                        <div style="font-size: 11px; color: #047857;">Vert naturel</div>
-                    </div>
-                </label>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
 
-                <!-- Ocean Blue -->
-                <label class="theme-card {% if user.theme == 'ocean' %}active{% endif %}" 
-                       style="cursor: pointer; position: relative;">
-                    <input type="radio" name="theme" value="ocean" 
-                           {% if user.theme == 'ocean' %}checked{% endif %}
-                           style="position: absolute; opacity: 0;">
-                    <div style="padding: 20px; border-radius: 12px; border: 2px solid #3b82f6; 
-                                background: linear-gradient(135deg, #dbeafe, #bfdbfe); 
-                                transition: all 0.3s; text-align: center;">
-                        <div style="font-weight: 700; color: #1e3a8a; margin-bottom: 4px;">Ocean Blue</div>
-                        <div style="font-size: 11px; color: #1e40af;">Bleu apaisant</div>
-                    </div>
-                </label>
-
-                <!-- Sunset Pink -->
-                <label class="theme-card {% if user.theme == 'sunset' %}active{% endif %}" 
-                       style="cursor: pointer; position: relative;">
-                    <input type="radio" name="theme" value="sunset" 
-                           {% if user.theme == 'sunset' %}checked{% endif %}
-                           style="position: absolute; opacity: 0;">
-                    <div style="padding: 20px; border-radius: 12px; border: 2px solid #ec4899; 
-                                background: linear-gradient(135deg, #fce7f3, #fbcfe8); 
-                                transition: all 0.3s; text-align: center;">
-                        <div style="font-weight: 700; color: #831843; margin-bottom: 4px;">Sunset Pink</div>
-                        <div style="font-size: 11px; color: #9f1239;">Rose chaleureux</div>
-                    </div>
-                </label>
-            </div>
-        </div>
-
-        <!-- Options de suivi -->
-        <div class="form-group" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--bg-gradient-start);">
-            <label style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; display: block;">
-                📊 Modules de suivi
-            </label>
-            
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                
-                <!-- Suivi repas -->
-                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; cursor: pointer;">
-                    <input type="checkbox" name="track_meals" value="1" 
-                           {% if user.track_meals %}checked{% endif %}
-                           style="width: 20px; height: 20px; cursor: pointer;">
-                    <div>
-                        <div style="font-weight: 600; color: var(--text-primary);">🍽️ Suivi des repas</div>
-                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
-                            Active les pages Repas et Récap
-                        </div>
-                    </div>
-                </label>
-
-                <!-- Suivi activités -->
-                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; cursor: pointer;">
-                    <input type="checkbox" name="track_activities" value="1" 
-                           {% if user.track_activities %}checked{% endif %}
-                           id="track_activities_checkbox"
-                           onchange="toggleGarminOption()"
-                           style="width: 20px; height: 20px; cursor: pointer;">
-                    <div>
-                        <div style="font-weight: 600; color: var(--text-primary);">🏃 Suivi des activités</div>
-                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
-                            Active la page Activités
-                        </div>
-                    </div>
-                </label>
-
-                <!-- Import Garmin (sous-option) -->
-                <div id="garmin_option" style="margin-left: 32px; {% if not user.track_activities %}display: none;{% endif %}">
-                    <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: white; border-radius: 12px; border: 1px solid var(--bg-gradient-start); cursor: pointer;">
-                        <input type="checkbox" name="enable_garmin_import" value="1" 
-                               {% if user.enable_garmin_import %}checked{% endif %}
-                               id="garmin_checkbox"
-                               style="width: 20px; height: 20px; cursor: pointer;">
-                        <div>
-                            <div style="font-weight: 600; color: var(--text-primary); font-size: 14px;">📲 Import Garmin</div>
-                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
-                                Active l'import CSV depuis Garmin Connect
-                            </div>
-                        </div>
-                    </label>
-                </div>
-
-            </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            
             <div class="form-group">
                 <label for="birth_date">
                     Date de naissance
                 </label>
-                <input type="date" class="form-control" id="birth_date" name="birth_date" 
+                <input type="date" class="form-control" id="birth_date" name="birth_date"
                        value="{{ user.birth_date.isoformat() if user.birth_date else '' }}">
                 <small style="color: var(--text-secondary);">Pour calculer ton âge</small>
             </div>
@@ -138,8 +32,8 @@
                 <label for="height">
                     Taille (cm)
                 </label>
-                <input type="number" class="form-control" id="height" name="height" 
-                       value="{{ user.height if user.height else '' }}" 
+                <input type="number" class="form-control" id="height" name="height"
+                       value="{{ user.height if user.height else '' }}"
                        placeholder="170" step="0.1" min="100" max="250">
                 <small style="color: var(--text-secondary);">Pour calculer l'IMC</small>
             </div>
@@ -160,20 +54,142 @@
                 <label for="target_weight">
                     Poids cible (kg)
                 </label>
-                <input type="number" class="form-control" id="target_weight" name="target_weight" 
-                       value="{{ user.target_weight if user.target_weight else '' }}" 
+                <input type="number" class="form-control" id="target_weight" name="target_weight"
+                       value="{{ user.target_weight if user.target_weight else '' }}"
                        placeholder="70" step="0.1" min="30" max="300">
                 <small style="color: var(--text-secondary);">Ton objectif de poids</small>
             </div>
 
         </div>
 
-        <button type="submit" class="btn btn-primary" style="margin-top: 8px;">
+    <button type="submit" class="btn btn-primary" style="margin-top: 8px;">
+        <svg class="icon" style="color:white"><use href="#icon-save"/></svg>
+        Enregistrer
+    </button>
+</div>
+
+
+<div class="card" style="margin-top: 24px;">
+    <h2><svg class="icon"><use href="#icon-settings"/></svg> Paramétrage</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        Personnalise l’application et active uniquement les modules dont tu as besoin.
+    </p>
+
+    <!-- Choix du thème -->
+        <div class="form-group" style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--bg-gradient-start);">
+            <label style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; display: block;">
+                <svg class="icon"><use href="#icon-settings"/></svg> Thème de l'application
+            </label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+
+                <!-- Healthy Green -->
+                <label class="theme-card {% if user.theme == 'healthy' %}active{% endif %}"
+                       style="cursor: pointer; position: relative;">
+                    <input type="radio" name="theme" value="healthy"
+                           {% if user.theme == 'healthy' %}checked{% endif %}
+                           style="position: absolute; opacity: 0;">
+                    <div style="padding: 20px; border-radius: 12px; border: 2px solid #10b981;
+                                background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+                                transition: all 0.3s; text-align: center;">
+                        <div style="font-weight: 700; color: #065f46; margin-bottom: 4px;">Healthy Green</div>
+                        <div style="font-size: 11px; color: #047857;">Vert naturel</div>
+                    </div>
+                </label>
+
+                <!-- Ocean Blue -->
+                <label class="theme-card {% if user.theme == 'ocean' %}active{% endif %}"
+                       style="cursor: pointer; position: relative;">
+                    <input type="radio" name="theme" value="ocean"
+                           {% if user.theme == 'ocean' %}checked{% endif %}
+                           style="position: absolute; opacity: 0;">
+                    <div style="padding: 20px; border-radius: 12px; border: 2px solid #3b82f6;
+                                background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+                                transition: all 0.3s; text-align: center;">
+                        <div style="font-weight: 700; color: #1e3a8a; margin-bottom: 4px;">Ocean Blue</div>
+                        <div style="font-size: 11px; color: #1e40af;">Bleu apaisant</div>
+                    </div>
+                </label>
+
+                <!-- Sunset Pink -->
+                <label class="theme-card {% if user.theme == 'sunset' %}active{% endif %}"
+                       style="cursor: pointer; position: relative;">
+                    <input type="radio" name="theme" value="sunset"
+                           {% if user.theme == 'sunset' %}checked{% endif %}
+                           style="position: absolute; opacity: 0;">
+                    <div style="padding: 20px; border-radius: 12px; border: 2px solid #ec4899;
+                                background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+                                transition: all 0.3s; text-align: center;">
+                        <div style="font-weight: 700; color: #831843; margin-bottom: 4px;">Sunset Pink</div>
+                        <div style="font-size: 11px; color: #9f1239;">Rose chaleureux</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+    <!-- Options de suivi -->
+        <div class="form-group" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--bg-gradient-start);">
+            <label style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; display: block;">
+                <svg class="icon"><use href="#icon-calendar"/></svg> Modules de suivi
+            </label>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+
+                <!-- Suivi repas -->
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; cursor: pointer;">
+                    <input type="checkbox" name="track_meals" value="1"
+                           {% if user.track_meals %}checked{% endif %}
+                           style="width: 20px; height: 20px; cursor: pointer;">
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary);"><svg class="icon"><use href="#icon-meal"/></svg>️ Suivi des repas</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                            Active les pages Repas et Récap
+                        </div>
+                    </div>
+                </label>
+
+                <!-- Suivi activités -->
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; cursor: pointer;">
+                    <input type="checkbox" name="track_activities" value="1"
+                           {% if user.track_activities %}checked{% endif %}
+                           id="track_activities_checkbox"
+                           onchange="toggleGarminOption()"
+                           style="width: 20px; height: 20px; cursor: pointer;">
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary);"><svg class="icon"><use href="#icon-activity"/></svg> Suivi des activités</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                            Active la page Activités
+                        </div>
+                    </div>
+                </label>
+
+                <!-- Import Garmin (sous-option) -->
+                <div id="garmin_option" style="margin-left: 32px; {% if not user.track_activities %}display: none;{% endif %}">
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: white; border-radius: 12px; border: 1px solid var(--bg-gradient-start); cursor: pointer;">
+                        <input type="checkbox" name="enable_garmin_import" value="1"
+                               {% if user.enable_garmin_import %}checked{% endif %}
+                               id="garmin_checkbox"
+                               style="width: 20px; height: 20px; cursor: pointer;">
+                        <div>
+                            <div style="font-weight: 600; color: var(--text-primary); font-size: 14px;"><svg class="icon"><use href="#icon-history"/></svg> Import Garmin</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                Active l'import CSV depuis Garmin Connect
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+            </div>
+        </div>
+
+    <div style="margin-top: 12px;">
+        <button type="submit" class="btn btn-primary">
             <svg class="icon" style="color:white"><use href="#icon-save"/></svg>
             Enregistrer
         </button>
-    </form>
+    </div>
 </div>
+
+</form>
 
 <!-- Statistiques calculées -->
 {% if user.height and latest_weight %}
@@ -181,7 +197,7 @@
     <h2>📊 Tes statistiques</h2>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
-        
+
         <!-- IMC avec jauge visuelle -->
         {% set imc = (latest_weight.weight / ((user.height / 100) ** 2)) %}
         <div style="padding: 20px; background: var(--bg-gradient-start); border-radius: 16px; grid-column: span 2;">
@@ -201,28 +217,28 @@
                     {% else %}Obésité{% endif %}
                 </div>
             </div>
-            
+
             <!-- Jauge IMC -->
-            <div style="position: relative; height: 40px; background: linear-gradient(to right, 
-                #3b82f6 0%, 
-                #10b981 18.5%, 
-                #10b981 25%, 
-                #fbbf24 30%, 
-                #f59e0b 35%, 
-                #ef4444 40%); 
+            <div style="position: relative; height: 40px; background: linear-gradient(to right,
+                #3b82f6 0%,
+                #10b981 18.5%,
+                #10b981 25%,
+                #fbbf24 30%,
+                #f59e0b 35%,
+                #ef4444 40%);
                 border-radius: 20px; margin-bottom: 8px;">
-                
+
                 <!-- Curseur position IMC -->
                 {% set imc_percent = ((imc - 15) / 25 * 100)|int %}
                 {% if imc_percent < 0 %}{% set imc_percent = 0 %}{% endif %}
                 {% if imc_percent > 100 %}{% set imc_percent = 100 %}{% endif %}
-                
+
                 <div style="position: absolute; left: {{ imc_percent }}%; top: -8px; transform: translateX(-50%);">
                     <div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 12px solid #1f2937;"></div>
                     <div style="width: 4px; height: 56px; background: #1f2937; margin-left: 6px;"></div>
                 </div>
             </div>
-            
+
             <!-- Légendes -->
             <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); padding: 0 4px;">
                 <span>15</span>
@@ -263,8 +279,8 @@
         <!-- Objectif restant -->
         {% if user.target_weight %}
         {% set remaining = latest_weight.weight - user.target_weight %}
-        <div style="padding: 20px; background: linear-gradient(135deg, 
-            {% if remaining <= 0 %}#dcfce7, #bbf7d0{% else %}#fef3c7, #fde68a{% endif %}); 
+        <div style="padding: 20px; background: linear-gradient(135deg,
+            {% if remaining <= 0 %}#dcfce7, #bbf7d0{% else %}#fef3c7, #fde68a{% endif %});
             border-radius: 16px; text-align: center;">
             <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 8px;">
                 Objectif restant
@@ -285,18 +301,18 @@
 <!-- Stats avancées perte moyenne -->
 {% if weight_stats %}
 <div class="card" style="margin-top: 24px;">
-    <h2>📈 Évolution et tendances</h2>
+    <h2><svg class="icon"><use href="#icon-trend-down"/></svg> Évolution et tendances</h2>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 24px;">
-        
+
         <!-- Perte totale -->
         {% if weight_stats.total_loss != 0 %}
-        <div style="padding: 20px; background: var(--bg-gradient-start); border-radius: 16px; border-left: 4px solid 
+        <div style="padding: 20px; background: var(--bg-gradient-start); border-radius: 16px; border-left: 4px solid
             {% if weight_stats.total_loss < 0 %}#10b981{% else %}#ef4444{% endif %};">
             <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
                 Évolution totale
             </div>
-            <div style="font-size: 28px; font-weight: 700; color: 
+            <div style="font-size: 28px; font-weight: 700; color:
                 {% if weight_stats.total_loss < 0 %}#10b981{% else %}#ef4444{% endif %};">
                 {{ "%.1f"|format(weight_stats.total_loss) }} kg
                 <svg class="icon" style="width:24px;height:24px;"><use href="
@@ -380,7 +396,7 @@ function toggleGarminOption() {
     const activitiesChecked = document.getElementById('track_activities_checkbox').checked;
     const garminOption = document.getElementById('garmin_option');
     const garminCheckbox = document.getElementById('garmin_checkbox');
-    
+
     if (activitiesChecked) {
         garminOption.style.display = 'block';
     } else {
@@ -400,13 +416,13 @@ function previewNavbar() {
     const mealsChecked = document.querySelector('input[name="track_meals"]').checked;
     const activitiesChecked = document.getElementById('track_activities_checkbox').checked;
     const garminChecked = document.getElementById('garmin_checkbox').checked;
-    
+
     // Récupérer tous les liens navbar
     const navLinks = document.querySelectorAll('.navbar nav a');
-    
+
     navLinks.forEach(link => {
         const href = link.getAttribute('href');
-        
+
         // Afficher/masquer selon les options
         if (href.includes('meals') || href.includes('recap')) {
             link.style.display = mealsChecked ? 'flex' : 'none';
