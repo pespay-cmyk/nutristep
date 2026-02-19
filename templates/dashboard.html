@@ -67,7 +67,7 @@
 
 <!-- Repas d'aujourd'hui + Activités du mois (2 colonnes) -->
 {% if user.track_meals or user.track_activities %}
-<div style="display: grid; grid-template-columns: {% if user.track_meals and user.track_activities %}1fr 1fr{% else %}1fr{% endif %}; gap: 20px; margin-top: 24px;">
+<div class="dashboard-meals-activities-grid" style="display: grid; grid-template-columns: {% if user.track_meals and user.track_activities %}1fr 1fr{% else %}1fr{% endif %}; gap: 20px; margin-top: 24px;">
 
     <!-- Repas d'aujourd'hui -->
     {% if user.track_meals %}

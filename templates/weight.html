@@ -29,7 +29,7 @@
 <div class="card">
     <h2><svg class="icon"><use href="#icon-plus"/></svg> Enregistrer mon poids aujourd'hui</h2>
     <form method="POST" action="{{ url_for('add_weight') }}">
-        <div style="display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: end;">
+        <div class="weight-form-grid" style="display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: end;">
             <div class="form-group" style="margin-bottom: 0;">
                 <label for="weight">Poids (kg)</label>
                 <input type="number"
@@ -63,7 +63,7 @@
 
 <!-- Sélecteur de période et options graphique -->
 <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div class="weight-chart-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 style="margin: 0;"><svg class="icon"><use href="#icon-activity"/></svg> Évolution du poids</h2>
         <div style="display: flex; gap: 12px; align-items: center;">
             <!-- Sélecteur de période -->
@@ -78,7 +78,8 @@
             <!-- Option axe Y -->
             <label style="display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer;">
                 <input type="checkbox" id="yAxisFromZero" onchange="updateChart()" style="cursor: pointer;">
-                <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Depuis 0</span>
+                <svg class="icon" style="width:16px;height:16px;color:var(--text-secondary)"><use href="#icon-trend-down"/></svg>
+                <span style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Axe à 0</span>
             </label>
         </div>
     </div>

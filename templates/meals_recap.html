@@ -317,6 +317,7 @@
                        value="{{ end_date.isoformat() }}" required>
             </div>
 
+            <div class="recap-filter-buttons" style="display: flex; gap: 12px;">
             <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
                 <svg class="icon"><use href="#icon-search"/></svg> Afficher
             </button>
@@ -325,23 +326,26 @@
                     onclick="resetToDefault()">
                 ↻ 2 dernières semaines
             </button>
+            </div>
         </div>
     </form>
 
     <!-- Statistiques résumées -->
+    <div class="recap-stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
     <div class="summary-stats" style="grid-template-columns: repeat(2, 1fr);">
         <div class="summary-card">
             <h3>Exceptions</h3>
             <div class="value">{{ stats.total_exceptions }}</div>
         </div>
         <div class="summary-card">
-            <h3>Équilibrages</h3>
+            <h3>Compensations</h3>
             <div class="value">{{ stats.total_equilibrages }}</div>
         </div>
     </div>
-
+    </div>
 
     {% if days_data %}
+    <div class="recap-table-wrapper" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
         <table class="recap-table" style="display: block; overflow-x: auto; overflow-y: hidden;">
             <thead>
                 <tr>
@@ -554,6 +558,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     {% else %}
     <div class="empty-state">
         <div class="empty-state-icon"><svg class="icon"><use href="#icon-calendar"/></svg></div>

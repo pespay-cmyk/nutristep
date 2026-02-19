@@ -1,0 +1,191 @@
+/* CORRECTIONS RESPONSIVE MOBILE - NutriStep */
+/* À ajouter dans base.html dans le <style> ou créer un fichier responsive.css */
+
+/* ============================================
+   1. DASHBOARD - Activités du mois en pleine largeur
+   ============================================ */
+@media (max-width: 768px) {
+    /* Forcer activités du mois en pleine largeur sous repas */
+    .dashboard-meals-activities-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ============================================
+   2. WEIGHT - Améliorer "Depuis 0"
+   ============================================ */
+@media (max-width: 768px) {
+    /* Mettre les contrôles du graphique en vertical */
+    .weight-chart-controls {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    .weight-chart-controls select {
+        width: 100% !important;
+    }
+
+    .weight-chart-controls label {
+        justify-content: center !important;
+    }
+
+    /* Responsive form saisie poids */
+    .weight-form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .weight-form-grid button {
+        width: 100%;
+    }
+}
+
+/* ============================================
+   3. MEALS - Calendrier responsive
+   ============================================ */
+@media (max-width: 768px) {
+    /* Calendrier : forcer scroll horizontal fluide */
+    .calendar-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .calendar-grid {
+        min-width: 600px; /* Force largeur minimum pour 7 jours */
+    }
+
+    /* Réduire padding des jours */
+    .calendar-day {
+        padding: 8px 4px !important;
+        font-size: 13px !important;
+    }
+
+    /* Indicateurs repas plus petits */
+    .meal-indicator {
+        font-size: 11px !important;
+        padding: 2px 4px !important;
+    }
+
+    /* Modal ajout repas en plein écran */
+    .modal-content {
+        width: 95vw !important;
+        max-width: none !important;
+        margin: 10px auto !important;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    /* Form dans modal : inputs en pleine largeur */
+    .modal-form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    /* Historique repas sur 2 colonnes au lieu de 3 */
+    .food-history-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* ============================================
+   4. RECAP - Tableau activités scrollable
+   ============================================ */
+@media (max-width: 768px) {
+    /* Wrapper pour scroll horizontal */
+    .recap-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -20px; /* Compenser le padding de .card */
+        padding: 0 20px;
+    }
+
+    .recap-table {
+        min-width: 800px; /* Force largeur minimum */
+    }
+
+    /* Stats en 2 colonnes au lieu de 4 */
+    .recap-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Boutons filtres en pleine largeur */
+    .recap-filter-buttons {
+        flex-direction: column !important;
+    }
+
+    .recap-filter-buttons button {
+        width: 100% !important;
+    }
+}
+
+/* ============================================
+   5. GLOBAL - Corrections générales mobile
+   ============================================ */
+@media (max-width: 768px) {
+    /* Réduire padding général du contenu */
+    .content {
+        padding: 20px 10px !important;
+        max-width: 100% !important;
+    }
+
+    /* Titres h1 plus petits */
+    h1 {
+        font-size: 24px !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* Cartes : réduire padding */
+    .card {
+        padding: 16px 12px !important;
+        margin: 0 !important;
+    }
+
+    /* Stats grid : forcer 2 colonnes */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    /* Tableaux : réduire taille police */
+    table {
+        font-size: 13px !important;
+    }
+
+    table th, table td {
+        padding: 8px 6px !important;
+    }
+
+    /* Boutons : pleine largeur si nécessaire */
+    .btn-primary, .btn {
+        padding: 12px 20px !important;
+    }
+
+    /* Graph canvas : hauteur réduite */
+    canvas {
+        max-height: 250px !important;
+    }
+    /* Dashboard : utiliser toute la largeur */
+    .dashboard-meals-activities-grid {
+        margin: 0 !important;
+        gap: 16px !important;
+    }
+}
+
+/* ============================================
+   6. TRÈS PETITS ÉCRANS (< 400px)
+   ============================================ */
+@media (max-width: 400px) {
+    /* Stats en 1 colonne */
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Navbar : icônes seulement, masquer texte */
+    .navbar nav a span {
+        display: none;
+    }
+
+    .navbar nav a {
+        padding: 8px 12px !important;
+    }
+}

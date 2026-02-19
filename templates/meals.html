@@ -542,7 +542,7 @@
                 </div>
                 {% endif %}
                 {% if day_data.equilibrage_count > 0 %}
-                <div class="qualification-badge equilibrage" title="Équilibrage">
+                <div class="qualification-badge equilibrage" title="Compensation">
                     {{ day_data.equilibrage_count }}<svg class="icon icon-sm"><use href="#icon-equilibrage"/></svg>
                 </div>
                 {% endif %}
@@ -582,7 +582,7 @@
 
 <!-- Modal de saisie des repas -->
 <div class="modal" id="dayModal">
-    <div class="modal-content">
+    <div class="modal-content" style="background: white; border-radius: 20px; padding: 32px; max-width: 600px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
         <div class="modal-header">
             <h2 style="margin: 0; font-size: 28px;" id="modalTitle">Repas du jour</h2>
             <p style="margin-top: 8px; opacity: 0.9; font-size: 14px;" id="modalDate"></p>
@@ -717,7 +717,7 @@ const allMeals = [
                                 <button type="button" class="qualification-btn ${mealData.qualification === 'exception' ? 'active exception' : ''}"
                                         onclick="setQualification('${mealType}', 'exception')">Exception</button>
                                 <button type="button" class="qualification-btn ${mealData.qualification === 'equilibrage' ? 'active equilibrage' : ''}"
-                                        onclick="setQualification('${mealType}', 'equilibrage')">Équilibrage</button>
+                                        onclick="setQualification('${mealType}', 'equilibrage')">Compensation</button>
                             </div>
                             <button type="button" class="btn-remove" style="padding: 8px 12px; font-size: 12px;" onclick="removeMeal('${mealType}'); markChanged();">
                                 <svg class="icon"><use href="#icon-delete"/></svg>️ Suppr
