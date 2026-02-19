@@ -1,6 +1,6 @@
 import csv
 import io
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash,g
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from authlib.integrations.flask_client import OAuth
@@ -103,6 +103,9 @@ class User(db.Model):
     height = db.Column(db.Float, nullable=True)  # en cm
     gender = db.Column(db.String(1), nullable=True)  # M/F
     target_weight = db.Column(db.Float, nullable=True)  # en kg
+    track_meals = db.Column(db.Boolean, default=True, nullable=False)
+    track_activities = db.Column(db.Boolean, default=True, nullable=False)
+    enable_garmin_import = db.Column(db.Boolean, default=True, nullable=False)
     # Relations
     weight_entries = db.relationship('WeightEntry', backref='user', lazy=True, cascade='all, delete-orphan')
     meal_entries = db.relationship('MealEntry', backref='user', lazy=True, cascade='all, delete-orphan')
@@ -791,7 +794,10 @@ def meals_recap():
                          has_snack_morning=has_snack_morning,
                          has_snack_afternoon=has_snack_afternoon,
                          activities_stats=activities_stats,
+                         current_user=user,
                          theme=user.theme)
+
+
 
 
 @app.route('/api/get-day-meals')
@@ -1459,6 +1465,10 @@ def profile_update():
     if theme in ['healthy', 'ocean', 'sunset']:
         user.theme = theme
 
+    user.track_meals = bool(request.form.get('track_meals'))
+    user.track_activities = bool(request.form.get('track_activities'))
+    user.enable_garmin_import = bool(request.form.get('enable_garmin_import'))
+
     # Date de naissance
     birth_date_str = request.form.get('birth_date', '').strip()
     if birth_date_str:
@@ -1530,8 +1540,21 @@ def create_tables():
         db.create_all()
         app.tables_created = True
 
+def load_user():
+    if 'user_id' in session:
+        g.current_user = User.query.get(session['user_id'])
+    else:
+        g.current_user = None
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
+@app.context_processor
+def inject_user():
+    if 'user_id' in session:
+        user = User.query.get(session['user_id'])
+        return dict(current_user=user)
+    return dict(current_user=None)

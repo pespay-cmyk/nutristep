@@ -68,6 +68,61 @@
             </div>
         </div>
 
+        <!-- Options de suivi -->
+        <div class="form-group" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--bg-gradient-start);">
+            <label style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; display: block;">
+                📊 Modules de suivi
+            </label>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                
+                <!-- Suivi repas -->
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; cursor: pointer;">
+                    <input type="checkbox" name="track_meals" value="1" 
+                           {% if user.track_meals %}checked{% endif %}
+                           style="width: 20px; height: 20px; cursor: pointer;">
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary);">🍽️ Suivi des repas</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                            Active les pages Repas et Récap
+                        </div>
+                    </div>
+                </label>
+
+                <!-- Suivi activités -->
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; cursor: pointer;">
+                    <input type="checkbox" name="track_activities" value="1" 
+                           {% if user.track_activities %}checked{% endif %}
+                           id="track_activities_checkbox"
+                           onchange="toggleGarminOption()"
+                           style="width: 20px; height: 20px; cursor: pointer;">
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary);">🏃 Suivi des activités</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                            Active la page Activités
+                        </div>
+                    </div>
+                </label>
+
+                <!-- Import Garmin (sous-option) -->
+                <div id="garmin_option" style="margin-left: 32px; {% if not user.track_activities %}display: none;{% endif %}">
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: white; border-radius: 12px; border: 1px solid var(--bg-gradient-start); cursor: pointer;">
+                        <input type="checkbox" name="enable_garmin_import" value="1" 
+                               {% if user.enable_garmin_import %}checked{% endif %}
+                               id="garmin_checkbox"
+                               style="width: 20px; height: 20px; cursor: pointer;">
+                        <div>
+                            <div style="font-weight: 600; color: var(--text-primary); font-size: 14px;">📲 Import Garmin</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                Active l'import CSV depuis Garmin Connect
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+            </div>
+        </div>
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             
             <div class="form-group">
@@ -319,5 +374,50 @@ document.querySelectorAll("input[name=\"theme\"]").forEach(radio => {
         document.body.setAttribute("data-theme", this.value);
     });
 });
+
+// Toggle option Garmin selon activités
+function toggleGarminOption() {
+    const activitiesChecked = document.getElementById('track_activities_checkbox').checked;
+    const garminOption = document.getElementById('garmin_option');
+    const garminCheckbox = document.getElementById('garmin_checkbox');
+    
+    if (activitiesChecked) {
+        garminOption.style.display = 'block';
+    } else {
+        garminOption.style.display = 'none';
+        garminCheckbox.checked = false;
+    }
+}
+
+// Aperçu temps réel des onglets dans la navbar
+document.getElementById('track_activities_checkbox').addEventListener('change', previewNavbar);
+document.getElementById('garmin_checkbox').addEventListener('change', previewNavbar);
+document.querySelectorAll('input[name="track_meals"]').forEach(cb => {
+    cb.addEventListener('change', previewNavbar);
+});
+
+function previewNavbar() {
+    const mealsChecked = document.querySelector('input[name="track_meals"]').checked;
+    const activitiesChecked = document.getElementById('track_activities_checkbox').checked;
+    const garminChecked = document.getElementById('garmin_checkbox').checked;
+    
+    // Récupérer tous les liens navbar
+    const navLinks = document.querySelectorAll('.navbar nav a');
+    
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        
+        // Afficher/masquer selon les options
+        if (href.includes('meals') || href.includes('recap')) {
+            link.style.display = mealsChecked ? 'flex' : 'none';
+        }
+        if (href.includes('activities') && !href.includes('garmin')) {
+            link.style.display = activitiesChecked ? 'flex' : 'none';
+        }
+        if (href.includes('garmin')) {
+            link.style.display = (activitiesChecked && garminChecked) ? 'flex' : 'none';
+        }
+    });
+}
 </script>
 {% endblock %}

@@ -355,7 +355,9 @@
                     <th><svg class="icon icon-gouter"><use href="#icon-gouter"/></svg> Goûter</th>
                     {% endif %}
                     <th><svg class="icon icon-dinner"><use href="#icon-dinner"/></svg> Dîner</th>
+                    {% if current_user.track_activities %}
                     <th><svg class="icon"><use href="#icon-activity"/></svg> Activités</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -515,6 +517,7 @@
                     </td>
 
                     <!-- Activités du jour -->
+                    {% if current_user.track_activities %}
                     <td class="meal-cell">
                         {% if day.activities %}
                             {% for activity in day.activities %}
@@ -546,6 +549,7 @@
                             <span style="color: #d1d5db;">—</span>
                         {% endif %}
                     </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
