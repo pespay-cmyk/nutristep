@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}NutriStep{% endblock %}</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#2ecc71">
+    <link rel="icon" href="{{ url_for('static', filename='images/nutristep-icone.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/nutristep-icone.png') }}">
 
     <!-- CSS Icônes -->
     <link rel="stylesheet" href="{{ url_for('static', filename='icons.css') }}">
@@ -192,6 +194,21 @@
             animation: slideIn 0.3s ease;
         }
 
+        // Nouvel icone
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            height: 32px;
+        }
+
+        .brand-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
         @keyframes slideIn {
             from {
                 transform: translateY(-10px);
@@ -526,7 +543,12 @@
     <div class="container">
         {% if session.user_id %}
         <div class="navbar">
-            <h1>NutriStep</h1>
+            <div class="brand">
+                <img src="{{ url_for('static', filename='images/nutristep-icone.png') }}"
+                     alt="NutriStep"
+                     class="logo-icon">
+                <span class="brand-name">NutriStep</span>
+            </div>
                <nav>
                     <a href="{{ url_for('dashboard') }}">
                         <svg class="icon icon-home"><use href="#icon-home"/></svg>
@@ -591,5 +613,10 @@
     {% block extra_js %}{% endblock %}
     <!-- Sprite SVG des icônes -->
     {% include 'icons.svg' %}
+    <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}");
+    }
+    </script>
 </body>
 </html>

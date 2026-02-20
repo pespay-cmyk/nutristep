@@ -232,11 +232,11 @@
         }
         /* Colonnes flexibles selon contenu */
         .date-cell {
-            width: 40px !important;
+            width: 12% !important; /* Pourcentage au lieu de pixels */
         }
 
         .meal-cell {
-            width: auto !important;
+            width: auto !important; /* Se répartit équitablement */
             min-width: 60px !important;
         }
 
@@ -335,6 +335,73 @@
         .card > div {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+        }
+
+
+
+
+        /* FORCER utilisation de toute la largeur */
+        .content {
+            padding: 12px 0 !important;
+            max-width: 100% !important;
+        }
+
+        .card {
+            margin: 0 !important;
+            padding: 12px 8px !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
+        }
+
+        /* Wrapper du tableau sans scroll */
+        .card > div {
+            overflow-x: visible !important;
+        }
+
+        /* Tableau : vraiment 100% */
+        .recap-table-wrapper,
+        .recap-table {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow-x: visible !important;
+        }
+
+        /* Stats en haut aussi pleine largeur */
+        .summary-stats {
+            margin: 0 !important;
+            padding: 0 8px !important;
+        }
+        /* VRAIMENT forcer 100% de largeur sur TOUT */
+        body {
+            overflow-x: hidden !important;
+        }
+
+        .container {
+            max-width: 100% !important;
+            padding: 0 !important;
+        }
+
+        .navbar {
+            padding: 12px 8px !important;
+        }
+
+        h1 {
+            padding: 0 8px !important;
+        }
+
+        /* Recap spécifiquement */
+        .period-selector,
+        .summary-stats,
+        .card {
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Tableau 100% */
+        .recap-table {
+            width: 100% !important;
+            table-layout: fixed !important; /* Important pour répartir équitablement */
         }
     }
 
