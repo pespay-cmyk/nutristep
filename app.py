@@ -185,6 +185,7 @@ def google_login():
     redirect_uri = url_for('google_authorized', _external=True)
     return google.authorize_redirect(redirect_uri)
 
+
 @app.route('/login/google/authorized')
 def google_authorized():
     try:
@@ -298,6 +299,7 @@ def logout():
     session.clear()
     flash('Vous êtes déconnecté.', 'info')
     return redirect(url_for('login'))
+
 
 @app.route('/api/change-theme', methods=['POST'])
 @login_required

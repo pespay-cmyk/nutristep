@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-  
+
   <!-- Dashboard / Home -->
   <symbol id="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -24,6 +24,7 @@
   <symbol id="icon-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
   </symbol>
+
 
   <!-- Récap / Report -->
   <symbol id="icon-report" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -268,163 +269,10 @@
     <circle cx="12" cy="12" r="3"/>
     <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
   </symbol>
-
-</svg>
-
-  <!-- Poids / Weight -->
-  <symbol id="icon-weight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="12" cy="12" r="10"/>
-    <path d="M12 6v12M6 12h12"/>
+  <!-- Logout / Déconnexion -->
+  <symbol id="icon-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+    <polyline points="16 17 21 12 16 7"/>
+    <line x1="21" y1="12" x2="9" y2="12"/>
   </symbol>
-
-  <!-- Repas / Meal -->
-  <symbol id="icon-meal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
-    <line x1="6" y1="1" x2="6" y2="8"/>
-    <line x1="10" y1="1" x2="10" y2="8"/>
-    <line x1="14" y1="1" x2="14" y2="8"/>
-  </symbol>
-
-  <!-- Activités / Activity -->
-  <symbol id="icon-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-  </symbol>
-
-  <!-- Récap / Report -->
-  <symbol id="icon-report" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-    <polyline points="14 2 14 8 20 8"/>
-    <line x1="16" y1="13" x2="8" y2="13"/>
-    <line x1="16" y1="17" x2="8" y2="17"/>
-    <polyline points="10 9 9 9 8 9"/>
-  </symbol>
-
-  <!-- Petit-déjeuner / Breakfast -->
-  <symbol id="icon-breakfast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="12" cy="12" r="5"/>
-    <line x1="12" y1="1" x2="12" y2="3"/>
-    <line x1="12" y1="21" x2="12" y2="23"/>
-    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-    <line x1="1" y1="12" x2="3" y2="12"/>
-    <line x1="21" y1="12" x2="23" y2="12"/>
-    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-  </symbol>
-
-  <!-- Encas / Snack -->
-  <symbol id="icon-snack" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
-    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
-    <line x1="6" y1="1" x2="6" y2="8"/>
-    <line x1="10" y1="1" x2="10" y2="8"/>
-  </symbol>
-
-  <!-- Déjeuner / Lunch -->
-  <symbol id="icon-lunch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="12" cy="12" r="10"/>
-    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-    <line x1="9" y1="9" x2="9.01" y2="9"/>
-    <line x1="15" y1="9" x2="15.01" y2="9"/>
-  </symbol>
-
-  <!-- Goûter / Afternoon Snack -->
-  <symbol id="icon-gouter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-    <line x1="7" y1="7" x2="7.01" y2="7"/>
-  </symbol>
-
-  <!-- Dîner / Dinner -->
-  <symbol id="icon-dinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M17 21v-2a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v2"/>
-    <path d="M7 21v-2a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v2"/>
-    <path d="M20 10a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1z"/>
-    <path d="M3 10v9a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-9"/>
-  </symbol>
-
-  <!-- Marche / Walk -->
-  <symbol id="icon-walk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="13" cy="5" r="2"/>
-    <polyline points="9 14 4 19"/>
-    <path d="m9 14 1.5-4.5L9 7"/>
-    <path d="m14 7 4 4-4 4"/>
-  </symbol>
-
-  <!-- Course / Run -->
-  <symbol id="icon-run" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="13" cy="5" r="2"/>
-    <path d="M6 12l2-6 5-1"/>
-    <path d="m10 18-2-5 5-1"/>
-    <path d="m11 19 4-9"/>
-  </symbol>
-
-  <!-- Vélo / Bike -->
-  <symbol id="icon-bike" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="5.5" cy="17.5" r="3.5"/>
-    <circle cx="18.5" cy="17.5" r="3.5"/>
-    <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-    <path d="M12 17.5V14l-3-3 4-3 2 3h2"/>
-  </symbol>
-
-  <!-- Natation / Swim -->
-  <symbol id="icon-swim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="8" cy="5" r="2"/>
-    <path d="M2 16s1-1 2-1 2 1 3 1 2-1 3-1 2 1 3 1 2-1 3-1 2 1 3 1 2-1 2-1"/>
-    <path d="M2 20s1-1 2-1 2 1 3 1 2-1 3-1 2 1 3 1 2-1 3-1 2 1 3 1 2-1 2-1"/>
-    <path d="M7 11l4-4 4 4"/>
-  </symbol>
-
-  <!-- Musculation / Gym -->
-  <symbol id="icon-gym" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M6.5 6.5h11"/>
-    <path d="M6.5 17.5h11"/>
-    <path d="M3 12h3"/>
-    <path d="M18 12h3"/>
-    <rect x="8" y="4" width="8" height="16" rx="1"/>
-  </symbol>
-
-  <!-- Yoga -->
-  <symbol id="icon-yoga" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="12" cy="6" r="2"/>
-    <path d="M12 8v5"/>
-    <path d="m8 13-3 8"/>
-    <path d="m16 13 3 8"/>
-    <path d="M12 13l-2 5"/>
-    <path d="M12 13l2 5"/>
-  </symbol>
-
-  <!-- Pas / Steps -->
-  <symbol id="icon-steps" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M2 21h20"/>
-    <path d="M6 21V9"/>
-    <path d="M10 21V6"/>
-    <path d="M14 21V3"/>
-    <path d="M18 21V9"/>
-  </symbol>
-
-  <!-- Ski -->
-  <symbol id="icon-ski" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="13" cy="4" r="2"/>
-    <path d="M2 20 13 8l3 4-6 8"/>
-    <path d="m18 12-3-4-3 4"/>
-    <path d="M5 20 19 8"/>
-  </symbol>
-
-  <!-- Check / Validation -->
-  <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <polyline points="20 6 9 17 4 12"/>
-  </symbol>
-
-  <!-- Plus / Add -->
-  <symbol id="icon-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <line x1="12" y1="5" x2="12" y2="19"/>
-    <line x1="5" y1="12" x2="19" y2="12"/>
-  </symbol>
-
-  <!-- Settings / Theme -->
-  <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="12" cy="12" r="3"/>
-    <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
-  </symbol>
-
 </svg>
