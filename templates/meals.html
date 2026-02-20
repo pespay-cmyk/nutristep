@@ -427,8 +427,7 @@
         }
 
         .today-badge {
-            font-size: 8px;
-            padding: 1px 4px;
+            display: none !important;
         }
 
         .meal-indicators {
@@ -438,6 +437,25 @@
 
         .meal-indicator {
             padding: 2px 4px;
+        }
+
+        /* MASQUER LE TEXTE DES REPAS SUR MOBILE - GARDER UNIQUEMENT ICÔNES */
+        .meal-indicator span:last-child {
+            display: none !important;
+        }
+
+        /* Réduire encore plus le padding */
+        .meal-indicator {
+            padding: 2px !important;
+            gap: 0 !important;
+            justify-content: center;
+        }
+
+        /* Fixer la largeur des cases du calendrier */
+        .calendar-day {
+            min-width: 45px !important;
+            max-width: 45px !important;
+            padding: 4px 2px !important;
         }
 
         .qualification-badges {
