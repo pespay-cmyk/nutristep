@@ -46,7 +46,18 @@
     }
 </style>
 
-<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;"><svg class="icon icon-xl icon-activity"><use href="#icon-activity"/></svg> Suivi des activités</h1>
+<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">
+    <svg class="icon icon-xl"><use href="#icon-activity"/></svg> Activités sportives
+</h1>
+
+{% if user.enable_garmin_import %}
+<div style="margin-bottom: 20px;">
+    <a href="{{ url_for('garmin_csv_import') }}" class="btn" style="background: linear-gradient(135deg, var(--secondary-start), var(--secondary-end)); color: white; display: inline-flex; align-items: center; gap: 8px;">
+        <svg class="icon" style="width:18px;height:18px;"><use href="#icon-activity"/></svg>
+        Importer depuis Garmin
+    </a>
+</div>
+{% endif %}
 
 <!-- Formulaire d'ajout -->
 <div class="card">

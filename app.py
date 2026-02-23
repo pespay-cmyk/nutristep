@@ -106,10 +106,13 @@ class User(db.Model):
     track_meals = db.Column(db.Boolean, default=True, nullable=False)
     track_activities = db.Column(db.Boolean, default=True, nullable=False)
     enable_garmin_import = db.Column(db.Boolean, default=True, nullable=False)
+    track_measurements = db.Column(db.Boolean, default=False, nullable=False)
+    enable_secondary_measurements = db.Column(db.Boolean, default=False, nullable=False)
     # Relations
     weight_entries = db.relationship('WeightEntry', backref='user', lazy=True, cascade='all, delete-orphan')
     meal_entries = db.relationship('MealEntry', backref='user', lazy=True, cascade='all, delete-orphan')
     activity_entries = db.relationship('ActivityEntry', backref='user', lazy=True, cascade='all, delete-orphan')
+    body_measurements = db.relationship('BodyMeasurement', backref='user', lazy=True, cascade='all, delete-orphan')
 
 class WeightEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -161,6 +164,25 @@ class ActivityEntry(db.Model):
     calories_burned = db.Column(db.Integer)
     date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
     note = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class BodyMeasurement(db.Model):
+    __tablename__ = 'body_measurements'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+
+    # Mesures essentielles
+    waist = db.Column(db.Float, nullable=True)      # Tour de taille (cm)
+    hips = db.Column(db.Float, nullable=True)       # Tour de hanches (cm)
+    thigh = db.Column(db.Float, nullable=True)      # Tour de cuisse (cm)
+
+    # Mesures secondaires (optionnelles)
+    arm = db.Column(db.Float, nullable=True)        # Tour de bras (cm)
+    chest = db.Column(db.Float, nullable=True)      # Tour de poitrine (cm)
+    calf = db.Column(db.Float, nullable=True)       # Tour de mollet (cm)
+
+    note = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ========================================
@@ -913,6 +935,7 @@ def activities():
                          entries=entries,
                          today=today,
                          stats=stats,
+                         user=user,
                          theme=user.theme)
 
 @app.route('/activities/add', methods=['POST'])
@@ -1470,7 +1493,8 @@ def profile_update():
     user.track_meals = bool(request.form.get('track_meals'))
     user.track_activities = bool(request.form.get('track_activities'))
     user.enable_garmin_import = bool(request.form.get('enable_garmin_import'))
-
+    user.track_measurements = bool(request.form.get('track_measurements'))
+    user.enable_secondary_measurements = bool(request.form.get('enable_secondary_measurements'))
     # Date de naissance
     birth_date_str = request.form.get('birth_date', '').strip()
     if birth_date_str:
@@ -1509,6 +1533,133 @@ def profile_update():
 
     flash('✅ Profil mis à jour !', 'success')
     return redirect(url_for('profile'))
+
+
+# ----------------------------------------
+# 5. ROUTE : PAGE MESURES (après route /activities)
+# ----------------------------------------
+
+@app.route('/measurements')
+@login_required
+def measurements():
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+
+    if not user.track_measurements:
+        flash('Le suivi des mesures n\'est pas activé.', 'warning')
+        return redirect(url_for('dashboard'))
+
+    today = datetime.utcnow().date()
+
+    # Mesure du jour
+    measurement_today = BodyMeasurement.query.filter_by(
+        user_id=user_id,
+        date=today
+    ).first()
+
+    # Dernière mesure si pas aujourd'hui
+    latest_measurement = BodyMeasurement.query.filter_by(
+        user_id=user_id
+    ).order_by(BodyMeasurement.date.desc()).first()
+
+    # Historique (90 derniers jours pour graphique)
+    ninety_days_ago = today - timedelta(days=90)
+    measurements = BodyMeasurement.query.filter(
+        BodyMeasurement.user_id == user_id,
+        BodyMeasurement.date >= ninety_days_ago
+    ).order_by(BodyMeasurement.date.desc()).all()
+
+    # Préparer données pour graphiques
+    dates = [m.date.strftime('%d/%m') for m in reversed(measurements)]
+    waist_data = [m.waist for m in reversed(measurements) if m.waist]
+    hips_data = [m.hips for m in reversed(measurements) if m.hips]
+    thigh_data = [m.thigh for m in reversed(measurements) if m.thigh]
+
+    # Calculer évolutions
+    stats = {}
+    if measurements and len(measurements) > 1:
+        first = measurements[-1]
+        latest = measurements[0]
+
+        if first.waist and latest.waist:
+            stats['waist_diff'] = latest.waist - first.waist
+        if first.hips and latest.hips:
+            stats['hips_diff'] = latest.hips - first.hips
+        if first.thigh and latest.thigh:
+            stats['thigh_diff'] = latest.thigh - first.thigh
+
+    # Calculer ratio taille/hanches si dispo
+    waist_hip_ratio = None
+    if latest_measurement and latest_measurement.waist and latest_measurement.hips:
+        waist_hip_ratio = round(latest_measurement.waist / latest_measurement.hips, 2)
+
+    return render_template('measurements.html',
+                         measurement_today=measurement_today,
+                         latest_measurement=latest_measurement,
+                         measurements=measurements,
+                         dates=dates,
+                         waist_data=waist_data,
+                         hips_data=hips_data,
+                         thigh_data=thigh_data,
+                         stats=stats,
+                         waist_hip_ratio=waist_hip_ratio,
+                         today=today,
+                         user=user,
+                         theme=user.theme)
+
+
+# ----------------------------------------
+# 6. ROUTE : AJOUTER MESURE
+# ----------------------------------------
+
+@app.route('/measurements/add', methods=['POST'])
+@login_required
+def add_measurement():
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+
+    if not user.track_measurements:
+        flash('Le suivi des mesures n\'est pas activé.', 'warning')
+        return redirect(url_for('dashboard'))
+
+    today = datetime.utcnow().date()
+
+    # Vérifier si déjà saisi aujourd'hui
+    existing = BodyMeasurement.query.filter_by(
+        user_id=user_id,
+        date=today
+    ).first()
+
+    if existing:
+        # Mise à jour
+        existing.waist = float(request.form.get('waist')) if request.form.get('waist') else None
+        existing.hips = float(request.form.get('hips')) if request.form.get('hips') else None
+        existing.thigh = float(request.form.get('thigh')) if request.form.get('thigh') else None
+        existing.arm = float(request.form.get('arm')) if request.form.get('arm') else None
+        existing.chest = float(request.form.get('chest')) if request.form.get('chest') else None
+        existing.calf = float(request.form.get('calf')) if request.form.get('calf') else None
+        existing.note = request.form.get('note', '').strip()
+
+        flash('✅ Mesures mises à jour !', 'success')
+    else:
+        # Création
+        new_measurement = BodyMeasurement(
+            user_id=user_id,
+            date=today,
+            waist=float(request.form.get('waist')) if request.form.get('waist') else None,
+            hips=float(request.form.get('hips')) if request.form.get('hips') else None,
+            thigh=float(request.form.get('thigh')) if request.form.get('thigh') else None,
+            arm=float(request.form.get('arm')) if request.form.get('arm') else None,
+            chest=float(request.form.get('chest')) if request.form.get('chest') else None,
+            calf=float(request.form.get('calf')) if request.form.get('calf') else None,
+            note=request.form.get('note', '').strip()
+        )
+        db.session.add(new_measurement)
+        flash('✅ Mesures enregistrées !', 'success')
+
+    db.session.commit()
+    return redirect(url_for('measurements'))
+
 # ========================================
 # API POUR LES GRAPHIQUES
 # ========================================

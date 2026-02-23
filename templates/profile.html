@@ -177,6 +177,37 @@
                         </div>
                     </label>
                 </div>
+                
+                <!-- Suivi mesures corporelles -->
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; cursor: pointer;">
+                    <input type="checkbox" name="track_measurements" value="1"
+                           {% if user.track_measurements %}checked{% endif %}
+                           id="track_measurements_checkbox"
+                           onchange="toggleSecondaryMeasurements()"
+                           style="width: 20px; height: 20px; cursor: pointer;">
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary);">📏 Suivi des mesures</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                            Active le suivi des mensurations (taille, hanches, cuisse)
+                        </div>
+                    </div>
+                </label>
+
+                <!-- Mesures secondaires (sous-option) -->
+                <div id="secondary_measurements_option" style="margin-left: 32px; {% if not user.track_measurements %}display: none;{% endif %}">
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: white; border-radius: 12px; border: 1px solid var(--bg-gradient-start); cursor: pointer;">
+                        <input type="checkbox" name="enable_secondary_measurements" value="1"
+                               {% if user.enable_secondary_measurements %}checked{% endif %}
+                               id="secondary_measurements_checkbox"
+                               style="width: 20px; height: 20px; cursor: pointer;">
+                        <div>
+                            <div style="font-weight: 600; color: var(--text-primary); font-size: 14px;">➕ Mesures secondaires</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                Tour de bras, poitrine et mollet
+                            </div>
+                        </div>
+                    </label>
+                </div>
 
             </div>
         </div>
@@ -404,10 +435,27 @@ function toggleGarminOption() {
     }
 }
 
+// Toggle option mesures secondaires selon mesures principales
+function toggleSecondaryMeasurements() {
+    const measurementsChecked = document.getElementById('track_measurements_checkbox').checked;
+    const secondaryOption = document.getElementById('secondary_measurements_option');
+    const secondaryCheckbox = document.getElementById('secondary_measurements_checkbox');
+    
+    if (measurementsChecked) {
+        secondaryOption.style.display = 'block';
+    } else {
+        secondaryOption.style.display = 'none';
+        secondaryCheckbox.checked = false;
+    }
+}
+
 // Aperçu temps réel des onglets dans la navbar
 document.getElementById('track_activities_checkbox').addEventListener('change', previewNavbar);
 document.getElementById('garmin_checkbox').addEventListener('change', previewNavbar);
 document.querySelectorAll('input[name="track_meals"]').forEach(cb => {
+    cb.addEventListener('change', previewNavbar);
+});
+document.querySelectorAll('input[name="track_measurements"]').forEach(cb => {
     cb.addEventListener('change', previewNavbar);
 });
 
@@ -415,6 +463,7 @@ function previewNavbar() {
     const mealsChecked = document.querySelector('input[name="track_meals"]').checked;
     const activitiesChecked = document.getElementById('track_activities_checkbox').checked;
     const garminChecked = document.getElementById('garmin_checkbox').checked;
+    const measurementsChecked = document.querySelector('input[name="track_measurements"]').checked;
 
     // Récupérer tous les liens navbar
     const navLinks = document.querySelectorAll('.navbar nav a');
@@ -431,6 +480,9 @@ function previewNavbar() {
         }
         if (href.includes('garmin')) {
             link.style.display = (activitiesChecked && garminChecked) ? 'flex' : 'none';
+        }
+        if (href.includes('measurements')) {
+            link.style.display = measurementsChecked ? 'flex' : 'none';
         }
     });
 }

@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Mesures corporelles - NutriStep{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">
+    <svg class="icon icon-xl"><use href="#icon-ruler"/></svg> Mesures corporelles
+</h1>
+
+<!-- Schéma anatomique + Guide AMÉLIORÉ -->
+<div class="card" style="background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end)); border: none;">
+    <h2 style="margin-bottom: 20px;"><svg class="icon"><use href="#icon-target"/></svg> Où mesurer exactement ?</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; align-items: start;">
+        
+        <!-- Schéma anatomique SVG AMÉLIORÉ -->
+        <div style="text-align: center;">
+            <svg viewBox="0 0 240 450" xmlns="http://www.w3.org/2000/svg" style="max-width: 240px; height: auto;">
+                <defs>
+                    <!-- Gradient pour le corps -->
+                    <linearGradient id="body-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#e0f2fe;stop-opacity:0.3" />
+                        <stop offset="100%" style="stop-color:#bae6fd;stop-opacity:0.5" />
+                    </linearGradient>
+                </defs>
+                
+                <!-- Silhouette humaine détaillée -->
+                <g stroke="var(--text-primary)" stroke-width="2.5" fill="url(#body-gradient)">
+                    <!-- Tête -->
+                    <circle cx="120" cy="35" r="25"/>
+                    
+                    <!-- Cou -->
+                    <rect x="110" y="58" width="20" height="15" rx="3"/>
+                    
+                    <!-- Torse -->
+                    <path d="M 95 73 Q 90 100, 90 130 L 90 160 Q 90 165, 95 165 L 145 165 Q 150 165, 150 160 L 150 130 Q 150 100, 145 73 Z"/>
+                    
+                    <!-- Bras gauche -->
+                    <path d="M 95 80 Q 75 95, 65 115 L 60 150" fill="none"/>
+                    <!-- Bras droit -->
+                    <path d="M 145 80 Q 165 95, 175 115 L 180 150" fill="none"/>
+                    
+                    <!-- Bassin/Hanches -->
+                    <ellipse cx="120" cy="175" rx="35" ry="18"/>
+                    
+                    <!-- Jambe gauche -->
+                    <path d="M 95 180 Q 92 240, 90 300 L 85 400" fill="none"/>
+                    <!-- Jambe droite -->
+                    <path d="M 145 180 Q 148 240, 150 300 L 155 400" fill="none"/>
+                </g>
+                
+                <!-- MESURES ESSENTIELLES (numéros 1-2-3) -->
+                
+                <!-- ① Tour de taille -->
+                <g>
+                    <ellipse cx="120" cy="130" rx="38" ry="14" 
+                             stroke="#10b981" stroke-width="3.5" fill="none"/>
+                    <circle cx="165" cy="130" r="14" fill="#10b981"/>
+                    <text x="165" y="136" font-size="18" font-weight="700" fill="white" text-anchor="middle">①</text>
+                    <!-- Flèche indicatrice -->
+                    <path d="M 175 130 L 190 130" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-green)"/>
+                    <text x="195" y="135" font-size="13" font-weight="600" fill="#10b981">Taille</text>
+                </g>
+                
+                <!-- ② Tour de hanches -->
+                <g>
+                    <ellipse cx="120" cy="175" rx="42" ry="16" 
+                             stroke="#10b981" stroke-width="3.5" fill="none"/>
+                    <circle cx="168" cy="175" r="14" fill="#10b981"/>
+                    <text x="168" y="181" font-size="18" font-weight="700" fill="white" text-anchor="middle">②</text>
+                    <path d="M 178 175 L 190 175" stroke="#10b981" stroke-width="2"/>
+                    <text x="195" y="180" font-size="13" font-weight="600" fill="#10b981">Hanches</text>
+                </g>
+                
+                <!-- ③ Tour de cuisse -->
+                <g>
+                    <ellipse cx="95" cy="220" rx="22" ry="12" 
+                             stroke="#10b981" stroke-width="3.5" fill="none"/>
+                    <circle cx="120" cy="220" r="14" fill="#10b981"/>
+                    <text x="120" y="226" font-size="18" font-weight="700" fill="white" text-anchor="middle">③</text>
+                    <path d="M 130 220 L 145 220" stroke="#10b981" stroke-width="2"/>
+                    <text x="150" y="225" font-size="13" font-weight="600" fill="#10b981">Cuisse</text>
+                </g>
+                
+                {% if user.enable_secondary_measurements %}
+                <!-- MESURES SECONDAIRES (numéros 4-5-6) -->
+                
+                <!-- ④ Tour de bras -->
+                <g opacity="0.8">
+                    <ellipse cx="68" cy="105" rx="14" ry="24" 
+                             stroke="#6366f1" stroke-width="2.5" fill="none" stroke-dasharray="4,3"/>
+                    <circle cx="50" cy="105" r="12" fill="#6366f1"/>
+                    <text x="50" y="111" font-size="16" font-weight="700" fill="white" text-anchor="middle">④</text>
+                    <path d="M 40 105 L 25 105" stroke="#6366f1" stroke-width="2"/>
+                    <text x="5" y="110" font-size="12" font-weight="600" fill="#6366f1">Bras</text>
+                </g>
+                
+                <!-- ⑤ Tour de poitrine -->
+                <g opacity="0.8">
+                    <ellipse cx="120" cy="90" rx="42" ry="16" 
+                             stroke="#6366f1" stroke-width="2.5" fill="none" stroke-dasharray="4,3"/>
+                    <circle cx="168" cy="90" r="12" fill="#6366f1"/>
+                    <text x="168" y="96" font-size="16" font-weight="700" fill="white" text-anchor="middle">⑤</text>
+                    <path d="M 178 90 L 190 90" stroke="#6366f1" stroke-width="2"/>
+                    <text x="195" y="95" font-size="12" font-weight="600" fill="#6366f1">Poitrine</text>
+                </g>
+                
+                <!-- ⑥ Tour de mollet -->
+                <g opacity="0.8">
+                    <ellipse cx="88" cy="310" rx="14" ry="10" 
+                             stroke="#6366f1" stroke-width="2.5" fill="none" stroke-dasharray="4,3"/>
+                    <circle cx="115" cy="310" r="12" fill="#6366f1"/>
+                    <text x="115" y="316" font-size="16" font-weight="700" fill="white" text-anchor="middle">⑥</text>
+                    <path d="M 125 310 L 140 310" stroke="#6366f1" stroke-width="2"/>
+                    <text x="145" y="315" font-size="12" font-weight="600" fill="#6366f1">Mollet</text>
+                </g>
+                {% endif %}
+                
+                <!-- Markers pour flèches -->
+                <defs>
+                    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
+                        <path d="M0,0 L0,6 L9,3 z" fill="#10b981" />
+                    </marker>
+                </defs>
+            </svg>
+            
+            <p style="margin-top: 20px; font-size: 13px; color: var(--text-secondary); font-style: italic;">
+                💡 Conseil : Mesurez toujours au même endroit, le matin à jeun
+            </p>
+        </div>
+        
+        <!-- Légende détaillée -->
+        <div>
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 16px;">
+                <h3 style="color: #10b981; margin-bottom: 16px; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                    <svg class="icon" style="width:20px;height:20px;color:#10b981"><use href="#icon-check-circle"/></svg>
+                    Mesures essentielles
+                </h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin-bottom: 16px; display: flex; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #f3f4f6;">
+                        <span style="color: #10b981; font-weight: 700; font-size: 20px; flex-shrink: 0;">①</span>
+                        <div>
+                            <strong style="color: var(--text-primary);">Tour de taille</strong><br>
+                            <span style="color: var(--text-secondary); font-size: 14px;">
+                                Au niveau du nombril, debout, ventre relâché (pas rentré !)
+                            </span>
+                        </div>
+                    </li>
+                    <li style="margin-bottom: 16px; display: flex; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #f3f4f6;">
+                        <span style="color: #10b981; font-weight: 700; font-size: 20px; flex-shrink: 0;">②</span>
+                        <div>
+                            <strong style="color: var(--text-primary);">Tour de hanches</strong><br>
+                            <span style="color: var(--text-secondary); font-size: 14px;">
+                                À l'endroit le plus large des fesses, pieds joints
+                            </span>
+                        </div>
+                    </li>
+                    <li style="margin-bottom: 0; display: flex; gap: 12px;">
+                        <span style="color: #10b981; font-weight: 700; font-size: 20px; flex-shrink: 0;">③</span>
+                        <div>
+                            <strong style="color: var(--text-primary);">Tour de cuisse</strong><br>
+                            <span style="color: var(--text-secondary); font-size: 14px;">
+                                Milieu de la cuisse (entre l'aine et le genou), jambe détendue
+                            </span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            
+            {% if user.enable_secondary_measurements %}
+            <div style="background: white; padding: 20px; border-radius: 12px; border: 2px dashed #6366f1;">
+                <h3 style="color: #6366f1; margin-bottom: 16px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    <svg class="icon" style="width:18px;height:18px;color:#6366f1"><use href="#icon-target"/></svg>
+                    Mesures secondaires
+                </h3>
+                <ul style="list-style: none; padding: 0; font-size: 14px;">
+                    <li style="margin-bottom: 10px; color: var(--text-secondary);">
+                        <span style="color: #6366f1; font-weight: 700;">④</span> Tour de bras (biceps détendu, milieu du bras)
+                    </li>
+                    <li style="margin-bottom: 10px; color: var(--text-secondary);">
+                        <span style="color: #6366f1; font-weight: 700;">⑤</span> Tour de poitrine (sous les aisselles, dos droit)
+                    </li>
+                    <li style="margin-bottom: 0; color: var(--text-secondary);">
+                        <span style="color: #6366f1; font-weight: 700;">⑥</span> Tour de mollet (partie la plus large)
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Formulaire de saisie -->
+{% if not measurement_today %}
+<div class="card">
+    <h2><svg class="icon"><use href="#icon-plus"/></svg> Enregistrer mes mesures aujourd'hui</h2>
+    
+    <form method="POST" action="{{ url_for('add_measurement') }}">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px;">
+            
+            <!-- Mesures essentielles -->
+            <div class="form-group">
+                <label for="waist">① Tour de taille (cm) *</label>
+                <input type="number" step="0.1" class="form-control" id="waist" name="waist" 
+                       value="{{ latest_measurement.waist if latest_measurement else '' }}" 
+                       placeholder="Ex: 85.5" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="hips">② Tour de hanches (cm) *</label>
+                <input type="number" step="0.1" class="form-control" id="hips" name="hips" 
+                       value="{{ latest_measurement.hips if latest_measurement else '' }}" 
+                       placeholder="Ex: 98.0" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="thigh">③ Tour de cuisse (cm) *</label>
+                <input type="number" step="0.1" class="form-control" id="thigh" name="thigh" 
+                       value="{{ latest_measurement.thigh if latest_measurement else '' }}" 
+                       placeholder="Ex: 55.0" required>
+            </div>
+        </div>
+        
+        {% if user.enable_secondary_measurements %}
+        <div style="padding: 20px; background: linear-gradient(135deg, #ede9fe, #ddd6fe); border-radius: 12px; margin-bottom: 20px;">
+            <h3 style="color: #6366f1; margin-bottom: 16px; font-size: 16px;">
+                <svg class="icon" style="width:18px;height:18px;color:#6366f1"><use href="#icon-target"/></svg>
+                Mesures secondaires (optionnel)
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <div class="form-group">
+                    <label for="arm">④ Tour de bras (cm)</label>
+                    <input type="number" step="0.1" class="form-control" id="arm" name="arm" 
+                           value="{{ latest_measurement.arm if latest_measurement else '' }}" 
+                           placeholder="Ex: 30.0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="chest">⑤ Tour de poitrine (cm)</label>
+                    <input type="number" step="0.1" class="form-control" id="chest" name="chest" 
+                           value="{{ latest_measurement.chest if latest_measurement else '' }}" 
+                           placeholder="Ex: 95.0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="calf">⑥ Tour de mollet (cm)</label>
+                    <input type="number" step="0.1" class="form-control" id="calf" name="calf" 
+                           value="{{ latest_measurement.calf if latest_measurement else '' }}" 
+                           placeholder="Ex: 38.0">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <button type="submit" class="btn btn-primary">
+            <svg class="icon"><use href="#icon-save"/></svg> Enregistrer
+        </button>
+    </form>
+</div>
+{% else %}
+<div class="card" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0); border-left: 4px solid #10b981;">
+    <p style="margin: 0; font-size: 16px; color: #065f46; font-weight: 600;">
+        <svg class="icon"><use href="#icon-check-circle"/></svg> Mesures du jour enregistrées !
+    </p>
+</div>
+{% endif %}
+
+<!-- Stats + Ratio -->
+{% if latest_measurement %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Dernière mesure</h3>
+        <div class="value" style="font-size: 18px;">{{ latest_measurement.date.strftime('%d/%m/%Y') }}</div>
+    </div>
+    
+    {% if waist_hip_ratio %}
+    <div class="stat-card">
+        <h3>Ratio Taille/Hanches</h3>
+        <div class="value">{{ waist_hip_ratio }}</div>
+        <div class="unit" style="font-size: 12px; color: 
+            {% if (user.gender == 'M' and waist_hip_ratio < 0.9) or (user.gender == 'F' and waist_hip_ratio < 0.8) %}#10b981
+            {% else %}#f59e0b{% endif %};">
+            {% if (user.gender == 'M' and waist_hip_ratio < 0.9) or (user.gender == 'F' and waist_hip_ratio < 0.8) %}
+                ✓ Excellent
+            {% else %}
+                ⚠ À surveiller
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if stats.waist_diff %}
+    <div class="stat-card">
+        <h3>Évolution taille</h3>
+        <div class="value" style="color: {% if stats.waist_diff < 0 %}#10b981{% else %}#ef4444{% endif %};">
+            {{ "%.1f"|format(stats.waist_diff|abs) }}
+        </div>
+        <div class="unit">
+            cm {% if stats.waist_diff < 0 %}<svg class="icon" style="width:16px;height:16px;color:#10b981"><use href="#icon-trend-down"/></svg>{% else %}<svg class="icon" style="width:16px;height:16px;color:#ef4444"><use href="#icon-trend-up"/></svg>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Graphiques -->
+{% if measurements|length > 1 %}
+<div class="card">
+    <h2><svg class="icon"><use href="#icon-activity"/></svg> Évolution des mesures</h2>
+    <canvas id="measurementsChart" height="80"></canvas>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if measurements|length > 1 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const ctx = document.getElementById('measurementsChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ dates|tojson }},
+        datasets: [
+            {
+                label: 'Taille (cm)',
+                data: {{ waist_data|tojson }},
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Hanches (cm)',
+                data: {{ hips_data|tojson }},
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Cuisse (cm)',
+                data: {{ thigh_data|tojson }},
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                tension: 0.4,
+                fill: true
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: true, position: 'bottom' }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

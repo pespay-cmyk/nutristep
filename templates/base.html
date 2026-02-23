@@ -556,6 +556,11 @@
                         <svg class="icon"><use href="#icon-balance"/></svg>
                         Poids
                     </a>
+                    <a href="{{ url_for('measurements') }}"
+                       style="{% if not (current_user and current_user.track_measurements) %}display:none;{% endif %}">
+                        <svg class="icon"><use href="#icon-ruler"/></svg>
+                        Mesures
+                    </a>
 
                     <a href="{{ url_for('meals') }}"
                        style="{% if not (current_user and current_user.track_meals) %}display:none;{% endif %}">
@@ -575,13 +580,6 @@
                         <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
                         Activités
                     </a>
-
-                    <a href="{{ url_for('garmin_csv_import') }}"
-                       style="{% if not (current_user and current_user.track_activities and current_user.enable_garmin_import) %}display:none;{% endif %}">
-                        <svg class="icon icon-activity"><use href="#icon-activity"/></svg>
-                        Garmin
-                    </a>
-
                     <a href="{{ url_for('profile') }}">
                         <svg class="icon icon-settings"><use href="#icon-settings"/></svg>
                         Profil
