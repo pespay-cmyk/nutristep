@@ -1,18 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Fond avec dégradé -->
+<svg width="32" height="32" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="grad-favicon" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
     </linearGradient>
   </defs>
-  
-  <!-- Cercle de fond -->
-  <circle cx="50" cy="50" r="48" fill="url(#grad1)"/>
-  
-  <!-- N stylisé (NutriStep) -->
-  <text x="50" y="70" font-family="Arial, sans-serif" font-size="60" font-weight="bold" fill="white" text-anchor="middle">N</text>
-  
-  <!-- Petit accent (feuille santé) -->
-  <path d="M 65 25 Q 70 20 75 25 T 75 35 Q 70 40 65 35 Z" fill="white" opacity="0.8"/>
+  <rect width="200" height="200" rx="45" fill="url(#grad-favicon)"/>
+  <g fill="white" opacity="0.95">
+    <rect x="45" y="70" width="14" height="65" rx="2"/>
+    <path d="M 59 70 L 108 125 L 108 135 L 100 127 L 120 127 L 100 147 L 80 127 L 88 127 L 88 120 L 66 80 Z"/>
+    <rect x="108" y="70" width="14" height="65" rx="2"/>
+  </g>
+  <g fill="white" opacity="1">
+    <rect x="145" y="80" width="3" height="15" rx="1"/>
+    <rect x="135" y="77" width="23" height="3" rx="1.5"/>
+    <circle cx="138" cy="68" r="6"/>
+    <circle cx="153" cy="73" r="5"/>
+    <line x1="138" y1="74" x2="138" y2="77" stroke="white" stroke-width="1"/>
+    <line x1="153" y1="78" x2="153" y2="77" stroke="white" stroke-width="1"/>
+  </g>
 </svg>

@@ -1,5 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
 
+  <!-- LOGO NUTRISTEP - Version navbar (vert foncé) -->
+  <symbol id="icon-logo-app" viewBox="0 0 200 200">
+    <defs>
+      <linearGradient id="grad-logo-app" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+      </linearGradient>
+    </defs>
+    <rect width="200" height="200" rx="45" fill="url(#grad-logo-app)"/>
+    <g fill="white" opacity="0.95">
+      <rect x="45" y="70" width="14" height="65" rx="2"/>
+      <path d="M 59 70 L 108 125 L 108 135 L 100 127 L 120 127 L 100 147 L 80 127 L 88 127 L 88 120 L 66 80 Z"/>
+      <rect x="108" y="70" width="14" height="65" rx="2"/>
+    </g>
+    <g fill="#065f46" opacity="0.95">
+      <rect x="145" y="80" width="3" height="15" rx="1"/>
+      <rect x="135" y="77" width="23" height="3" rx="1.5"/>
+      <circle cx="138" cy="68" r="6"/>
+      <circle cx="153" cy="73" r="5"/>
+      <line x1="138" y1="74" x2="138" y2="77" stroke="#065f46" stroke-width="1"/>
+      <line x1="153" y1="78" x2="153" y2="77" stroke="#065f46" stroke-width="1"/>
+    </g>
+  </symbol>
+
+  <!-- BALANCE SEULE - Pour onglet Poids -->
+  <symbol id="icon-balance" viewBox="0 0 24 24" fill="currentColor">
+    <rect x="11" y="16" width="2" height="6" rx="0.5"/>
+    <rect x="4" y="14.5" width="16" height="1.5" rx="0.75"/>
+    <circle cx="6.5" cy="9" r="4"/>
+    <line x1="6.5" y1="13" x2="6.5" y2="14.5" stroke="currentColor" stroke-width="0.8"/>
+    <circle cx="17.5" cy="11.5" r="3.5"/>
+    <line x1="17.5" y1="15" x2="17.5" y2="14.5" stroke="currentColor" stroke-width="0.8"/>
+  </symbol>
+
   <!-- Dashboard / Home -->
   <symbol id="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
