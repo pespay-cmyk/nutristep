@@ -141,10 +141,18 @@
     }
 
     /* Stats grid : forcer 2 colonnes */
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 12px !important;
+    .profile-stats-grid {
+        grid-template-columns: 1fr !important;
     }
+
+    .imc-gauge {
+        max-width: 100% !important;
+    }
+
+    .imc-gauge {
+        max-width: 100% !important;
+    }
+
 
     /* Tableaux : réduire taille police */
     table {

@@ -11,28 +11,55 @@
             gap: 20px !important;
         }
         
-        /* Schéma pleine largeur */
-        .measurements-schema-grid > div:first-child {
-            order: 1;
+        /* Date verticale compacte */
+        table th:first-child,
+        table td:first-child {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            min-width: 30px !important;
+            max-width: 30px !important;
+            font-size: 9px !important;
+            padding: 8px 2px !important;
         }
         
-        /* Légende dessous */
-        .measurements-schema-grid > div:last-child {
-            order: 2;
+        /* Masquer badge AUJOURD'HUI */
+        .today-badge {
+            display: none !important;
         }
         
-        /* Masquer texte du bouton supprimer */
+        /* Headers : Remplacer par numéros colorés */
+        table thead th:not(:first-child):not(:last-child) {
+            font-size: 0 !important;
+            padding: 6px 2px !important;
+        }
+        
+        /* Numéros via pseudo-élément */
+        table thead th:nth-child(2)::before { content: "①"; font-size: 16px; color: #10b981; }
+        table thead th:nth-child(3)::before { content: "②"; font-size: 16px; color: #10b981; }
+        table thead th:nth-child(4)::before { content: "③"; font-size: 16px; color: #10b981; }
+        table thead th:nth-child(5)::before { content: "④"; font-size: 14px; color: #6366f1; }
+        table thead th:nth-child(6)::before { content: "⑤"; font-size: 14px; color: #6366f1; }
+        table thead th:nth-child(7)::before { content: "⑥"; font-size: 14px; color: #6366f1; }
+        
+        /* Valeurs compactes */
+        table td {
+            font-size: 11px !important;
+            padding: 6px 2px !important;
+        }
+        
+        /* Bouton supprimer */
+        .btn-small {
+            padding: 6px !important;
+        }
+        
         .btn-delete-text {
             display: none;
         }
         
-        /* Tableau responsive */
-        table {
-            font-size: 12px;
-        }
-        
-        table th, table td {
-            padding: 8px 4px;
+        /* Stats grid gap uniforme */
+        .stats-grid {
+            gap: 12px !important;
         }
     }
 </style>
@@ -362,7 +389,7 @@
                 <td style="font-weight: 600;">
                     {{ measurement.date.strftime('%d/%m/%Y') }}
                     {% if measurement.date == today %}
-                        <span style="background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-left: 8px;">AUJOURD'HUI</span>
+                        <span class="today-badge" style="background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-left: 8px;">AUJOURD'HUI</span>
                     {% endif %}
                 </td>
                 <td><strong>{{ measurement.waist if measurement.waist else '—' }}</strong></td>
@@ -399,10 +426,16 @@
 {% endif %}
 
 <!-- Graphiques -->
-{% if measurements|length > 1 %}
+{% if measurements|length > 0 %}
 <div class="card">
     <h2><svg class="icon"><use href="#icon-activity"/></svg> Évolution des mesures</h2>
+    {% if measurements|length > 1 %}
     <canvas id="measurementsChart" height="80"></canvas>
+    {% else %}
+    <p style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+        📊 Le graphique s'affichera dès que tu auras enregistré une deuxième mesure !
+    </p>
+    {% endif %}
 </div>
 {% endif %}
 

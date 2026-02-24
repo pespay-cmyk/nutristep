@@ -180,10 +180,16 @@
 {% endif %}
 
 <!-- Graphique mesures corporelles (si activé) -->
-{% if user.track_measurements and latest_measurements and latest_measurements|length > 1 %}
+{% if user.track_measurements and latest_measurements and latest_measurements|length > 0 %}
 <div class="card">
     <h2><svg class="icon"><use href="#icon-ruler"/></svg> Évolution des mesures</h2>
+    {% if latest_measurements|length > 1 %}
     <canvas id="measurementsChart" height="70"></canvas>
+    {% else %}
+    <p style="text-align: center; padding: 30px 20px; color: var(--text-secondary); font-size: 14px;">
+        📊 Enregistre une deuxième mesure pour voir le graphique d'évolution !
+    </p>
+    {% endif %}
     <a href="{{ url_for('measurements') }}" class="btn btn-primary" style="margin-top: 15px;">
         <svg class="icon"><use href="#icon-plus"/></svg> Ajouter mesures
     </a>

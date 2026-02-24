@@ -9,6 +9,46 @@
         .btn-delete-text {
             display: none;
         }
+        
+        /* Tableau responsive */
+        table {
+            font-size: 11px !important;
+        }
+        
+        table th, table td {
+            padding: 8px 3px !important;
+        }
+        
+        /* Date en mode vertical */
+        table th:first-child,
+        table td:first-child {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            min-width: 35px !important;
+            max-width: 35px !important;
+            font-size: 10px !important;
+        }
+        
+        /* Masquer badge "AUJOURD'HUI" */
+        .today-badge {
+            display: none !important;
+        }
+        
+        /* Poids plus compact */
+        table td:nth-child(2) strong {
+            font-size: 14px !important;
+        }
+        
+        /* Bouton supprimer plus petit */
+        .btn-small {
+            padding: 6px !important;
+        }
+        
+        /* Stats grid avec gap uniforme */
+        .stats-grid {
+            gap: 16px !important;
+        }
     }
 </style>
 
@@ -114,7 +154,7 @@
                     <td style="font-weight: 600;">
                         {{ entry.date.strftime('%d/%m/%Y') }}
                         {% if entry.date == today %}
-                            <span style="background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-left: 8px;">AUJOURD'HUI</span>
+                            <span class="today-badge" style="background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-left: 8px;">AUJOURD'HUI</span>
                         {% endif %}
                     </td>
                     <td>
