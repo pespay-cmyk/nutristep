@@ -356,6 +356,15 @@ def dashboard():
     # Poids actuel
     latest_weight = WeightEntry.query.filter_by(user_id=user_id).order_by(WeightEntry.date.desc()).first()
 
+    # Mesures corporelles (30 derniers jours)
+    latest_measurements = []
+    if user.track_measurements:
+        thirty_days_ago = datetime.utcnow().date() - timedelta(days=30)
+        latest_measurements = BodyMeasurement.query.filter(
+            BodyMeasurement.user_id == user_id,
+            BodyMeasurement.date >= thirty_days_ago
+        ).order_by(BodyMeasurement.date).all()
+
     # Repas d'aujourd'hui
     today_meals = MealEntry.query.filter_by(user_id=user_id, date=today).all()
 
@@ -444,6 +453,7 @@ def dashboard():
                          steps_stats=steps_stats,
                          activities_by_date=activities_by_date,
                          user=user,
+                         latest_measurements=latest_measurements,
                          theme=user.theme)
 
 # ========================================
@@ -1658,6 +1668,23 @@ def add_measurement():
         flash('✅ Mesures enregistrées !', 'success')
 
     db.session.commit()
+    return redirect(url_for('measurements'))
+
+@app.route('/measurements/delete/<int:id>', methods=['POST'])
+@login_required
+def delete_measurement(id):
+    user_id = session['user_id']
+    measurement = BodyMeasurement.query.get_or_404(id)
+
+    # Vérifier que la mesure appartient bien à l'utilisateur
+    if measurement.user_id != user_id:
+        flash('Action non autorisée', 'error')
+        return redirect(url_for('measurements'))
+
+    db.session.delete(measurement)
+    db.session.commit()
+
+    flash('✅ Mesure supprimée !', 'success')
     return redirect(url_for('measurements'))
 
 # ========================================

@@ -731,11 +731,17 @@ const allMeals = [
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                             <div class="qualification-selector">
                                 <button type="button" class="qualification-btn ${mealData.qualification === 'normal' ? 'active normal' : ''}"
-                                        onclick="setQualification('${mealType}', 'normal')">Normal</button>
+                                        onclick="setQualification('${mealType}', 'normal')" title="Normal">
+                                    <svg class="icon"><use href="#icon-check"/></svg>
+                                </button>
                                 <button type="button" class="qualification-btn ${mealData.qualification === 'exception' ? 'active exception' : ''}"
-                                        onclick="setQualification('${mealType}', 'exception')">Exception</button>
+                                        onclick="setQualification('${mealType}', 'exception')" title="Exception">
+                                    <svg class="icon"><use href="#icon-exception"/></svg>
+                                </button>
                                 <button type="button" class="qualification-btn ${mealData.qualification === 'equilibrage' ? 'active equilibrage' : ''}"
-                                        onclick="setQualification('${mealType}', 'equilibrage')">Compensation</button>
+                                        onclick="setQualification('${mealType}', 'equilibrage')" title="Compensation">
+                                    <svg class="icon"><use href="#icon-equilibrage"/></svg>
+                                </button>
                             </div>
                             <button type="button" class="btn-remove" style="padding: 8px 12px; font-size: 12px;" onclick="removeMeal('${mealType}'); markChanged();">
                                 <svg class="icon"><use href="#icon-delete"/></svg>️ Suppr
@@ -874,14 +880,8 @@ const allMeals = [
 
     function showAutocomplete(input) {
         const value = input.value.toLowerCase();
-        if (value.length < 2) return;
-
-        const matches = userFoodHistory.filter(food =>
-            food.toLowerCase().includes(value)
-        ).slice(0, 5);
-
-        if (matches.length === 0) return;
-
+        
+        // Récupérer ou créer le dropdown
         let dropdown = input.nextElementSibling;
         if (!dropdown || !dropdown.classList.contains('autocomplete-dropdown')) {
             dropdown = document.createElement('div');
@@ -889,12 +889,30 @@ const allMeals = [
             input.parentElement.style.position = 'relative';
             input.after(dropdown);
         }
+        
+        // Si moins de 2 caractères, cacher le dropdown
+        if (value.length < 2) {
+            dropdown.classList.remove('active');
+            return;
+        }
 
+        const matches = userFoodHistory.filter(food =>
+            food.toLowerCase().includes(value)
+        ).slice(0, 5);
+
+        // Si pas de matches, cacher le dropdown
+        if (matches.length === 0) {
+            dropdown.classList.remove('active');
+            return;
+        }
+
+        // Afficher les suggestions
         dropdown.innerHTML = matches.map(food =>
             `<div class="autocomplete-item" onclick="selectFood(this, '${food.replace(/'/g, "\\'")}')">${food}</div>`
         ).join('');
         dropdown.classList.add('active');
 
+        // Fermer au clic extérieur
         document.addEventListener('click', function closeDropdown(e) {
             if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.classList.remove('active');

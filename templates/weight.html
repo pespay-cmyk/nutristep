@@ -3,7 +3,16 @@
 {% block title %}Suivi du poids - NutriStep{% endblock %}
 
 {% block content %}
-<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;"><svg class="icon icon-xl"><use href="#icon-weight"/></svg> Suivi du poids</h1>
+<style>
+    @media (max-width: 768px) {
+        /* Masquer texte du bouton supprimer sur mobile */
+        .btn-delete-text {
+            display: none;
+        }
+    }
+</style>
+
+<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;"><svg class="icon icon-xl"><use href="#icon-balance"/></svg> Suivi du poids</h1>
 
 <!-- Message si pas saisi depuis X jours -->
 {% if days_since_last_entry and days_since_last_entry >= 7 %}
@@ -134,16 +143,16 @@
                     </td>
                     <td>
                         {% if entry.date == today %}
-                        <form method="POST" action="{{ url_for('delete_weight', entry_id=entry.id) }}" 
-                              style="display: inline;" 
+                        <form method="POST" action="{{ url_for('delete_weight', entry_id=entry.id) }}"
+                              style="display: inline;"
                               onsubmit="return confirm('Supprimer la pesée du jour ?');">
-                            <button type="submit" 
+                            <button type="submit"
                                     class="btn btn-danger btn-small"
                                     style="background: none; border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;"
-                                    onmouseover="this.style.background='#fee2e2'" 
+                                    onmouseover="this.style.background='#fee2e2'"
                                     onmouseout="this.style.background='transparent'">
                                 <svg class="icon" style="width:14px;height:14px;"><use href="#icon-delete"/></svg>
-                                Supprimer
+                                <span class="btn-delete-text">Supprimer</span>
                             </button>
                         </form>
                         {% else %}

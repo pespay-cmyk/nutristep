@@ -179,6 +179,17 @@
 </div>
 {% endif %}
 
+<!-- Graphique mesures corporelles (si activé) -->
+{% if user.track_measurements and latest_measurements and latest_measurements|length > 1 %}
+<div class="card">
+    <h2><svg class="icon"><use href="#icon-ruler"/></svg> Évolution des mesures</h2>
+    <canvas id="measurementsChart" height="70"></canvas>
+    <a href="{{ url_for('measurements') }}" class="btn btn-primary" style="margin-top: 15px;">
+        <svg class="icon"><use href="#icon-plus"/></svg> Ajouter mesures
+    </a>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block extra_js %}
@@ -392,6 +403,77 @@
         };
         return emojis[type] || '🎯';
     }
+{% endif %}
+
+// Graphique mesures corporelles
+{% if user.track_measurements and latest_measurements and latest_measurements|length > 1 %}
+    const ctxMeasurements = document.getElementById('measurementsChart').getContext('2d');
+    const measurementsData = {
+        labels: [
+            {% for m in latest_measurements %}
+                '{{ m.date.strftime("%d/%m") }}'{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [
+            {
+                label: 'Taille (cm)',
+                data: [
+                    {% for m in latest_measurements %}
+                        {{ m.waist if m.waist else 'null' }}{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Hanches (cm)',
+                data: [
+                    {% for m in latest_measurements %}
+                        {{ m.hips if m.hips else 'null' }}{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Cuisse (cm)',
+                data: [
+                    {% for m in latest_measurements %}
+                        {{ m.thigh if m.thigh else 'null' }}{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                tension: 0.4,
+                fill: true
+            }
+        ]
+    };
+    
+    new Chart(ctxMeasurements, {
+        type: 'line',
+        data: measurementsData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: true, position: 'bottom' }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' cm';
+                        }
+                    }
+                }
+            }
+        }
+    });
 {% endif %}
 </script>
 {% endblock %}

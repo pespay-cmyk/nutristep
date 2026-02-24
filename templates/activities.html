@@ -21,14 +21,27 @@
 
         table {
             font-size: 12px;
+            display: block;
+            overflow-x: auto;
         }
 
         table th, table td {
-            padding: 8px 6px;
+            padding: 8px 4px;
+        }
+        
+        /* Masquer colonne Note sur mobile */
+        table th:nth-child(4),
+        table td:nth-child(4) {
+            display: none;
+        }
+
+        /* Bouton supprimer : icône seule sans texte */
+        .btn-delete-text {
+            display: none;
         }
 
         .btn-small {
-            padding: 4px 8px;
+            padding: 8px;
             font-size: 11px;
         }
 
@@ -176,7 +189,7 @@
                         <a href="{{ url_for('delete_activity', id=entry.id) }}"
                            class="btn btn-danger btn-small"
                            onclick="return confirm('Supprimer cette activité ?')">
-                            <svg class="icon icon-sm"><use href="#icon-delete"/></svg>️ Supprimer
+                            <svg class="icon icon-sm"><use href="#icon-delete"/></svg><span class="btn-delete-text"> Supprimer</span>
                         </a>
                     </td>
                 </tr>

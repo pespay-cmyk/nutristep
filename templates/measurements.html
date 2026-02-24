@@ -3,6 +3,40 @@
 {% block title %}Mesures corporelles - NutriStep{% endblock %}
 
 {% block content %}
+<style>
+    @media (max-width: 768px) {
+        /* Schéma + légende en colonne sur mobile */
+        .measurements-schema-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+        }
+        
+        /* Schéma pleine largeur */
+        .measurements-schema-grid > div:first-child {
+            order: 1;
+        }
+        
+        /* Légende dessous */
+        .measurements-schema-grid > div:last-child {
+            order: 2;
+        }
+        
+        /* Masquer texte du bouton supprimer */
+        .btn-delete-text {
+            display: none;
+        }
+        
+        /* Tableau responsive */
+        table {
+            font-size: 12px;
+        }
+        
+        table th, table td {
+            padding: 8px 4px;
+        }
+    }
+</style>
+
 <h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">
     <svg class="icon icon-xl"><use href="#icon-ruler"/></svg> Mesures corporelles
 </h1>
@@ -11,7 +45,7 @@
 <div class="card" style="background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end)); border: none;">
     <h2 style="margin-bottom: 20px;"><svg class="icon"><use href="#icon-target"/></svg> Où mesurer exactement ?</h2>
     
-    <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; align-items: start;">
+    <div class="measurements-schema-grid" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; align-items: start;">
         
         <!-- Schéma anatomique SVG AMÉLIORÉ -->
         <div style="text-align: center;">
@@ -300,6 +334,67 @@
         </div>
     </div>
     {% endif %}
+</div>
+{% endif %}
+
+<!-- Historique -->
+{% if measurements %}
+<div class="card">
+    <h2><svg class="icon"><use href="#icon-history"/></svg> Historique</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Taille</th>
+                <th>Hanches</th>
+                <th>Cuisse</th>
+                {% if user.enable_secondary_measurements %}
+                <th>Bras</th>
+                <th>Poitrine</th>
+                <th>Mollet</th>
+                {% endif %}
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for measurement in measurements %}
+            <tr>
+                <td style="font-weight: 600;">
+                    {{ measurement.date.strftime('%d/%m/%Y') }}
+                    {% if measurement.date == today %}
+                        <span style="background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-left: 8px;">AUJOURD'HUI</span>
+                    {% endif %}
+                </td>
+                <td><strong>{{ measurement.waist if measurement.waist else '—' }}</strong></td>
+                <td><strong>{{ measurement.hips if measurement.hips else '—' }}</strong></td>
+                <td><strong>{{ measurement.thigh if measurement.thigh else '—' }}</strong></td>
+                {% if user.enable_secondary_measurements %}
+                <td>{{ measurement.arm if measurement.arm else '—' }}</td>
+                <td>{{ measurement.chest if measurement.chest else '—' }}</td>
+                <td>{{ measurement.calf if measurement.calf else '—' }}</td>
+                {% endif %}
+                <td>
+                    {% if measurement.date == today %}
+                    <form method="POST" action="{{ url_for('delete_measurement', id=measurement.id) }}"
+                          style="display: inline;"
+                          onsubmit="return confirm('Supprimer ces mesures ?');">
+                        <button type="submit"
+                                class="btn btn-danger btn-small"
+                                style="background: none; border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;"
+                                onmouseover="this.style.background='#fee2e2'"
+                                onmouseout="this.style.background='transparent'">
+                            <svg class="icon" style="width:14px;height:14px;"><use href="#icon-delete"/></svg>
+                            <span class="btn-delete-text">Supprimer</span>
+                        </button>
+                    </form>
+                    {% else %}
+                    <span style="color: #d1d5db; font-size: 13px;">—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endif %}
 
