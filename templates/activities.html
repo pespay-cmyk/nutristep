@@ -28,7 +28,7 @@
         table th, table td {
             padding: 8px 4px;
         }
-        
+
         /* Masquer colonne Note sur mobile */
         table th:nth-child(4),
         table td:nth-child(4) {
@@ -44,10 +44,10 @@
             padding: 8px;
             font-size: 11px;
         }
-
         .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px !important;  /* ← AJOUTE JUSTE ÇA */
+            }
 
         .stat-card .value {
             font-size: 28px;

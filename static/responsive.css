@@ -111,7 +111,7 @@
         justify-content: center !important;
         max-width: 100% !important;
     }
-    
+
     .summary-card {
         width: 100% !important;
         padding: 16px !important;
@@ -151,7 +151,9 @@
     /* Cartes : réduire padding */
     .card {
         padding: 16px 12px !important;
-        margin: 0 !important;
+        margin-bottom: 16px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
     }
 
     /* PROFILE - Stats IMC + pastilles */
@@ -159,17 +161,17 @@
         grid-template-columns: 1fr !important;
         gap: 12px !important;
     }
-    
+
     /* IMC ne prend plus 2 colonnes sur mobile */
     .imc-card {
         grid-column: span 1 !important;
     }
-    
+
     /* Jauge IMC responsive */
     .imc-gauge {
         max-width: 100% !important;
     }
-    
+
     /* Stats grid : 1 colonne sur mobile */
     .stats-grid {
         grid-template-columns: 1fr !important;
@@ -211,7 +213,7 @@
         grid-template-columns: repeat(3, 1fr);
         gap: 16px;
     }
-    
+
     /* Stats profil principales */
     .profile-main-stats {
         display: grid;
