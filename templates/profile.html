@@ -186,7 +186,7 @@
                            onchange="toggleSecondaryMeasurements()"
                            style="width: 20px; height: 20px; cursor: pointer;">
                     <div>
-                        <div style="font-weight: 600; color: var(--text-primary);">📏 Suivi des mesures</div>
+                        <div style="font-weight: 600; color: var(--text-primary);"><svg class="icon"><use href="#icon-activity"/></svg>  Suivi des mesures</div>
                         <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
                             Active le suivi des mensurations (taille, hanches, cuisse)
                         </div>
@@ -201,7 +201,7 @@
                                id="secondary_measurements_checkbox"
                                style="width: 20px; height: 20px; cursor: pointer;">
                         <div>
-                            <div style="font-weight: 600; color: var(--text-primary); font-size: 14px;">➕ Mesures secondaires</div>
+                            <div style="font-weight: 600; color: var(--text-primary); font-size: 14px;"><svg class="icon"><use href="#icon-plus"/></svg> Mesures secondaires</div>
                             <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
                                 Tour de bras, poitrine et mollet
                             </div>
@@ -227,11 +227,12 @@
 <div class="card" style="margin-top: 24px;">
     <h2><svg class="icon"><use href="#icon-stats"/></svg>Tes statistiques</h2>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
+    <!-- Grille principale stats profil -->
+    <div class="profile-main-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
 
         <!-- IMC avec jauge visuelle -->
         {% set imc = (latest_weight.weight / ((user.height / 100) ** 2)) %}
-        <div style="padding: 20px; background: var(--bg-gradient-start); border-radius: 16px; grid-column: span 2; max-width: 90% !important;">
+        <div class="imc-card" style="padding: 20px; background: var(--bg-gradient-start); border-radius: 16px; grid-column: span 2;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <div>
                     <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 4px;">
@@ -250,7 +251,7 @@
             </div>
 
             <!-- Jauge IMC -->
-            <div style="position: relative; height: 40px; background: linear-gradient(to right,
+            <div class="imc-gauge" style="position: relative; height: 40px; background: linear-gradient(to right,
                 #3b82f6 0%,
                 #10b981 18.5%,
                 #10b981 25%,
@@ -283,7 +284,7 @@
         <!-- Âge -->
         {% if user.birth_date %}
         {% set age = ((today - user.birth_date).days / 365.25)|int %}
-        <div style="padding: 20px; background: linear-gradient(135deg, #e0e7ff, #c7d2fe); border-radius: 16px; text-align: center;">
+        <div class="stat-mini-card" style="padding: 20px; background: linear-gradient(135deg, #e0e7ff, #c7d2fe); border-radius: 16px; text-align: center;">
             <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 8px;">
                 Âge
             </div>
@@ -296,7 +297,7 @@
 
         <!-- Poids de départ -->
         {% if first_weight %}
-        <div style="padding: 20px; background: linear-gradient(135deg, #fce7f3, #fbcfe8); border-radius: 16px; text-align: center;">
+        <div class="stat-mini-card" style="padding: 20px; background: linear-gradient(135deg, #fce7f3, #fbcfe8); border-radius: 16px; text-align: center;">
             <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 8px;">
                 Poids de départ
             </div>
@@ -310,7 +311,7 @@
         <!-- Objectif restant -->
         {% if user.target_weight %}
         {% set remaining = latest_weight.weight - user.target_weight %}
-        <div style="padding: 20px; background: linear-gradient(135deg,
+        <div class="stat-mini-card" style="padding: 20px; background: linear-gradient(135deg,
             {% if remaining <= 0 %}#dcfce7, #bbf7d0{% else %}#fef3c7, #fde68a{% endif %});
             border-radius: 16px; text-align: center;">
             <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 8px;">
@@ -334,44 +335,42 @@
 <div class="card" style="margin-top: 24px;">
     <h2><svg class="icon"><use href="#icon-trend-down"/></svg> Évolution et tendances</h2>
 
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 24px;">
+    <!-- Grille tendances avec classes globales -->
+    <div class="stats-grid" style="margin-top: 24px;">
 
         <!-- Perte totale -->
         {% if weight_stats.total_loss != 0 %}
-        <div class="stats-grid">
-
         <div class="stat-card">
             <h3>Évolution totale</h3>
             <div class="value" style="color:
-                {% if weight_stats.total_loss < 0 %}#10b981{% else %}#ef4444{% endif %};">{{ "%.1f"|format(weight_stats.total_loss) }} kg
+                {% if weight_stats.total_loss < 0 %}#10b981{% else %}#ef4444{% endif %};">
+                {{ "%.1f"|format(weight_stats.total_loss|abs) }} kg
                 <svg class="icon" style="width:24px;height:24px;"><use href="
                     {% if weight_stats.total_loss < 0 %}#icon-trend-down{% else %}#icon-trend-up{% endif %}
-                "/></svg></div>
+                "/></svg>
+            </div>
             <div class="unit">depuis {{ weight_stats.days_tracking }} jours</div>
         </div>
         {% endif %}
 
         <!-- Perte moyenne par semaine -->
         {% if weight_stats.avg_per_week %}
-        <div class="stats-grid">
         <div class="stat-card">
             <h3>Perte moyenne / semaine</h3>
             <div class="value">{{ "%.2f"|format(weight_stats.avg_per_week|abs) }} kg</div>
-            <div class="unit">{% if weight_stats.avg_per_week < 0 %}👍 Bonne progression{% else %}<svg class="icon"><use href="#icon-report"/></svg> Suivi{% endif %}</div>
+            <div class="unit">
+                {% if weight_stats.avg_per_week < 0 %}👍 Suivi{% else %}<svg class="icon"><use href="#icon-report"/></svg> Suivi{% endif %}
+            </div>
         </div>
-
         {% endif %}
 
-        {% if weight_stats.avg_per_month %}
         <!-- Perte moyenne par mois -->
-        <div class="stats-grid">
+        {% if weight_stats.avg_per_month %}
         <div class="stat-card">
             <h3>Perte moyenne / mois</h3>
             <div class="value">{{ "%.2f"|format(weight_stats.avg_per_month|abs) }} kg</div>
             <div class="unit">Estimation sur {{ weight_stats.days_tracking }} jours</div>
         </div>
-
         {% endif %}
 
         <!-- Temps estimé pour objectif -->

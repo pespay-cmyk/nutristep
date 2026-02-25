@@ -140,19 +140,27 @@
         margin: 0 !important;
     }
 
-    /* Stats grid : forcer 2 colonnes */
-    .profile-stats-grid {
+    /* PROFILE - Stats IMC + pastilles */
+    .profile-main-stats {
         grid-template-columns: 1fr !important;
+        gap: 12px !important;
     }
-
+    
+    /* IMC ne prend plus 2 colonnes sur mobile */
+    .imc-card {
+        grid-column: span 1 !important;
+    }
+    
+    /* Jauge IMC responsive */
     .imc-gauge {
         max-width: 100% !important;
     }
-
-    .imc-gauge {
-        max-width: 100% !important;
+    
+    /* Stats grid : 1 colonne sur mobile */
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
     }
-
 
     /* Tableaux : réduire taille police */
     table {
@@ -176,6 +184,25 @@
     .dashboard-meals-activities-grid {
         margin: 0 !important;
         gap: 16px !important;
+    }
+}
+
+/* ============================================
+   6. DESKTOP - Profile stats en 3 colonnes
+   ============================================ */
+@media (min-width: 769px) {
+    /* Tendances : 3 colonnes sur desktop */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+    
+    /* Stats profil principales */
+    .profile-main-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
     }
 }
 
