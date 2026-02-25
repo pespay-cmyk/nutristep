@@ -101,6 +101,20 @@
 
     .recap-table {
         min-width: 800px; /* Force largeur minimum */
+        margin: 0 auto; /* Centrer le tableau */
+    }
+
+    /* Pastilles exceptions/compensations : centrées et même taille */
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        justify-content: center !important;
+        max-width: 100% !important;
+    }
+    
+    .summary-card {
+        width: 100% !important;
+        padding: 16px !important;
     }
 
     /* Stats en 2 colonnes au lieu de 4 */

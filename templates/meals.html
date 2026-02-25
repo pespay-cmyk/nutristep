@@ -252,31 +252,54 @@
 
     .qualification-btn {
         padding: 6px 16px;
-        border: 2px solid #e5e7eb;
+        border: 3px solid transparent;
         background: white;
         border-radius: 12px;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+    }
+    
+    /* Couleurs icônes FIXES */
+    .qualification-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .qualification-btn.normal svg {
+        color: #3b82f6 !important; /* Bleu */
+    }
+    
+    .qualification-btn.exception svg {
+        color: #f59e0b !important; /* Orange */
+    }
+    
+    .qualification-btn.equilibrage svg {
+        color: #10b981 !important; /* Vert */
     }
 
+    /* Bordure épaisse quand actif */
     .qualification-btn.active.normal {
-        background: #10b981;
-        border-color: #10b981;
-        color: white;
+        border-color: #3b82f6; /* Bleu */
+        border-width: 3px;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
     }
 
     .qualification-btn.active.exception {
-        background: #f59e0b;
-        border-color: #f59e0b;
-        color: white;
+        border-color: #f59e0b; /* Orange */
+        border-width: 3px;
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
     }
 
     .qualification-btn.active.equilibrage {
-        background: #3b82f6;
-        border-color: #3b82f6;
-        color: white;
+        border-color: #10b981; /* Vert */
+        border-width: 3px;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
     }
 
     .food-items {
@@ -739,17 +762,17 @@ const allMeals = [
                 <div class="meal-section" id="meal_section_${mealType}">
                     <div class="meal-section-header">
                         <div class="meal-title">${meal.icon} ${meal.label}</div>
-                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: nowrap;">
                             <div class="qualification-selector">
-                                <button type="button" class="qualification-btn ${mealData.qualification === 'normal' ? 'active normal' : ''}"
+                                <button type="button" class="qualification-btn normal ${mealData.qualification === 'normal' ? 'active' : ''}"
                                         onclick="setQualification('${mealType}', 'normal')" title="Normal">
                                     <svg class="icon"><use href="#icon-check"/></svg>
                                 </button>
-                                <button type="button" class="qualification-btn ${mealData.qualification === 'exception' ? 'active exception' : ''}"
+                                <button type="button" class="qualification-btn exception ${mealData.qualification === 'exception' ? 'active' : ''}"
                                         onclick="setQualification('${mealType}', 'exception')" title="Exception">
                                     <svg class="icon"><use href="#icon-exception"/></svg>
                                 </button>
-                                <button type="button" class="qualification-btn ${mealData.qualification === 'equilibrage' ? 'active equilibrage' : ''}"
+                                <button type="button" class="qualification-btn equilibrage ${mealData.qualification === 'equilibrage' ? 'active' : ''}"
                                         onclick="setQualification('${mealType}', 'equilibrage')" title="Compensation">
                                     <svg class="icon"><use href="#icon-equilibrage"/></svg>
                                 </button>
@@ -853,9 +876,11 @@ const allMeals = [
 
         const buttons = document.querySelectorAll(`[onclick*="setQualification('${mealType}'"]`);
         buttons.forEach(btn => {
-            btn.classList.remove('active', 'normal', 'exception', 'equilibrage');
+            // Enlever seulement 'active', GARDER les classes normal/exception/equilibrage
+            btn.classList.remove('active');
         });
-        event.target.classList.add('active', qualification);
+        // Ajouter 'active' au bouton cliqué
+        event.target.classList.add('active');
         markChanged();
     }
 

@@ -223,7 +223,8 @@
         .recap-table {
             width: 100% !important;
             min-width: auto !important;
-            table-layout: auto !important;
+            table-layout: fixed !important;
+            margin: 0 auto !important;
         }
 
         .recap-table thead th,
@@ -250,7 +251,15 @@
         }
 
         .summary-stats {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+            justify-content: center !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .summary-card {
+            width: 100% !important;
         }
 
         .summary-card .value {
@@ -351,12 +360,11 @@
 
         /* Mode scroll horizontal pour le tableau sur mobile */
         .card > div {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            width: 100% !important;
+            margin: 0 !important;
         }
-
-
-
 
         /* FORCER utilisation de toute la largeur */
         .content {
@@ -484,17 +492,15 @@
     </form>
 
     <!-- Statistiques résumées -->
-    <div class="recap-stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-    <div class="summary-stats" style="grid-template-columns: repeat(2, 1fr);">
-        <div class="summary-card">
+    <div class="summary-stats" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; width: 100%; max-width: 100%;">
+        <div class="summary-card" style="width: 100%;">
             <h3>Exceptions</h3>
             <div class="value">{{ stats.total_exceptions }}</div>
         </div>
-        <div class="summary-card">
+        <div class="summary-card" style="width: 100%;">
             <h3>Compensations</h3>
             <div class="value">{{ stats.total_equilibrages }}</div>
         </div>
-    </div>
     </div>
 
     {% if days_data %}
