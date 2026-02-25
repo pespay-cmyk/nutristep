@@ -237,12 +237,38 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 16px;
+        transition: background 0.2s;
+    }
+
+    .meal-section-header:hover {
+        background: var(--bg-gradient-end) !important;
+    }
+
+    .accordion-icon {
+        font-size: 14px;
+        transition: transform 0.3s;
+        color: var(--text-secondary);
     }
 
     .meal-title {
         font-size: 18px;
         font-weight: 700;
         color: var(--text-primary);
+    }
+
+    .meal-section-body {
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            max-height: 0;
+        }
+        to {
+            opacity: 1;
+            max-height: 1000px;
+        }
     }
 
     .qualification-selector {
@@ -264,21 +290,21 @@
         justify-content: center;
         gap: 4px;
     }
-    
+
     /* Couleurs icônes FIXES */
     .qualification-btn svg {
         width: 20px;
         height: 20px;
     }
-    
+
     .qualification-btn.normal svg {
         color: #3b82f6 !important; /* Bleu */
     }
-    
+
     .qualification-btn.exception svg {
         color: #f59e0b !important; /* Orange */
     }
-    
+
     .qualification-btn.equilibrage svg {
         color: #10b981 !important; /* Vert */
     }
@@ -531,12 +557,33 @@
             font-size: 11px;
             min-width: 0; /* Permet rétrécissement */
         }
-        
+
+        /* Réduire padding body sur mobile */
+        .meal-section-body {
+            padding: 0 8px 12px 8px !important;
+        }
+
+        /* Boutons : masquer textes, garder icônes */
+        .btn-add span:not(.icon),
+        .btn-remove .btn-text {
+            display: none !important;
+        }
+
+        .btn-add, .btn-remove {
+            padding: 12px !important;
+            min-width: 48px;
+            font-size: 0;
+        }
+
+        .btn-add svg, .btn-remove svg {
+            font-size: 18px;
+        }
+
         /* Bouton Suppr : icône seule */
         .btn-text {
             display: none !important;
         }
-        
+
         .btn-remove {
             padding: 8px !important;
         }
@@ -760,9 +807,13 @@ const allMeals = [
 
             html += `
                 <div class="meal-section" id="meal_section_${mealType}">
-                    <div class="meal-section-header">
-                        <div class="meal-title">${meal.icon} ${meal.label}</div>
-                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: nowrap;">
+                    <!-- Header cliquable -->
+                    <div class="meal-section-header" onclick="toggleMealSection('${mealType}')" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                            <span class="accordion-icon" id="accordion_${mealType}">▶</span>
+                            <div class="meal-title">${meal.icon} ${meal.label}</div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: nowrap;" onclick="event.stopPropagation();">
                             <div class="qualification-selector">
                                 <button type="button" class="qualification-btn normal ${mealData.qualification === 'normal' ? 'active' : ''}"
                                         onclick="setQualification('${mealType}', 'normal')" title="Normal">
@@ -777,40 +828,47 @@ const allMeals = [
                                     <svg class="icon"><use href="#icon-equilibrage"/></svg>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Body dépliable (caché par défaut) -->
+                    <div class="meal-section-body" id="meal_body_${mealType}" style="display: none; padding: 0 16px 16px 16px;">
+                        <input type="hidden" name="${mealType}_qualification" id="${mealType}_qualification" value="${mealData.qualification}">
+
+                        <div class="none-checkbox">
+                            <input type="checkbox" id="${mealType}_none" name="${mealType}_none"
+                                   ${mealData.is_none ? 'checked' : ''} onchange="toggleNone('${mealType}'); markChanged();">
+                            <label for="${mealType}_none" style="cursor: pointer; font-weight: 600;">Rien mangé pour ce repas</label>
+                        </div>
+
+                        <div id="${mealType}_foods" class="food-items" ${mealData.is_none ? 'style="display:none;"' : ''}>
+                            ${mealData.foods.length > 0 ? mealData.foods.map((food, idx) => `
+                                <div class="food-item">
+                                    <input type="text" class="form-control" name="${mealType}_food[]"
+                                           value="${food}" placeholder="Ex: Yaourt nature"
+                                           oninput="showAutocomplete(this); markChanged();">
+                                    <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();"><svg class="icon icon-sm"><use href="#icon-delete"/></svg><span class="btn-text"></button>
+                                </div>
+                            `).join('') : `
+                                <div class="food-item">
+                                    <input type="text" class="form-control" name="${mealType}_food[]"
+                                           placeholder="Ex: Yaourt nature" oninput="showAutocomplete(this); markChanged();">
+                                    <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();"><svg class="icon icon-sm"><use href="#icon-delete"/></svg><span class="btn-text"></button>
+                                </div>
+                            `}
+                        </div>
+
+                        <div class="meal-actions" style="display: flex; gap: 12px; align-items: center; margin-top: 16px; flex-wrap: wrap;">
+                            <button type="button" class="btn-add" onclick="addFood('${mealType}'); markChanged();"
+                                id="${mealType}_add_btn" ${mealData.is_none ? 'style="display:none;"' : ''}>
+                                <svg class="icon"><use href="#icon-plus"/></svg> <span>Ajouter un aliment</span>
+                            </button>
+
                             <button type="button" class="btn-remove" style="padding: 8px 12px; font-size: 12px;" onclick="removeMeal('${mealType}'); markChanged();">
-                                <svg class="icon"><use href="#icon-delete"/></svg><span class="btn-text">️ Suppr</span>
+                                <svg class="icon"><use href="#icon-delete"/></svg><span class="btn-text"> Supprimer ce repas</span>
                             </button>
                         </div>
                     </div>
-                    <input type="hidden" name="${mealType}_qualification" id="${mealType}_qualification" value="${mealData.qualification}">
-
-                    <div class="none-checkbox">
-                        <input type="checkbox" id="${mealType}_none" name="${mealType}_none"
-                               ${mealData.is_none ? 'checked' : ''} onchange="toggleNone('${mealType}'); markChanged();">
-                        <label for="${mealType}_none" style="cursor: pointer; font-weight: 600;">Rien mangé pour ce repas</label>
-                    </div>
-
-                    <div id="${mealType}_foods" class="food-items" ${mealData.is_none ? 'style="display:none;"' : ''}>
-                        ${mealData.foods.length > 0 ? mealData.foods.map((food, idx) => `
-                            <div class="food-item">
-                                <input type="text" class="form-control" name="${mealType}_food[]"
-                                       value="${food}" placeholder="Ex: Yaourt nature"
-                                       oninput="showAutocomplete(this); markChanged();">
-                                <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();">✕</button>
-                            </div>
-                        `).join('') : `
-                            <div class="food-item">
-                                <input type="text" class="form-control" name="${mealType}_food[]"
-                                       placeholder="Ex: Yaourt nature" oninput="showAutocomplete(this); markChanged();">
-                                <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();">✕</button>
-                            </div>
-                        `}
-                    </div>
-
-                    <button type="button" class="btn-add" onclick="addFood('${mealType}'); markChanged();"
-                            id="${mealType}_add_btn" ${mealData.is_none ? 'style="display:none;"' : ''}>
-                        <svg class="icon"><use href="#icon-plus"/></svg> Ajouter un aliment
-                    </button>
                 </div>
             `;
         });
@@ -874,14 +932,32 @@ const allMeals = [
     function setQualification(mealType, qualification) {
         document.getElementById(`${mealType}_qualification`).value = qualification;
 
+        // Enlever 'active' de tous les boutons de ce repas
         const buttons = document.querySelectorAll(`[onclick*="setQualification('${mealType}'"]`);
         buttons.forEach(btn => {
-            // Enlever seulement 'active', GARDER les classes normal/exception/equilibrage
             btn.classList.remove('active');
         });
-        // Ajouter 'active' au bouton cliqué
-        event.target.classList.add('active');
+
+        // Ajouter 'active' au bouton cliqué (gérer si on clique sur le SVG)
+        const clickedBtn = event.target.closest('.qualification-btn');
+        if (clickedBtn) {
+            clickedBtn.classList.add('active');
+        }
+
         markChanged();
+    }
+
+    function toggleMealSection(mealType) {
+        const body = document.getElementById(`meal_body_${mealType}`);
+        const icon = document.getElementById(`accordion_${mealType}`);
+
+        if (body.style.display === 'none' || body.style.display === '') {
+            body.style.display = 'block';
+            icon.textContent = '▼';
+        } else {
+            body.style.display = 'none';
+            icon.textContent = '▶';
+        }
     }
 
     function toggleNone(mealType) {
@@ -916,7 +992,7 @@ const allMeals = [
 
     function showAutocomplete(input) {
         const value = input.value.toLowerCase();
-        
+
         // Récupérer ou créer le dropdown
         let dropdown = input.nextElementSibling;
         if (!dropdown || !dropdown.classList.contains('autocomplete-dropdown')) {
@@ -925,7 +1001,7 @@ const allMeals = [
             input.parentElement.style.position = 'relative';
             input.after(dropdown);
         }
-        
+
         // Si moins de 2 caractères, cacher le dropdown
         if (value.length < 2) {
             dropdown.classList.remove('active');
