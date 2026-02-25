@@ -44,6 +44,91 @@
    3. MEALS - Calendrier responsive
    ============================================ */
 @media (max-width: 768px) {
+    /* HAMBURGER MENU */
+    .hamburger-btn {
+        display: block;
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 1001;
+        background: var(--primary-start);
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        width: 48px;
+        height: 48px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .hamburger-btn span {
+        display: block;
+        width: 24px;
+        height: 3px;
+        background: white;
+        margin: 4px 0;
+        transition: 0.3s;
+        border-radius: 2px;
+    }
+    
+    /* Animation croix */
+    .hamburger-btn.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+    
+    .hamburger-btn.active span:nth-child(2) {
+        opacity: 0;
+    }
+    
+    .hamburger-btn.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -7px);
+    }
+    
+    /* Overlay sombre */
+    .menu-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        backdrop-filter: blur(2px);
+    }
+    
+    .menu-overlay.active {
+        display: block;
+    }
+    
+    /* Navbar cachée par défaut sur mobile */
+    .navbar {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 280px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+    }
+    
+    .navbar.open {
+        left: 0;
+    }
+    
+    .navbar nav {
+        flex-direction: column;
+        padding: 80px 0 20px 0;
+    }
+    
+    .navbar nav a {
+        width: 100%;
+        padding: 16px 24px;
+        border-radius: 0;
+    }
+    
     /* Calendrier : forcer scroll horizontal fluide */
     .calendar-wrapper {
         overflow-x: auto !important;
@@ -207,6 +292,20 @@
    6. DESKTOP - Profile stats en 3 colonnes
    ============================================ */
 @media (min-width: 769px) {
+    /* Masquer hamburger et overlay sur desktop */
+    .hamburger-btn,
+    .menu-overlay {
+        display: none !important;
+    }
+    
+    /* Navbar normale sur desktop */
+    .navbar {
+        position: relative;
+        left: 0;
+        width: auto;
+        height: auto;
+    }
+    
     /* Tendances : 3 colonnes sur desktop */
     .stats-grid {
         display: grid;
