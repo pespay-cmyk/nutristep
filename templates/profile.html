@@ -222,8 +222,8 @@
 
 </form>
 
-<!-- Statistiques calculées -->
-{% if user.height and latest_weight %}
+<!-- Statistiques déplacées vers le dashboard -->
+{% if false %}
 <div class="card" style="margin-top: 24px;">
     <h2><svg class="icon"><use href="#icon-stats"/></svg>Tes statistiques</h2>
 
@@ -329,7 +329,8 @@
     </div>
 </div>
 {% endif %}
-
+{# FIN BLOC STATS DÉPLACÉ VERS DASHBOARD #}
+{% if false %}
 <!-- Stats avancées perte moyenne -->
 {% if weight_stats %}
 <div class="card" style="margin-top: 24px;">
@@ -396,6 +397,8 @@
     </div>
 </div>
 {% endif %}
+{% endif %}
+{# FIN BLOC TENDANCES DÉPLACÉ VERS DASHBOARD #}
 
 {% endblock %}
 

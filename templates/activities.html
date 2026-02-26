@@ -44,10 +44,11 @@
             padding: 8px;
             font-size: 11px;
         }
+
         .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px !important;  /* ← AJOUTE JUSTE ÇA */
-            }
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px !important;
+        }
 
         .stat-card .value {
             font-size: 28px;
@@ -87,15 +88,15 @@
                 <label for="activity_type">Type d'activité</label>
                 <select class="form-control" id="activity_type" name="activity_type" required onchange="toggleFields()">
                     <option value="">-- Choisir --</option>
-                    <option value="Marche"><svg class="icon"><use href="#icon-walk"/></svg> Marche</option>
-                    <option value="Course"><svg class="icon"><use href="#icon-run"/></svg> Course</option>
-                    <option value="Vélo"><svg class="icon"><use href="#icon-bike"/></svg> Vélo</option>
-                    <option value="Natation"><svg class="icon"><use href="#icon-swim"/></svg> Natation</option>
-                    <option value="Musculation"><svg class="icon"><use href="#icon-gym"/></svg> Musculation</option>
-                    <option value="Yoga"><svg class="icon"><use href="#icon-yoga"/></svg> Yoga</option>
-                    <option value="Ski"><svg class="icon"><use href="#icon-ski"/></svg> Ski</option>
-                    <option value="Pas"><svg class="icon"><use href="#icon-steps"/></svg> Pas quotidiens</option>
-                    <option value="Autre"><svg class="icon"><use href="#icon-target"/></svg> Autre</option>
+                    <option value="Marche">Marche</option>
+                    <option value="Course">Course</option>
+                    <option value="Vélo">Vélo</option>
+                    <option value="Natation">Natation</option>
+                    <option value="Musculation">Musculation</option>
+                    <option value="Yoga">Yoga</option>
+                    <option value="Ski">Ski</option>
+                    <option value="Pas">Pas quotidiens</option>
+                    <option value="Autre">Autre</option>
                 </select>
             </div>
 
@@ -128,6 +129,22 @@
     </form>
 </div>
 
+<!-- Graphique pas + activités (30 derniers jours) -->
+{% if entries %}
+<div class="card">
+    <h2><svg class="icon"><use href="#icon-steps"/></svg> Pas & activités (30 derniers jours)</h2>
+    <canvas id="stepsChart" height="100"></canvas>
+    {% if steps_stats.average > 0 %}
+    <div style="margin-top: 16px; text-align: center; padding: 12px; background: var(--bg-gradient-start); border-radius: 8px;">
+        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Moyenne quotidienne de pas</div>
+        <div style="font-size: 24px; font-weight: 700; color: var(--primary-start);">
+            {{ "{:,}".format(steps_stats.average|int).replace(',', ' ') }} pas
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
 <!-- Historique -->
 <div class="card">
     <h2>📋 Historique</h2>
@@ -153,15 +170,15 @@
                     </td>
                     <td>
                         <strong style="color: var(--text-primary);">
-                            {% if entry.activity_type == 'Marche' %}<svg class="icon"><use href="#icon-walk"/>
-                            {% elif entry.activity_type == 'Course' %}<svg class="icon"><use href="#icon-run"/>
-                            {% elif entry.activity_type == 'Vélo' %}<svg class="icon"><use href="#icon-bike"/>
-                            {% elif entry.activity_type == 'Natation' %}<svg class="icon"><use href="#icon-swim"/>
-                            {% elif entry.activity_type == 'Musculation' %}<svg class="icon"><use href="#icon-gym"/>
-                            {% elif entry.activity_type == 'Yoga' %}<svg class="icon"><use href="#icon-yoga"/>
-                            {% elif entry.activity_type == 'Pas' %}<svg class="icon"><use href="#icon-steps"/>
-                            {% elif entry.activity_type == 'Ski' %}<svg class="icon"><use href="#icon-ski"/>
-                            {% else %}<svg class="icon"><use href="#icon-target"/>
+                            {% if entry.activity_type == 'Marche' %}<svg class="icon"><use href="#icon-walk"/></svg>
+                            {% elif entry.activity_type == 'Course' %}<svg class="icon"><use href="#icon-run"/></svg>
+                            {% elif entry.activity_type == 'Vélo' %}<svg class="icon"><use href="#icon-bike"/></svg>
+                            {% elif entry.activity_type == 'Natation' %}<svg class="icon"><use href="#icon-swim"/></svg>
+                            {% elif entry.activity_type == 'Musculation' %}<svg class="icon"><use href="#icon-gym"/></svg>
+                            {% elif entry.activity_type == 'Yoga' %}<svg class="icon"><use href="#icon-yoga"/></svg>
+                            {% elif entry.activity_type == 'Pas' %}<svg class="icon"><use href="#icon-steps"/></svg>
+                            {% elif entry.activity_type == 'Ski' %}<svg class="icon"><use href="#icon-ski"/></svg>
+                            {% else %}<svg class="icon"><use href="#icon-target"/></svg>
                             {% endif %}
                             {{ entry.activity_type }}
                         </strong>
@@ -248,20 +265,16 @@
         const durationInput = document.getElementById('duration');
 
         if (activityType === 'Pas') {
-            // Mode "Pas quotidiens"
             stepsField.style.display = 'block';
             durationField.style.display = 'none';
             caloriesField.style.display = 'none';
-
             stepsInput.required = true;
             durationInput.required = false;
             durationInput.value = '0';
         } else if (activityType) {
-            // Mode activité normale
             stepsField.style.display = 'none';
             durationField.style.display = 'block';
             caloriesField.style.display = 'block';
-
             stepsInput.required = false;
             stepsInput.value = '';
             durationInput.required = true;
@@ -269,4 +282,116 @@
     }
 </script>
 
+{% endblock %}
+
+{% block extra_js %}
+{% if entries %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const ctxSteps = document.getElementById('stepsChart').getContext('2d');
+
+    // Données activités par date pour enrichir le tooltip
+    const activitiesByDate = {{ activities_by_date|tojson }};
+
+    new Chart(ctxSteps, {
+        type: 'line',
+        data: {
+            labels: {{ steps_data.dates|tojson }},
+            datasets: [
+                {
+                    label: 'Pas quotidiens',
+                    data: {{ steps_data.steps|tojson }},
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: function(context) {
+                        const date = context.chart.data.labels[context.dataIndex];
+                        return activitiesByDate[date] && activitiesByDate[date].length > 0 ? 10 : 6;
+                    },
+                    pointBackgroundColor: function(context) {
+                        const date = context.chart.data.labels[context.dataIndex];
+                        return activitiesByDate[date] && activitiesByDate[date].length > 0
+                            ? 'rgb(16, 185, 129)' : 'rgb(59, 130, 246)';
+                    },
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 12
+                },
+                {
+                    label: 'Moyenne',
+                    data: Array({{ steps_data.dates|length }}).fill({{ steps_stats.average }}),
+                    borderColor: 'rgba(239, 68, 68, 0.5)',
+                    borderDash: [5, 5],
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
+                        label: function(context) {
+                            if (context.datasetIndex === 0) {
+                                const steps = context.parsed.y;
+                                return '👣 ' + steps.toLocaleString('fr-FR') + ' pas';
+                            }
+                            return 'Moyenne : ' + context.parsed.y.toLocaleString('fr-FR') + ' pas';
+                        },
+                        afterLabel: function(context) {
+                            if (context.datasetIndex === 0) {
+                                const date = context.label;
+                                const activities = activitiesByDate[date] || [];
+                                if (activities.length > 0) {
+                                    let lines = ['\nActivités :'];
+                                    activities.forEach(act => {
+                                        const emoji = getActivityEmoji(act.type);
+                                        let line = emoji + ' ' + act.type;
+                                        if (act.duration) line += ' (' + act.duration + 'min)';
+                                        if (act.calories) line += ' - ' + act.calories + 'kcal';
+                                        lines.push(line);
+                                    });
+                                    return lines;
+                                }
+                            }
+                            return [];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('fr-FR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    function getActivityEmoji(type) {
+        const emojis = {
+            'Marche': '🚶', 'Course': '🏃', 'Vélo': '🚴',
+            'Natation': '🏊', 'Musculation': '💪', 'Yoga': '🧘',
+            'Pas': '👣', 'Ski': '⛷️'
+        };
+        return emojis[type] || '🎯';
+    }
+</script>
+{% endif %}
 {% endblock %}

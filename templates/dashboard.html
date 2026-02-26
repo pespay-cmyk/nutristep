@@ -47,139 +47,128 @@
 <div class="card">
     <h2><svg class="icon"><use href="#icon-trend-down"/></svg> Évolution du poids (30 derniers jours)</h2>
     <canvas id="weightChart" height="80"></canvas>
+    {% if not today_weight %}
+    <div style="margin-top: 16px;">
+        <a href="{{ url_for('weight') }}" class="btn btn-primary">
+            <svg class="icon"><use href="#icon-plus"/></svg> Ajouter mon poids du jour
+        </a>
+    </div>
+    {% endif %}
 </div>
 
-<!-- Graphique des pas (pleine largeur) -->
-{% if user.track_activities %}
+<!-- Statistiques profil (IMC, âge, poids départ, objectif) -->
+{% if user.height and latest_weight %}
 <div class="card">
-    <h2><svg class="icon"><use href="#icon-steps"/></svg> Nombre de pas (30 derniers jours)</h2>
-    <canvas id="stepsChart" height="100"></canvas>
-    {% if steps_stats.average > 0 %}
-    <div style="margin-top: 16px; text-align: center; padding: 12px; background: var(--bg-gradient-start); border-radius: 8px;">
-        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Moyenne quotidienne</div>
-        <div style="font-size: 24px; font-weight: 700; color: var(--primary-start);">
-            {{ "{:,}".format(steps_stats.average|int).replace(',', ' ') }} pas
+    <h2><svg class="icon"><use href="#icon-stats"/></svg> Tes statistiques</h2>
+    <div class="profile-main-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
+
+        <!-- IMC avec jauge visuelle -->
+        {% set imc = (latest_weight.weight / ((user.height / 100) ** 2)) %}
+        <div class="imc-card" style="padding: 20px; background: var(--bg-gradient-start); border-radius: 16px; grid-column: span 2;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div>
+                    <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 4px;">Indice de Masse Corporelle (IMC)</div>
+                    <div style="font-size: 42px; font-weight: 800; color: var(--text-primary);">{{ "%.1f"|format(imc) }}</div>
+                </div>
+                <div style="text-align: right; font-size: 13px; color: var(--text-secondary);">
+                    {% if imc < 18.5 %}Maigreur{% elif imc < 25 %}Corpulence normale{% elif imc < 30 %}Surpoids{% else %}Obésité{% endif %}
+                </div>
+            </div>
+            <div class="imc-gauge" style="position: relative; height: 40px; background: linear-gradient(to right, #3b82f6 0%, #10b981 18.5%, #10b981 25%, #fbbf24 30%, #f59e0b 35%, #ef4444 40%); border-radius: 20px; margin-bottom: 8px;">
+                {% set imc_percent = ((imc - 15) / 25 * 100)|int %}
+                {% if imc_percent < 0 %}{% set imc_percent = 0 %}{% endif %}
+                {% if imc_percent > 100 %}{% set imc_percent = 100 %}{% endif %}
+                <div style="position: absolute; left: {{ imc_percent }}%; top: -8px; transform: translateX(-50%);">
+                    <div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 12px solid #1f2937;"></div>
+                    <div style="width: 4px; height: 56px; background: #1f2937; margin-left: 6px;"></div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); padding: 0 4px;">
+                <span>15</span><span style="margin-left: -20px;">18.5</span><span style="margin-left: -15px;">25</span><span style="margin-left: -10px;">30</span><span>40+</span>
+            </div>
         </div>
+
+        {% if user.birth_date %}
+        {% set age = ((today - user.birth_date).days / 365.25)|int %}
+        <div style="padding: 20px; background: linear-gradient(135deg, #e0e7ff, #c7d2fe); border-radius: 16px; text-align: center;">
+            <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 8px;">Âge</div>
+            <div style="font-size: 32px; font-weight: 800; margin-bottom: 4px;">{{ age }}</div>
+            <div style="font-size: 12px; opacity: 0.8;">ans</div>
+        </div>
+        {% endif %}
+
+        {% if first_weight is defined and first_weight %}
+        <div style="padding: 20px; background: linear-gradient(135deg, #fce7f3, #fbcfe8); border-radius: 16px; text-align: center;">
+            <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 8px;">Poids de départ</div>
+            <div style="font-size: 32px; font-weight: 800; margin-bottom: 4px;">{{ first_weight.weight }}</div>
+            <div style="font-size: 12px; opacity: 0.8;">kg</div>
+        </div>
+        {% endif %}
+
+        {% if user.target_weight %}
+        {% set remaining = latest_weight.weight - user.target_weight %}
+        <div style="padding: 20px; background: linear-gradient(135deg, {% if remaining <= 0 %}#dcfce7, #bbf7d0{% else %}#fef3c7, #fde68a{% endif %}); border-radius: 16px; text-align: center;">
+            <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 8px;">Objectif restant</div>
+            <div style="font-size: 32px; font-weight: 800; margin-bottom: 4px;">{{ "%.1f"|format(remaining|abs) }}</div>
+            <div style="font-size: 12px; opacity: 0.8;">{% if remaining <= 0 %}🎉 Objectif atteint !{% else %}kg à perdre{% endif %}</div>
+        </div>
+        {% endif %}
+
     </div>
-    {% endif %}
 </div>
 {% endif %}
 
-<!-- Repas d'aujourd'hui + Activités du mois (2 colonnes) -->
-{% if user.track_meals or user.track_activities %}
-<div class="dashboard-meals-activities-grid" style="display: grid; grid-template-columns: {% if user.track_meals and user.track_activities %}1fr 1fr{% else %}1fr{% endif %}; gap: 20px; margin-top: 24px;">
+<!-- Évolution et tendances -->
+{% if weight_stats is defined and weight_stats %}
+<div class="card">
+    <h2><svg class="icon"><use href="#icon-trend-down"/></svg> Évolution et tendances</h2>
+    <div class="stats-grid" style="margin-top: 24px;">
 
-    <!-- Repas d'aujourd'hui -->
-    {% if user.track_meals %}
-    <div class="card">
-        <h2><svg class="icon"><use href="#icon-meal"/></svg>️ Repas d'aujourd'hui</h2>
-        {% if today_meals %}
-            <div style="display: grid; gap: 16px; margin-bottom: 20px;">
-                {% for meal in today_meals %}
-                <div style="padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; border-left: 4px solid var(--primary-start);">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                        <span style="font-size: 24px;">
-                            {% if meal.meal_type == 'breakfast' %}<svg class="icon"><use href="#icon-breakfast"/></svg>
-                            {% elif meal.meal_type == 'snack_morning' %}<svg class="icon"><use href="#icon-snack"/></svg>
-                            {% elif meal.meal_type == 'lunch' %}<svg class="icon"><use href="#icon-lunch"/></svg>
-                            {% elif meal.meal_type == 'snack_afternoon' %}<svg class="icon"><use href="#icon-gouter"/></svg>
-                            {% elif meal.meal_type == 'dinner' %}<svg class="icon"><use href="#icon-dinner"/></svg>
-                            {% else %}<svg class="icon"><use href="#icon-meal"/></svg>
-                            {% endif %}
-                        </span>
-                        <div>
-                            <div style="font-weight: 700; color: var(--text-primary); font-size: 16px;">
-                                {% if meal.meal_type == 'breakfast' %}Petit-déjeuner
-                                {% elif meal.meal_type == 'snack_morning' %}Encas (matin)
-                                {% elif meal.meal_type == 'lunch' %}Déjeuner
-                                {% elif meal.meal_type == 'snack_afternoon' %}Goûter
-                                {% elif meal.meal_type == 'dinner' %}Dîner
-                                {% else %}Repas
-                                {% endif %}
-                            </div>
-                            {% if meal.is_none %}
-                                <div style="color: #9ca3af; font-style: italic; font-size: 14px;">Rien mangé</div>
-                            {% else %}
-                                <div style="color: var(--text-secondary); font-size: 14px;">
-                                    {% for food in meal.get_foods_list() %}
-                                        {{ food }}{% if not loop.last %}, {% endif %}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                            {% if meal.qualification != 'normal' %}
-                                <span style="display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
-                                    {% if meal.qualification == 'exception' %}background: #fef3c7; color: #92400e;
-                                    {% else %}background: #dbeafe; color: #1e3a8a;
-                                    {% endif %}">
-                                    {% if meal.qualification == 'exception' %}<svg class="icon"><use href="#icon-exception"/></svg> Exception{% else %}<svg class="icon"><use href="#icon-equilibrage"/></svg> Équilibrage{% endif %}
-                                </span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+        {% if weight_stats.total_loss != 0 %}
+        <div class="stat-card">
+            <h3>Évolution totale</h3>
+            <div class="value" style="color: {% if weight_stats.total_loss < 0 %}#10b981{% else %}#ef4444{% endif %};">
+                {{ "%.1f"|format(weight_stats.total_loss|abs) }} kg
+                <svg class="icon" style="width:24px;height:24px;"><use href="{% if weight_stats.total_loss < 0 %}#icon-trend-down{% else %}#icon-trend-up{% endif %}"/></svg>
             </div>
-        {% else %}
-            <div style="text-align: center; padding: 40px 20px;">
-                <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.3;"><svg class="icon"><use href="#icon-meal"/></svg>️</div>
-                <p style="color: #9ca3af; font-size: 16px; margin: 0;">Aucun repas enregistré aujourd'hui</p>
-            </div>
+            <div class="unit">depuis {{ weight_stats.days_tracking }} jours</div>
+        </div>
         {% endif %}
-        <a href="{{ url_for('meals') }}" class="btn btn-primary"><svg class="icon"><use href="#icon-plus"/></svg> Ajouter un repas</a>
-    </div>
 
-    {% endif %}
-
-    <!-- Activités du mois -->
-    {% if user.track_activities %}
-    <div class="card">
-        <h2><svg class="icon"><use href="#icon-activity"/></svg> Activités du mois</h2>
-        {% if month_activities %}
-            <div style="max-height: 400px; overflow-y: auto;">
-                {% for activity in month_activities %}
-                <div style="padding: 12px; margin-bottom: 8px; background: var(--bg-gradient-start); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: 600; color: var(--text-primary);">
-                            {% if activity.activity_type == 'Marche' %}<svg class="icon"><use href="#icon-walk"/></svg>
-                            {% elif activity.activity_type == 'Course' %}<svg class="icon"><use href="#icon-run"/></svg>
-                            {% elif activity.activity_type == 'Vélo' %}<svg class="icon"><use href="#icon-bike"/></svg>
-                            {% elif activity.activity_type == 'Natation' %}<svg class="icon"><use href="#icon-swim"/></svg>
-                            {% elif activity.activity_type == 'Musculation' %}<svg class="icon"><use href="#icon-gym"/></svg>
-                            {% elif activity.activity_type == 'Yoga' %}<svg class="icon"><use href="#icon-yoga"/></svg>
-                            {% elif activity.activity_type == 'Pas' %}<svg class="icon"><use href="#icon-steps"/></svg>
-                            {% elif activity.activity_type == 'Ski' %}<svg class="icon"><use href="#icon-ski"/></svg>
-                            {% else %}<svg class="icon"><use href="#icon-target"/></svg>
-                            {% endif %}
-                            {{ activity.activity_type }}
-                        </div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">
-                            {{ activity.date.strftime('%d/%m/%Y') }}
-                        </div>
-                    </div>
-                    <div style="text-align: right; font-size: 13px; color: var(--text-secondary);">
-                        {% if activity.activity_type == 'Pas' %}
-                            {{ "{:,}".format(activity.steps).replace(',', ' ') }} pas
-                        {% else %}
-                            {% if activity.duration > 0 %}{{ activity.duration }} min{% endif %}
-                            {% if activity.calories_burned %} • {{ activity.calories_burned }} kcal{% endif %}
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div style="text-align: center; padding: 40px 20px;">
-                <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.3;"><svg class="icon"><use href="#icon-activity"/></svg></div>
-                <p style="color: #9ca3af; font-size: 16px; margin: 0;">Aucune activité ce mois-ci</p>
-            </div>
+        {% if weight_stats.avg_per_week %}
+        <div class="stat-card">
+            <h3>Perte moyenne / semaine</h3>
+            <div class="value">{{ "%.2f"|format(weight_stats.avg_per_week|abs) }} kg</div>
+            <div class="unit">{% if weight_stats.avg_per_week < 0 %}👍 Suivi{% else %}<svg class="icon"><use href="#icon-report"/></svg> Suivi{% endif %}</div>
+        </div>
         {% endif %}
-        <a href="{{ url_for('activities') }}" class="btn btn-primary" style="margin-top: 15px;"><svg class="icon"><use href="#icon-plus"/></svg> Ajouter une activité</a>
+
+        {% if weight_stats.avg_per_month %}
+        <div class="stat-card">
+            <h3>Perte moyenne / mois</h3>
+            <div class="value">{{ "%.2f"|format(weight_stats.avg_per_month|abs) }} kg</div>
+            <div class="unit">Estimation sur {{ weight_stats.days_tracking }} jours</div>
+        </div>
+        {% endif %}
+
+        {% if user.target_weight and weight_stats.avg_per_week and weight_stats.avg_per_week < 0 %}
+        {% set remaining = latest_weight.weight - user.target_weight %}
+        {% if remaining > 0 %}
+        {% set weeks_needed = (remaining / (weight_stats.avg_per_week|abs))|int %}
+        {% set months_needed = (weeks_needed / 4.33)|int %}
+        <div class="stat-card">
+            <h3>Objectif estimé dans</h3>
+            <div class="value">{% if months_needed > 0 %}{{ months_needed }}{% else %}{{ weeks_needed }}{% endif %}</div>
+            <div class="unit">{% if months_needed > 0 %}mois{% else %}semaines{% endif %} à ce rythme ({{ "%.2f"|format(weight_stats.avg_per_week|abs) }}kg/sem.)</div>
+        </div>
+        {% endif %}
+        {% endif %}
+
     </div>
-    {% endif %}
 </div>
 {% endif %}
 
-<!-- Graphique mesures corporelles (si activé) -->
+<!-- Graphique mesures corporelles (si activé, juste sous poids) -->
 {% if user.track_measurements and latest_measurements and latest_measurements|length > 0 %}
 <div class="card">
     <h2><svg class="icon"><use href="#icon-ruler"/></svg> Évolution des mesures</h2>
@@ -196,6 +185,66 @@
 </div>
 {% endif %}
 
+<!-- Repas d'aujourd'hui (pleine largeur, si activé) -->
+{% if user.track_meals %}
+<div class="card">
+    <h2><svg class="icon"><use href="#icon-meal"/></svg>️ Repas d'aujourd'hui</h2>
+    {% if today_meals %}
+        <div style="display: grid; gap: 16px; margin-bottom: 20px;">
+            {% for meal in today_meals %}
+            <div style="padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; border-left: 4px solid var(--primary-start);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <span style="font-size: 24px;">
+                        {% if meal.meal_type == 'breakfast' %}<svg class="icon"><use href="#icon-breakfast"/></svg>
+                        {% elif meal.meal_type == 'snack_morning' %}<svg class="icon"><use href="#icon-snack"/></svg>
+                        {% elif meal.meal_type == 'lunch' %}<svg class="icon"><use href="#icon-lunch"/></svg>
+                        {% elif meal.meal_type == 'snack_afternoon' %}<svg class="icon"><use href="#icon-gouter"/></svg>
+                        {% elif meal.meal_type == 'dinner' %}<svg class="icon"><use href="#icon-dinner"/></svg>
+                        {% else %}<svg class="icon"><use href="#icon-meal"/></svg>
+                        {% endif %}
+                    </span>
+                    <div>
+                        <div style="font-weight: 700; color: var(--text-primary); font-size: 16px;">
+                            {% if meal.meal_type == 'breakfast' %}Petit-déjeuner
+                            {% elif meal.meal_type == 'snack_morning' %}Encas (matin)
+                            {% elif meal.meal_type == 'lunch' %}Déjeuner
+                            {% elif meal.meal_type == 'snack_afternoon' %}Goûter
+                            {% elif meal.meal_type == 'dinner' %}Dîner
+                            {% else %}Repas
+                            {% endif %}
+                        </div>
+                        {% if meal.is_none %}
+                            <div style="color: #9ca3af; font-style: italic; font-size: 14px;">Rien mangé</div>
+                        {% else %}
+                            <div style="color: var(--text-secondary); font-size: 14px;">
+                                {% for food in meal.get_foods_list() %}
+                                    {{ food }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        {% if meal.qualification != 'normal' %}
+                            <span style="display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+                                {% if meal.qualification == 'exception' %}background: #fef3c7; color: #92400e;
+                                {% else %}background: #dbeafe; color: #1e3a8a;
+                                {% endif %}">
+                                {% if meal.qualification == 'exception' %}<svg class="icon"><use href="#icon-exception"/></svg> Exception{% else %}<svg class="icon"><use href="#icon-equilibrage"/></svg> Équilibrage{% endif %}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 40px 20px;">
+            <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.3;"><svg class="icon"><use href="#icon-meal"/></svg>️</div>
+            <p style="color: #9ca3af; font-size: 16px; margin: 0;">Aucun repas enregistré aujourd'hui</p>
+        </div>
+    {% endif %}
+    <a href="{{ url_for('meals') }}" class="btn btn-primary"><svg class="icon"><use href="#icon-plus"/></svg> Ajouter un repas</a>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block extra_js %}
@@ -204,40 +253,36 @@
     // Graphique Poids
     const ctxWeight = document.getElementById('weightChart').getContext('2d');
 
-    const weightData = {
-        labels: [
-            {% for entry in weight_history %}
-                '{{ entry.date.strftime("%d/%m") }}'{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ],
-        datasets: [{
-            label: 'Poids (kg)',
-            data: [
-                {% for entry in weight_history %}
-                    {{ entry.weight }}{% if not loop.last %},{% endif %}
-                {% endfor %}
-            ],
-            borderColor: 'rgb(16, 185, 129)',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            tension: 0.4,
-            fill: true,
-            pointRadius: 4,
-            pointBackgroundColor: 'rgb(16, 185, 129)',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2
-        }]
-    };
-
     new Chart(ctxWeight, {
         type: 'line',
-        data: weightData,
+        data: {
+            labels: [
+                {% for entry in weight_history %}
+                    '{{ entry.date.strftime("%d/%m") }}'{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Poids (kg)',
+                data: [
+                    {% for entry in weight_history %}
+                        {{ entry.weight }}{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                borderColor: 'rgb(16, 185, 129)',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: 'rgb(16, 185, 129)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
         options: {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     padding: 12,
@@ -261,208 +306,57 @@
         }
     });
 
-{% if user.track_activities %}
-
-    // Graphique des pas avec icônes d'activités
-    const ctxSteps = document.getElementById('stepsChart').getContext('2d');
-
-    // Données des activités par date (pour afficher les icônes)
-    const activitiesByDate = {{ activities_by_date|tojson }};
-
-    const stepsData = {
-        labels: {{ steps_data.dates|tojson }},
-        datasets: [
-            {
-                label: 'Pas quotidiens',
-                data: {{ steps_data.steps|tojson }},
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: function(context) {
-                    const date = context.label;
-                    // Si activité ce jour-là → point plus gros
-                    return activitiesByDate[date] && activitiesByDate[date].length > 0 ? 10 : 6;
-                },
-                pointBackgroundColor: function(context) {
-                    const date = context.label;
-                    // Si activité ce jour-là → couleur différente
-                    return activitiesByDate[date] && activitiesByDate[date].length > 0 ?
-                        'rgb(16, 185, 129)' : 'rgb(59, 130, 246)';
-                },
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointHoverRadius: 12,
-                pointStyle: function(context) {
-                    const date = context.label;
-                    const activities = activitiesByDate[date];
-
-                    // Si une seule activité → afficher son icône
-                    if (activities && activities.length === 1) {
-                        const emoji = getActivityEmoji(activities[0].type);
-                        // Créer une image avec l'emoji
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 32;
-                        canvas.height = 32;
-                        const ctx = canvas.getContext('2d');
-                        ctx.font = '24px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(emoji, 16, 16);
-
-                        const img = new Image();
-                        img.src = canvas.toDataURL();
-                        return img;
-                    }
-                    return 'circle';
-                }
-            },
-            {
-                label: 'Moyenne',
-                data: Array({{ steps_data.dates|length }}).fill({{ steps_stats.average }}),
-                borderColor: 'rgba(239, 68, 68, 0.5)',
-                borderDash: [5, 5],
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false
-            }
-        ]
-    };
-
-    new Chart(ctxSteps, {
-        type: 'line',
-        data: stepsData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
-                    callbacks: {
-                        title: function(context) {
-                            return context[0].label;
-                        },
-                        label: function(context) {
-                            if (context.datasetIndex === 0) {
-                                const steps = context.parsed.y;
-                                const formattedSteps = steps.toLocaleString('fr-FR');
-                                return '👣 ' + formattedSteps + ' pas';
-                            }
-                            return 'Moyenne : ' + context.parsed.y.toLocaleString('fr-FR') + ' pas';
-                        },
-                        afterLabel: function(context) {
-                            if (context.datasetIndex === 0) {
-                                const date = context.label;
-                                const activities = activitiesByDate[date] || [];
-
-                                if (activities.length > 0) {
-                                    let lines = ['\nActivités :'];
-                                    activities.forEach(act => {
-                                        const emoji = getActivityEmoji(act.type);
-                                        let line = emoji + ' ' + act.type;
-                                        if (act.duration) line += ' (' + act.duration + 'min)';
-                                        if (act.calories) line += ' - ' + act.calories + 'kcal';
-                                        lines.push(line);
-                                    });
-                                    return lines;
-                                }
-                            }
-                            return [];
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return value.toLocaleString('fr-FR');
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    function getActivityEmoji(type) {
-        const emojis = {
-            'Marche': '🚶',
-            'Course': '🏃',
-            'Vélo': '🚴',
-            'Natation': '🏊',
-            'Musculation': '💪',
-            'Yoga': '🧘',
-            'Pas': '👣',
-            'Ski': '⛷️'
-        };
-        return emojis[type] || '🎯';
-    }
-{% endif %}
-
 // Graphique mesures corporelles
 {% if user.track_measurements and latest_measurements and latest_measurements|length > 1 %}
     const ctxMeasurements = document.getElementById('measurementsChart').getContext('2d');
-    const measurementsData = {
-        labels: [
-            {% for m in latest_measurements %}
-                '{{ m.date.strftime("%d/%m") }}'{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ],
-        datasets: [
-            {
-                label: 'Taille (cm)',
-                data: [
-                    {% for m in latest_measurements %}
-                        {{ m.waist if m.waist else 'null' }}{% if not loop.last %},{% endif %}
-                    {% endfor %}
-                ],
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                tension: 0.4,
-                fill: true
-            },
-            {
-                label: 'Hanches (cm)',
-                data: [
-                    {% for m in latest_measurements %}
-                        {{ m.hips if m.hips else 'null' }}{% if not loop.last %},{% endif %}
-                    {% endfor %}
-                ],
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                fill: true
-            },
-            {
-                label: 'Cuisse (cm)',
-                data: [
-                    {% for m in latest_measurements %}
-                        {{ m.thigh if m.thigh else 'null' }}{% if not loop.last %},{% endif %}
-                    {% endfor %}
-                ],
-                borderColor: '#f59e0b',
-                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                tension: 0.4,
-                fill: true
-            }
-        ]
-    };
-    
+
     new Chart(ctxMeasurements, {
         type: 'line',
-        data: measurementsData,
+        data: {
+            labels: [
+                {% for m in latest_measurements %}
+                    '{{ m.date.strftime("%d/%m") }}'{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [
+                {
+                    label: 'Taille (cm)',
+                    data: [
+                        {% for m in latest_measurements %}
+                            {{ m.waist if m.waist else 'null' }}{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Hanches (cm)',
+                    data: [
+                        {% for m in latest_measurements %}
+                            {{ m.hips if m.hips else 'null' }}{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Cuisse (cm)',
+                    data: [
+                        {% for m in latest_measurements %}
+                            {{ m.thigh if m.thigh else 'null' }}{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
         options: {
             responsive: true,
             maintainAspectRatio: true,

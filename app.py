@@ -343,23 +343,46 @@ def change_theme():
 # ========================================
 # ROUTES PRINCIPALES
 # ========================================
-
 @app.route('/dashboard')
 @login_required
 def dashboard():
     user_id = session['user_id']
     user = User.query.get(user_id)
-
     today = datetime.utcnow().date()
     thirty_days_ago = today - timedelta(days=30)
 
     # Poids actuel
     latest_weight = WeightEntry.query.filter_by(user_id=user_id).order_by(WeightEntry.date.desc()).first()
 
+    # Poids de départ
+    first_weight = WeightEntry.query.filter_by(user_id=user_id).order_by(WeightEntry.date.asc()).first()
+
+    # Poids saisi aujourd'hui (pour afficher/masquer le bouton)
+    today_weight = WeightEntry.query.filter_by(user_id=user_id, date=today).first()
+
+    # Historique poids (30 derniers jours)
+    weight_history = WeightEntry.query.filter(
+        WeightEntry.user_id == user_id,
+        WeightEntry.date >= thirty_days_ago
+    ).order_by(WeightEntry.date).all()
+
+    # Statistiques d'évolution du poids
+    weight_stats = None
+    if latest_weight and first_weight and first_weight.id != latest_weight.id:
+        days_tracking = (latest_weight.date - first_weight.date).days or 1
+        total_loss = latest_weight.weight - first_weight.weight
+        avg_per_week = (total_loss / days_tracking) * 7
+        avg_per_month = (total_loss / days_tracking) * 30
+        weight_stats = {
+            'total_loss': total_loss,
+            'avg_per_week': avg_per_week,
+            'avg_per_month': avg_per_month,
+            'days_tracking': days_tracking
+        }
+
     # Mesures corporelles (30 derniers jours)
     latest_measurements = []
     if user.track_measurements:
-        thirty_days_ago = datetime.utcnow().date() - timedelta(days=30)
         latest_measurements = BodyMeasurement.query.filter(
             BodyMeasurement.user_id == user_id,
             BodyMeasurement.date >= thirty_days_ago
@@ -368,92 +391,16 @@ def dashboard():
     # Repas d'aujourd'hui
     today_meals = MealEntry.query.filter_by(user_id=user_id, date=today).all()
 
-    # Activités du mois (30 derniers jours)
-    month_activities = ActivityEntry.query.filter(
-        ActivityEntry.user_id == user_id,
-        ActivityEntry.date >= thirty_days_ago
-    ).order_by(ActivityEntry.date.desc()).all()
-
-    # Historique poids (30 derniers jours)
-    weight_history = WeightEntry.query.filter(
-        WeightEntry.user_id == user_id,
-        WeightEntry.date >= thirty_days_ago
-    ).order_by(WeightEntry.date).all()
-
-    # ========================================
-    # DONNÉES POUR LE GRAPHIQUE DES PAS
-    # ========================================
-
-    # Récupérer toutes les activités "Pas" des 30 derniers jours
-    steps_activities = ActivityEntry.query.filter(
-        ActivityEntry.user_id == user_id,
-        ActivityEntry.activity_type == 'Pas',
-        ActivityEntry.date >= thirty_days_ago
-    ).order_by(ActivityEntry.date).all()
-
-    # Créer un dictionnaire date -> steps
-    steps_by_date = {}
-    for activity in steps_activities:
-        steps_by_date[activity.date] = activity.steps or 0
-
-    # Générer toutes les dates des 30 derniers jours
-    steps_dates = []
-    steps_values = []
-    current_date = thirty_days_ago
-
-    while current_date <= today:
-        steps_dates.append(current_date.strftime('%d/%m'))
-        steps_values.append(steps_by_date.get(current_date, 0))
-        current_date += timedelta(days=1)
-
-    steps_data = {
-        'dates': steps_dates,
-        'steps': steps_values
-    }
-
-    # Calculer la moyenne des pas (jours avec au moins 1 pas)
-    total_steps = sum(steps_values)
-    days_with_steps = sum(1 for s in steps_values if s > 0)
-    average_steps = total_steps / days_with_steps if days_with_steps > 0 else 0
-
-    steps_stats = {
-        'total': total_steps,
-        'average': average_steps
-    }
-
-    # ========================================
-    # ACTIVITÉS PAR DATE (pour le tooltip du graph)
-    # ========================================
-
-    # Récupérer toutes les activités (sauf "Pas") des 30 derniers jours
-    other_activities = ActivityEntry.query.filter(
-        ActivityEntry.user_id == user_id,
-        ActivityEntry.activity_type != 'Pas',
-        ActivityEntry.date >= thirty_days_ago
-    ).order_by(ActivityEntry.date).all()
-
-    # Organiser par date
-    activities_by_date = {}
-    for activity in other_activities:
-        date_key = activity.date.strftime('%d/%m')
-        if date_key not in activities_by_date:
-            activities_by_date[date_key] = []
-        activities_by_date[date_key].append({
-            'type': activity.activity_type,
-            'duration': activity.duration,
-            'calories': activity.calories_burned
-        })
-
     return render_template('dashboard.html',
                          latest_weight=latest_weight,
-                         today_meals=today_meals,
-                         month_activities=month_activities,
+                         first_weight=first_weight,
+                         today_weight=today_weight,
                          weight_history=weight_history,
-                         steps_data=steps_data,
-                         steps_stats=steps_stats,
-                         activities_by_date=activities_by_date,
-                         user=user,
+                         weight_stats=weight_stats,
+                         today_meals=today_meals,
                          latest_measurements=latest_measurements,
+                         user=user,
+                         today=today,
                          theme=user.theme)
 
 # ========================================
@@ -919,32 +866,69 @@ def activities():
     user_id = session['user_id']
     user = User.query.get(user_id)
     today = datetime.utcnow().date()
-
     entries = ActivityEntry.query.filter_by(user_id=user_id).order_by(
         ActivityEntry.date.desc(),
         ActivityEntry.created_at.desc()
     ).all()
 
-    # Calculer des statistiques
+    # Statistiques générales
     week_ago = today - timedelta(days=7)
     week_count = ActivityEntry.query.filter(
         ActivityEntry.user_id == user_id,
         ActivityEntry.date >= week_ago
     ).count()
-
     total_steps = sum(entry.steps or 0 for entry in entries)
     total_calories = sum(entry.calories_burned or 0 for entry in entries)
-
     stats = {
         'week_count': week_count,
         'total_steps': total_steps,
         'total_calories': total_calories
     }
 
+    # Données graphique pas (30 derniers jours)
+    thirty_days_ago = today - timedelta(days=30)
+    recent_entries = ActivityEntry.query.filter(
+        ActivityEntry.user_id == user_id,
+        ActivityEntry.date >= thirty_days_ago
+    ).order_by(ActivityEntry.date.asc()).all()
+
+    # Construire les listes dates/pas pour le graphique
+    steps_by_date = {}
+    activities_by_date = {}
+    for entry in recent_entries:
+        date_str = entry.date.strftime('%d/%m')
+        if entry.activity_type == 'Pas':
+            steps_by_date[date_str] = (steps_by_date.get(date_str, 0) + (entry.steps or 0))
+        else:
+            if date_str not in activities_by_date:
+                activities_by_date[date_str] = []
+            activities_by_date[date_str].append({
+                'type': entry.activity_type,
+                'duration': entry.duration,
+                'calories': entry.calories_burned
+            })
+
+    # Générer toutes les dates des 30 derniers jours
+    all_dates = []
+    all_steps = []
+    for i in range(30):
+        d = thirty_days_ago + timedelta(days=i)
+        date_str = d.strftime('%d/%m')
+        all_dates.append(date_str)
+        all_steps.append(steps_by_date.get(date_str, 0))
+
+    steps_data = {'dates': all_dates, 'steps': all_steps}
+
+    non_zero = [s for s in all_steps if s > 0]
+    steps_stats = {'average': int(sum(non_zero) / len(non_zero)) if non_zero else 0}
+
     return render_template('activities.html',
                          entries=entries,
                          today=today,
                          stats=stats,
+                         steps_data=steps_data,
+                         steps_stats=steps_stats,
+                         activities_by_date=activities_by_date,
                          user=user,
                          theme=user.theme)
 

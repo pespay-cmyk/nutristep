@@ -447,7 +447,7 @@
             padding: 0;
             gap: 0;
         }
-        
+
         .navbar .brand {
             padding: 16px 24px;
             margin: 0;
@@ -562,10 +562,10 @@
             <span></span>
             <span></span>
         </button>
-        
+
         <!-- Overlay sombre -->
         <div class="menu-overlay" id="menuOverlay"></div>
-        
+
         <div class="navbar" id="navbar">
                 <div class="brand" style="display: flex; align-items: center; gap: 8px;">
                     <svg style="width: 48px; height: 48px;"><use href="#icon-logo-app"/></svg>
@@ -574,7 +574,7 @@
                 <nav>
                     <a href="{{ url_for('dashboard') }}">
                         <svg class="icon icon-home"><use href="#icon-home"/></svg>
-                        Dashboard
+                        Accueil
                     </a>
                     <a href="{{ url_for('weight') }}">
                         <svg class="icon"><use href="#icon-balance"/></svg>
@@ -595,7 +595,7 @@
                     <a href="{{ url_for('meals_recap') }}"
                        style="{% if not (current_user and current_user.track_meals) %}display:none;{% endif %}">
                         <svg class="icon icon-report"><use href="#icon-report"/></svg>
-                        Récap
+                        Rapport
                     </a>
 
 
@@ -636,14 +636,14 @@
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const navbar = document.getElementById('navbar');
     const menuOverlay = document.getElementById('menuOverlay');
-    
+
     if (hamburgerBtn) {
         hamburgerBtn.addEventListener('click', () => {
             navbar.classList.toggle('open');
             menuOverlay.classList.toggle('active');
             hamburgerBtn.classList.toggle('active');
         });
-        
+
         menuOverlay.addEventListener('click', () => {
             navbar.classList.remove('open');
             menuOverlay.classList.remove('active');
