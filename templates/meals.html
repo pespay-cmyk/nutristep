@@ -814,6 +814,12 @@ const allMeals = [
                             <div class="meal-title">${meal.icon} ${meal.label}</div>
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: nowrap;" onclick="event.stopPropagation();">
+                            <!-- Bouton favoris -->
+                            <button type="button" class="btn-favorite" id="fav_btn_${mealType}"
+                                    onclick="toggleFavoritesPanel('${mealType}')" title="Repas favoris"
+                                    style="background:none; border:2px solid #f59e0b; border-radius:10px; padding:6px 10px; cursor:pointer; line-height:1; color:#f59e0b; display:flex; align-items:center; justify-content:center;">
+                                <svg style="width:18px;height:18px;"><use href="#icon-star-filled"/></svg>
+                            </button>
                             <div class="qualification-selector">
                                 <button type="button" class="qualification-btn normal ${mealData.qualification === 'normal' ? 'active' : ''}"
                                         onclick="setQualification('${mealType}', 'normal')" title="Normal">
@@ -834,6 +840,18 @@ const allMeals = [
                     <!-- Body dépliable (caché par défaut) -->
                     <div class="meal-section-body" id="meal_body_${mealType}" style="display: none; padding: 0 16px 16px 16px;">
                         <input type="hidden" name="${mealType}_qualification" id="${mealType}_qualification" value="${mealData.qualification}">
+
+                        <!-- Panel favoris -->
+                        <div id="fav_panel_${mealType}" style="display:none; margin-bottom:16px; background:white; border:2px solid #f59e0b; border-radius:12px; overflow:hidden;">
+                            <div style="background:#fffbeb; padding:10px 14px; font-size:12px; font-weight:700; color:#92400e; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                <span style="display:flex;align-items:center;gap:6px;"><svg style="width:16px;height:16px;color:#f59e0b;"><use href="#icon-star-filled"/></svg> Repas favoris</span>
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    <button type="button" onclick="saveCurrentAsFavorite('${mealType}')" style="background:#f59e0b; color:white; border:none; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:700; cursor:pointer;">+ Sauvegarder ce repas</button>
+                                    <button type="button" onclick="toggleFavoritesPanel('${mealType}')" style="background:none; border:none; cursor:pointer; color:#92400e; font-size:20px; line-height:1; padding:0 4px;">×</button>
+                                </div>
+                            </div>
+                            <div id="fav_list_${mealType}" style="padding:8px;"></div>
+                        </div>
 
                         <div class="none-checkbox">
                             <input type="checkbox" id="${mealType}_none" name="${mealType}_none"
@@ -981,7 +999,7 @@ const allMeals = [
         newItem.innerHTML = `
             <input type="text" class="form-control" name="${mealType}_food[]"
                    placeholder="Ex: Pomme" oninput="showAutocomplete(this); markChanged();">
-            <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();">✕</button>
+            <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();"><svg class="icon icon-sm"><use href="#icon-delete"/></svg></button>
         `;
         foodsDiv.appendChild(newItem);
     }
@@ -1071,5 +1089,121 @@ const allMeals = [
             e.returnValue = '';
         }
     });
+
+    // ========================================
+    // FAVORIS
+    // ========================================
+
+    let favoritesCache = {}; // { meal_type: [{id, name, foods}] }
+
+    function toggleFavoritesPanel(mealType) {
+        const panel = document.getElementById(`fav_panel_${mealType}`);
+        const body  = document.getElementById(`meal_body_${mealType}`);
+
+        if (panel.style.display === 'none') {
+            // Ouvrir l'accordéon si fermé
+            if (body.style.display === 'none' || body.style.display === '') {
+                toggleMealSection(mealType);
+            }
+            panel.style.display = 'block';
+            loadFavoritesForType(mealType);
+        } else {
+            panel.style.display = 'none';
+        }
+    }
+
+    function loadFavoritesForType(mealType) {
+        const listEl = document.getElementById(`fav_list_${mealType}`);
+        listEl.innerHTML = '<p style="padding:8px;font-size:13px;color:var(--text-secondary);">Chargement…</p>';
+
+        fetch(`/api/meal-favorites?meal_type=${mealType}`)
+            .then(r => r.json())
+            .then(favorites => {
+                favoritesCache[mealType] = favorites;
+                if (favorites.length === 0) {
+                    listEl.innerHTML = '<p style="padding:8px 12px;font-size:13px;color:var(--text-secondary);">Aucun favori pour ce repas. Sauvegarde-en un ci-dessus !</p>';
+                    return;
+                }
+                listEl.innerHTML = favorites.map(fav => `
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border-radius:8px; margin-bottom:4px; background:var(--bg-gradient-start); gap:8px;">
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-weight:700; font-size:13px; color:var(--text-primary); display:flex; align-items:center; gap:5px;"><svg style="width:13px;height:13px;color:#f59e0b;"><use href="#icon-star-filled"/></svg> ${fav.name}</div>
+                            <div style="font-size:11px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fav.foods.join(' · ')}</div>
+                        </div>
+                        <button type="button" onclick="applyFavorite('${mealType}', ${fav.id})"
+                                style="background:linear-gradient(135deg,var(--primary-start),var(--primary-end)); color:white; border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0;">
+                            Utiliser
+                        </button>
+                    </div>
+                `).join('');
+            });
+    }
+
+    function applyFavorite(mealType, favId) {
+        const favorites = favoritesCache[mealType] || [];
+        const fav = favorites.find(f => f.id === favId);
+        if (!fav) return;
+
+        // Vider les aliments existants
+        const foodsDiv = document.getElementById(`${mealType}_foods`);
+        foodsDiv.innerHTML = '';
+
+        // Remplir avec les aliments du favori
+        fav.foods.forEach(food => {
+            const item = document.createElement('div');
+            item.className = 'food-item';
+            item.innerHTML = `
+                <input type="text" class="form-control" name="${mealType}_food[]"
+                       value="${food.replace(/"/g, '&quot;')}"
+                       oninput="showAutocomplete(this); markChanged();">
+                <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();"><svg class="icon icon-sm"><use href="#icon-delete"/></svg><span class="btn-text"></span></button>
+            `;
+            foodsDiv.appendChild(item);
+        });
+
+        // S'assurer que "rien mangé" est décoché
+        const noneCheck = document.getElementById(`${mealType}_none`);
+        if (noneCheck.checked) {
+            noneCheck.checked = false;
+            toggleNone(mealType);
+        }
+
+        // Fermer le panel
+        document.getElementById(`fav_panel_${mealType}`).style.display = 'none';
+        markChanged();
+    }
+
+    function saveCurrentAsFavorite(mealType) {
+        // Récupérer les aliments actuellement saisis
+        const foods = [];
+        const inputs = document.querySelectorAll(`#${mealType}_foods input[type="text"]`);
+        inputs.forEach(input => {
+            const val = input.value.trim();
+            if (val) foods.push(val);
+        });
+
+        if (foods.length === 0) {
+            alert('Saisis d\'abord des aliments avant de sauvegarder un favori.');
+            return;
+        }
+
+        const name = prompt(`Nom de ce favori (${allMeals.find(m=>m.type===mealType)?.label}) :`);
+        if (!name || !name.trim()) return;
+
+        fetch('/api/meal-favorites/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name.trim(), meal_type: mealType, foods })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                alert('Erreur : ' + data.error);
+            } else {
+                // Recharger la liste
+                loadFavoritesForType(mealType);
+            }
+        });
+    }
 </script>
 {% endblock %}

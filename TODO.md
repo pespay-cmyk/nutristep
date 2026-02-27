@@ -6,7 +6,7 @@
 
 ## 🔧 EN COURS - BUGS À CORRIGER
 
-*(aucun bug en cours)*
+- [ ] **Qualification jour vs repas** — la qualification Normal/Exception/Compensation est actuellement au niveau de chaque repas individuel, alors qu'elle devrait être au niveau de la **journée entière**. À revoir en profondeur (modèle BDD + UI).
 
 ---
 
@@ -71,6 +71,7 @@
 - Mode suivi strict
 - Floutage visage sur photos de progression
 - Partage social des photos/progression
+- Gestion de la traduction (i18n)
 
 ---
 

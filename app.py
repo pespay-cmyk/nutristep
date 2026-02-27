@@ -122,6 +122,7 @@ class User(db.Model):
     activity_entries = db.relationship('ActivityEntry', backref='user', lazy=True, cascade='all, delete-orphan')
     body_measurements = db.relationship('BodyMeasurement', backref='user', lazy=True, cascade='all, delete-orphan')
     photo_entries = db.relationship('PhotoEntry', backref='user', lazy=True, cascade='all, delete-orphan')
+    meal_favorites = db.relationship('MealFavorite', backref='user', lazy=True, cascade='all, delete-orphan')
 
 class WeightEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -213,6 +214,21 @@ PHOTO_ANGLES = [
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads', 'photos')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'heic'}
+
+class MealFavorite(db.Model):
+    __tablename__ = 'meal_favorites'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    meal_type = db.Column(db.String(20), nullable=False)
+    foods = db.Column(db.Text, nullable=False)  # JSON
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def get_foods_list(self):
+        return json.loads(self.foods) if self.foods else []
+
+    def set_foods_list(self, foods_list):
+        self.foods = json.dumps(foods_list, ensure_ascii=False)
 
 # ========================================
 # DÉCORATEUR POUR PROTÉGER LES ROUTES
@@ -1750,6 +1766,62 @@ def load_user():
         g.current_user = User.query.get(session['user_id'])
     else:
         g.current_user = None
+
+# ========================================
+# ROUTES FAVORIS REPAS
+# ========================================
+
+@app.route('/api/meal-favorites')
+@login_required
+def get_meal_favorites():
+    user_id = session['user_id']
+    meal_type = request.args.get('meal_type')
+    query = MealFavorite.query.filter_by(user_id=user_id)
+    if meal_type:
+        query = query.filter_by(meal_type=meal_type)
+    favorites = query.order_by(MealFavorite.name).all()
+    return jsonify([{
+        'id': f.id,
+        'name': f.name,
+        'meal_type': f.meal_type,
+        'foods': f.get_foods_list()
+    } for f in favorites])
+
+@app.route('/api/meal-favorites/save', methods=['POST'])
+@login_required
+def save_meal_favorite():
+    user_id = session['user_id']
+    data = request.get_json()
+    name = data.get('name', '').strip()
+    meal_type = data.get('meal_type', '')
+    foods = data.get('foods', [])
+
+    if not name or not meal_type or not foods:
+        return jsonify({'error': 'Données manquantes'}), 400
+
+    # Vérifier doublon nom + type
+    existing = MealFavorite.query.filter_by(
+        user_id=user_id, name=name, meal_type=meal_type
+    ).first()
+    if existing:
+        return jsonify({'error': 'Un favori avec ce nom existe déjà pour ce type de repas'}), 409
+
+    fav = MealFavorite(user_id=user_id, name=name, meal_type=meal_type)
+    fav.set_foods_list(foods)
+    db.session.add(fav)
+    db.session.commit()
+    return jsonify({'success': True, 'id': fav.id, 'name': fav.name})
+
+@app.route('/api/meal-favorites/<int:fav_id>', methods=['DELETE'])
+@login_required
+def delete_meal_favorite(fav_id):
+    user_id = session['user_id']
+    fav = MealFavorite.query.get_or_404(fav_id)
+    if fav.user_id != user_id:
+        return jsonify({'error': 'Non autorisé'}), 403
+    db.session.delete(fav)
+    db.session.commit()
+    return jsonify({'success': True})
 
 # ========================================
 # ROUTES PHOTOS

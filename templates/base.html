@@ -567,15 +567,11 @@
         <div class="menu-overlay" id="menuOverlay"></div>
         
         <div class="navbar" id="navbar">
-                <div class="brand" style="display: flex; align-items: center; gap: 8px;">
+                <a href="{{ url_for('dashboard') }}" class="brand" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
                     <svg style="width: 48px; height: 48px;"><use href="#icon-logo-app"/></svg>
                     <span class="brand-name">NutriStep</span>
-                </div>
+                </a>
                 <nav>
-                    <a href="{{ url_for('dashboard') }}">
-                        <svg class="icon icon-home"><use href="#icon-home"/></svg>
-                        Dashboard
-                    </a>
                     <a href="{{ url_for('weight') }}">
                         <svg class="icon"><use href="#icon-balance"/></svg>
                         Poids
