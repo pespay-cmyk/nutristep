@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+
+{% block title %}Photos progression - NutriStep{% endblock %}
+
+{% block content %}
+
+<style>
+    .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .photo-slot {
+        position: relative;
+        aspect-ratio: 3/4;
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--bg-gradient-start);
+        border: 2px dashed var(--accent);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .photo-slot:hover {
+        border-color: var(--primary-start);
+        transform: scale(1.02);
+        box-shadow: 0 8px 24px var(--card-shadow);
+    }
+
+    .photo-slot.has-photo {
+        border: 2px solid var(--primary-start);
+    }
+
+    .photo-slot img.slot-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .photo-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 8px 10px;
+        background: linear-gradient(transparent, rgba(0,0,0,0.75));
+        color: white;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        letter-spacing: 0.5px;
+    }
+
+    .photo-guide {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        padding: 8px 8px 36px 8px;
+        gap: 0;
+    }
+
+    .photo-guide img.guide-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center;
+        opacity: 0.75;
+    }
+
+    .already-done-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 20px;
+        z-index: 2;
+        box-shadow: 0 2px 6px rgba(16,185,129,0.4);
+        letter-spacing: 0.3px;
+    }
+
+    .photo-delete-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(239,68,68,0.85);
+        border: none;
+        border-radius: 8px;
+        padding: 6px;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .photo-slot:hover .photo-delete-btn { opacity: 1; }
+    .photo-delete-btn svg { width: 14px; height: 14px; color: white; }
+
+    .compare-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .compare-side h3 {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        text-align: center;
+    }
+
+    .compare-photos {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+
+    .compare-photo {
+        aspect-ratio: 3/4;
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--bg-gradient-start);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .compare-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .month-badge {
+        background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+        color: white;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .lightbox {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.93);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .lightbox.active { display: flex; }
+
+    .lightbox img {
+        max-width: 92vw;
+        max-height: 85vh;
+        border-radius: 12px;
+        object-fit: contain;
+    }
+
+    .lightbox-label {
+        color: rgba(255,255,255,0.7);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .lightbox-close {
+        position: absolute;
+        top: 16px;
+        right: 20px;
+        color: white;
+        font-size: 36px;
+        cursor: pointer;
+        background: none;
+        border: none;
+        line-height: 1;
+        opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+        .compare-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;">
+    <svg class="icon icon-xl"><use href="#icon-camera"/></svg> Photos de progression
+</h1>
+
+{% if not photo_this_month %}
+<div style="background: linear-gradient(135deg, var(--primary-start), var(--primary-end)); color: white; padding: 20px 24px; border-radius: 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px;">
+    <svg class="icon" style="width:36px;height:36px;flex-shrink:0;"><use href="#icon-camera"/></svg>
+    <div>
+        <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px;">Pas encore de photos ce mois-ci !</div>
+        <div style="opacity: 0.9; font-size: 14px;">3 photos, 3 minutes — et tu pourras voir ta progression dans le temps 💪</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Upload -->
+<div class="card">
+    <h2><svg class="icon"><use href="#icon-upload"/></svg> Ajouter des photos ce mois-ci</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">
+        Même endroit, même éclairage, même heure chaque mois. Sur mobile tu peux prendre la photo directement ou choisir depuis ta galerie.
+    </p>
+
+    <form method="POST" action="{{ url_for('upload_photo') }}" enctype="multipart/form-data">
+
+        {# Photos déjà prises ce mois-ci #}
+        {% set current_month_key = today.strftime('%Y-%m') %}
+        {% set current_month_photos = photos_by_month.get(current_month_key, {}).get('photos', {}) %}
+
+        <div class="photo-grid">
+
+            <!-- VISAGE -->
+            <div class="photo-slot {% if current_month_photos.get('visage') %}has-photo{% endif %}" id="slot-visage" onclick="document.getElementById('input-visage').click()">
+                {% if current_month_photos.get('visage') %}
+                <div class="already-done-badge">✓ Prise</div>
+                {% endif %}
+                <div class="photo-guide" id="guide-visage">
+                    <img class="guide-img" src="{{ url_for('static', filename='images/guide_visage.jpg') }}" alt="Guide visage">
+
+                </div>
+                <img class="slot-img" id="preview-visage" src="" alt="Visage" style="display:none;">
+                <div class="photo-label">Visage</div>
+                <input type="file" id="input-visage" name="photo_visage" accept="image/*" capture="environment" style="display:none;" onchange="previewPhoto(this, 'visage')">
+            </div>
+
+            <!-- VENTRE (profil) -->
+            <div class="photo-slot {% if current_month_photos.get('ventre') %}has-photo{% endif %}" id="slot-ventre" onclick="document.getElementById('input-ventre').click()">
+                {% if current_month_photos.get('ventre') %}
+                <div class="already-done-badge">✓ Prise</div>
+                {% endif %}
+                <div class="photo-guide" id="guide-ventre">
+                    <img class="guide-img" src="{{ url_for('static', filename='images/guide_ventre.jpg') }}" alt="Guide ventre profil">
+
+                </div>
+                <img class="slot-img" id="preview-ventre" src="" alt="Ventre" style="display:none;">
+                <div class="photo-label">Ventre (profil)</div>
+                <input type="file" id="input-ventre" name="photo_ventre" accept="image/*" capture="environment" style="display:none;" onchange="previewPhoto(this, 'ventre')">
+            </div>
+
+            <!-- TOTALE -->
+            <div class="photo-slot {% if current_month_photos.get('totale') %}has-photo{% endif %}" id="slot-totale" onclick="document.getElementById('input-totale').click()">
+                {% if current_month_photos.get('totale') %}
+                <div class="already-done-badge">✓ Prise</div>
+                {% endif %}
+                <div class="photo-guide" id="guide-totale">
+                    <img class="guide-img" src="{{ url_for('static', filename='images/guide_totale.jpg') }}" alt="Guide silhouette entière">
+
+                </div>
+                <img class="slot-img" id="preview-totale" src="" alt="Silhouette" style="display:none;">
+                <div class="photo-label">Silhouette</div>
+                <input type="file" id="input-totale" name="photo_totale" accept="image/*" capture="environment" style="display:none;" onchange="previewPhoto(this, 'totale')">
+            </div>
+
+        </div>
+
+        <div style="margin-top: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <button type="submit" class="btn btn-primary" id="submitBtn" style="display:none;">
+                <svg class="icon"><use href="#icon-save"/></svg> Enregistrer les photos
+            </button>
+            <span id="uploadHint" style="color: var(--text-secondary); font-size: 14px;">
+                Clique sur un emplacement pour prendre ou choisir une photo
+            </span>
+        </div>
+    </form>
+</div>
+
+<!-- Comparaison avant / après -->
+{% if first_month and last_month %}
+<div class="card">
+    <h2><svg class="icon"><use href="#icon-compare"/></svg> Avant / Après</h2>
+    <div class="compare-grid">
+        <div class="compare-side">
+            <h3>📅 {{ first_month.label }}</h3>
+            <div class="compare-photos">
+                {% for angle, label, _ in photo_angles %}
+                {% if first_month.photos.get(angle) %}{% set p = first_month.photos[angle] %}
+                <div class="compare-photo" title="{{ label }}">
+                    <img src="{{ url_for('serve_photo', user_id=user.id, month=p.date.strftime('%Y-%m'), filename=p.filename) }}"
+                         alt="{{ label }}" onclick="openLightbox(this.src, '{{ label }}')" style="cursor:zoom-in;">
+                </div>
+                {% else %}
+                <div class="compare-photo"><svg style="width:20px;height:20px;opacity:0.2;"><use href="#icon-photo"/></svg></div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="compare-side">
+            <h3>📅 {{ last_month.label }}</h3>
+            <div class="compare-photos">
+                {% for angle, label, _ in photo_angles %}
+                {% if last_month.photos.get(angle) %}{% set p = last_month.photos[angle] %}
+                <div class="compare-photo" title="{{ label }}">
+                    <img src="{{ url_for('serve_photo', user_id=user.id, month=p.date.strftime('%Y-%m'), filename=p.filename) }}"
+                         alt="{{ label }}" onclick="openLightbox(this.src, '{{ label }}')" style="cursor:zoom-in;">
+                </div>
+                {% else %}
+                <div class="compare-photo"><svg style="width:20px;height:20px;opacity:0.2;"><use href="#icon-photo"/></svg></div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Galerie -->
+{% if photos_by_month %}
+<div class="card">
+    <h2><svg class="icon"><use href="#icon-photo"/></svg> Galerie de progression</h2>
+
+    {% for month_key in months_list|reverse %}
+    {% set month_data = photos_by_month[month_key] %}
+    <div style="margin-bottom: 32px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <span class="month-badge">📅 {{ month_data.label }}</span>
+            <span style="font-size:13px; color:var(--text-secondary);">{{ month_data.photos|length }} / 3</span>
+        </div>
+        <div class="photo-grid">
+            {% for angle, label, _ in photo_angles %}
+            {% if month_data.photos.get(angle) %}
+            {% set photo = month_data.photos[angle] %}
+            <div class="photo-slot has-photo">
+                <img class="slot-img"
+                     src="{{ url_for('serve_photo', user_id=user.id, month=photo.date.strftime('%Y-%m'), filename=photo.filename) }}"
+                     alt="{{ label }}"
+                     onclick="openLightbox(this.src, '{{ label }} — {{ month_data.label }}')"
+                     style="cursor:zoom-in;">
+                <div class="photo-label">{{ label }}</div>
+                <form method="POST" action="{{ url_for('delete_photo', photo_id=photo.id) }}" style="display:inline;">
+                    <button type="submit" class="photo-delete-btn"
+                            onclick="event.stopPropagation(); return confirm('Supprimer cette photo ?');">
+                        <svg><use href="#icon-delete"/></svg>
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="photo-slot" style="cursor:default; opacity:0.45;">
+                <div class="photo-guide">
+                    <svg style="width:32px;height:32px;opacity:0.3;"><use href="#icon-photo"/></svg>
+                    <div class="guide-hint">{{ label }}<br>non prise</div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% if not loop.last %}<hr style="border:none; border-top:1px solid var(--bg-gradient-start); margin-bottom:32px;">{% endif %}
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align:center; padding:60px 20px;">
+    <svg style="width:64px;height:64px;opacity:0.2;margin-bottom:16px;"><use href="#icon-camera"/></svg>
+    <p style="color:#9ca3af; font-size:18px; margin:0;">Aucune photo enregistrée pour le moment</p>
+    <p style="color:#d1d5db; font-size:14px; margin-top:8px;">Ajoute ta première série de photos !</p>
+</div>
+{% endif %}
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">×</button>
+    <img id="lightboxImg" src="" alt="">
+    <div class="lightbox-label" id="lightboxLabel"></div>
+</div>
+
+<script>
+    function previewPhoto(input, angle) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('preview-' + angle);
+                const guide  = document.getElementById('guide-' + angle);
+                const slot   = document.getElementById('slot-' + angle);
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                guide.style.display   = 'none';
+                slot.classList.add('has-photo');
+            };
+            reader.readAsDataURL(input.files[0]);
+            document.getElementById('submitBtn').style.display = 'inline-flex';
+            document.getElementById('uploadHint').style.display = 'none';
+        }
+    }
+
+    function openLightbox(src, label) {
+        document.getElementById('lightboxImg').src = src;
+        document.getElementById('lightboxLabel').textContent = label || '';
+        document.getElementById('lightbox').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        document.getElementById('lightbox').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+</script>
+
+{% endblock %}

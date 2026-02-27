@@ -5,6 +5,22 @@
 {% block content %}
 <h1 style="margin-bottom: 30px; color: var(--text-primary); font-size: 32px; font-weight: 700;"><svg class="icon icon-lg"><use href="#icon-home"/></svg> Bonjour {{ session.username }} !</h1>
 
+<!-- Rappel photo mensuel -->
+{% if user.track_photos and photo_reminder %}
+<div style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid #f59e0b; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <svg class="icon" style="width:28px;height:28px;color:#92400e;flex-shrink:0;"><use href="#icon-camera"/></svg>
+        <div>
+            <div style="font-weight: 700; color: #92400e;">Pas encore de photos ce mois-ci</div>
+            <div style="font-size: 13px; color: #92400e; opacity: 0.8;">Prends 5 minutes pour immortaliser ta progression !</div>
+        </div>
+    </div>
+    <a href="{{ url_for('photos') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706); flex-shrink:0;">
+        <svg class="icon"><use href="#icon-camera"/></svg> Ajouter des photos
+    </a>
+</div>
+{% endif %}
+
 <!-- Stat unique : Poids actuel + IMC -->
 <div class="stats-grid" style="grid-template-columns: 1fr;">
     <div class="stat-card">

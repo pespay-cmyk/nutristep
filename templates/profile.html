@@ -209,6 +209,19 @@
                     </label>
                 </div>
 
+                <!-- Suivi photos -->
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-gradient-start); border-radius: 12px; cursor: pointer;">
+                    <input type="checkbox" name="track_photos" value="1"
+                           {% if user.track_photos %}checked{% endif %}
+                           style="width: 20px; height: 20px; cursor: pointer;">
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary);"><svg class="icon"><use href="#icon-camera"/></svg> Suivi photos</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                            Active la galerie de photos de progression (5 angles, rappel mensuel)
+                        </div>
+                    </div>
+                </label>
+
             </div>
         </div>
 

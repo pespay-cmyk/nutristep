@@ -1,8 +1,10 @@
 import csv
 import io
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash,g
+import uuid
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash, g
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from authlib.integrations.flask_client import OAuth
 from datetime import datetime, timedelta
 import os
@@ -10,6 +12,11 @@ from functools import wraps
 from dotenv import load_dotenv
 from garminconnect import Garmin
 import json
+try:
+    from PIL import Image
+    PILLOW_AVAILABLE = True
+except ImportError:
+    PILLOW_AVAILABLE = False
 
 # Charger les variables d'environnement depuis .env
 load_dotenv()
@@ -108,11 +115,13 @@ class User(db.Model):
     enable_garmin_import = db.Column(db.Boolean, default=True, nullable=False)
     track_measurements = db.Column(db.Boolean, default=False, nullable=False)
     enable_secondary_measurements = db.Column(db.Boolean, default=False, nullable=False)
+    track_photos = db.Column(db.Boolean, default=False, nullable=False)
     # Relations
     weight_entries = db.relationship('WeightEntry', backref='user', lazy=True, cascade='all, delete-orphan')
     meal_entries = db.relationship('MealEntry', backref='user', lazy=True, cascade='all, delete-orphan')
     activity_entries = db.relationship('ActivityEntry', backref='user', lazy=True, cascade='all, delete-orphan')
     body_measurements = db.relationship('BodyMeasurement', backref='user', lazy=True, cascade='all, delete-orphan')
+    photo_entries = db.relationship('PhotoEntry', backref='user', lazy=True, cascade='all, delete-orphan')
 
 class WeightEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -184,6 +193,26 @@ class BodyMeasurement(db.Model):
 
     note = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class PhotoEntry(db.Model):
+    __tablename__ = 'photo_entries'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    angle = db.Column(db.String(20), nullable=False)
+    # face, profil_g, profil_d, dos, ventre
+    filename = db.Column(db.String(200), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+PHOTO_ANGLES = [
+    ('visage',  'Visage',        'De face, cadre tête et épaules'),
+    ('ventre',  'Ventre',        'De profil, zone abdomen/taille'),
+    ('totale',  'Silhouette',    'De face, corps entier'),
+]
+
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads', 'photos')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'heic'}
 
 # ========================================
 # DÉCORATEUR POUR PROTÉGER LES ROUTES
@@ -391,6 +420,16 @@ def dashboard():
     # Repas d'aujourd'hui
     today_meals = MealEntry.query.filter_by(user_id=user_id, date=today).all()
 
+    # Rappel photo mensuel
+    photo_reminder = False
+    if user.track_photos:
+        first_day_month = today.replace(day=1)
+        photo_this_month = PhotoEntry.query.filter(
+            PhotoEntry.user_id == user_id,
+            PhotoEntry.date >= first_day_month
+        ).first()
+        photo_reminder = photo_this_month is None
+
     return render_template('dashboard.html',
                          latest_weight=latest_weight,
                          first_weight=first_weight,
@@ -399,6 +438,7 @@ def dashboard():
                          weight_stats=weight_stats,
                          today_meals=today_meals,
                          latest_measurements=latest_measurements,
+                         photo_reminder=photo_reminder,
                          user=user,
                          today=today,
                          theme=user.theme)
@@ -1489,6 +1529,7 @@ def profile_update():
     user.enable_garmin_import = bool(request.form.get('enable_garmin_import'))
     user.track_measurements = bool(request.form.get('track_measurements'))
     user.enable_secondary_measurements = bool(request.form.get('enable_secondary_measurements'))
+    user.track_photos = bool(request.form.get('track_photos'))
     # Date de naissance
     birth_date_str = request.form.get('birth_date', '').strip()
     if birth_date_str:
@@ -1709,6 +1750,184 @@ def load_user():
         g.current_user = User.query.get(session['user_id'])
     else:
         g.current_user = None
+
+# ========================================
+# ROUTES PHOTOS
+# ========================================
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def compress_and_save(file, filepath, max_size=(1200, 1600), quality=85):
+    """Compresse et sauvegarde une image. Retourne True si succès."""
+    if PILLOW_AVAILABLE:
+        try:
+            img = Image.open(file)
+            # Corriger l'orientation EXIF
+            try:
+                from PIL import ImageOps
+                img = ImageOps.exif_transpose(img)
+            except Exception:
+                pass
+            # Convertir RGBA en RGB si nécessaire
+            if img.mode in ('RGBA', 'P'):
+                img = img.convert('RGB')
+            img.thumbnail(max_size, Image.LANCZOS)
+            img.save(filepath, 'JPEG', quality=quality, optimize=True)
+            return True
+        except Exception:
+            pass
+    # Fallback sans Pillow : sauvegarde brute
+    file.seek(0)
+    with open(filepath, 'wb') as f:
+        f.write(file.read())
+    return True
+
+@app.route('/photos')
+@login_required
+def photos():
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+
+    if not user.track_photos:
+        flash('Le suivi photos n\'est pas activé.', 'warning')
+        return redirect(url_for('dashboard'))
+
+    today = datetime.utcnow().date()
+
+    # Toutes les photos de l'utilisateur
+    all_photos = PhotoEntry.query.filter_by(user_id=user_id).order_by(PhotoEntry.date.desc()).all()
+
+    # Organiser par mois
+    photos_by_month = {}
+    for photo in all_photos:
+        month_key = photo.date.strftime('%Y-%m')
+        month_label = photo.date.strftime('%B %Y').capitalize()
+        if month_key not in photos_by_month:
+            photos_by_month[month_key] = {'label': month_label, 'photos': {}}
+        photos_by_month[month_key]['photos'][photo.angle] = photo
+
+    # Photo ce mois-ci ?
+    first_day_month = today.replace(day=1)
+    photo_this_month = PhotoEntry.query.filter(
+        PhotoEntry.user_id == user_id,
+        PhotoEntry.date >= first_day_month
+    ).first()
+
+    # Données pour comparaison avant/après
+    months_list = sorted(photos_by_month.keys())
+    first_month = photos_by_month.get(months_list[0]) if months_list else None
+    last_month = photos_by_month.get(months_list[-1]) if len(months_list) > 1 else None
+
+    return render_template('photos.html',
+                         photos_by_month=photos_by_month,
+                         photo_this_month=photo_this_month,
+                         photo_angles=PHOTO_ANGLES,
+                         first_month=first_month,
+                         last_month=last_month,
+                         months_list=months_list,
+                         today=today,
+                         user=user,
+                         theme=user.theme)
+
+@app.route('/photos/upload', methods=['POST'])
+@login_required
+def upload_photo():
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+
+    if not user.track_photos:
+        flash('Le suivi photos n\'est pas activé.', 'warning')
+        return redirect(url_for('dashboard'))
+
+    today = datetime.utcnow().date()
+    uploaded = 0
+    errors = 0
+
+    for angle, _, _ in PHOTO_ANGLES:
+        file = request.files.get(f'photo_{angle}')
+        if not file or not file.filename:
+            continue
+        if not allowed_file(file.filename):
+            errors += 1
+            continue
+
+        # Dossier utilisateur/mois
+        user_folder = os.path.join(UPLOAD_FOLDER, str(user_id), today.strftime('%Y-%m'))
+        os.makedirs(user_folder, exist_ok=True)
+
+        # Nom de fichier unique
+        ext = 'jpg'  # On sauvegarde toujours en JPEG après compression
+        filename = f"{today.isoformat()}_{angle}_{uuid.uuid4().hex[:8]}.{ext}"
+        filepath = os.path.join(user_folder, filename)
+
+        # Supprimer ancienne photo du même angle ce mois-ci si elle existe
+        first_day_month = today.replace(day=1)
+        existing = PhotoEntry.query.filter(
+            PhotoEntry.user_id == user_id,
+            PhotoEntry.angle == angle,
+            PhotoEntry.date >= first_day_month
+        ).first()
+        if existing:
+            old_path = os.path.join(UPLOAD_FOLDER, str(user_id),
+                                    existing.date.strftime('%Y-%m'), existing.filename)
+            if os.path.exists(old_path):
+                os.remove(old_path)
+            db.session.delete(existing)
+
+        # Compresser et sauvegarder
+        compress_and_save(file, filepath)
+
+        # Enregistrer en BDD
+        photo = PhotoEntry(
+            user_id=user_id,
+            date=today,
+            angle=angle,
+            filename=filename
+        )
+        db.session.add(photo)
+        uploaded += 1
+
+    db.session.commit()
+
+    if uploaded > 0:
+        flash(f'✅ {uploaded} photo(s) enregistrée(s) !', 'success')
+    if errors > 0:
+        flash(f'⚠️ {errors} fichier(s) ignoré(s) (format non supporté).', 'warning')
+
+    return redirect(url_for('photos'))
+
+@app.route('/photos/delete/<int:photo_id>', methods=['POST'])
+@login_required
+def delete_photo(photo_id):
+    user_id = session['user_id']
+    photo = PhotoEntry.query.get_or_404(photo_id)
+
+    if photo.user_id != user_id:
+        flash('Action non autorisée.', 'danger')
+        return redirect(url_for('photos'))
+
+    # Supprimer le fichier
+    filepath = os.path.join(UPLOAD_FOLDER, str(user_id),
+                            photo.date.strftime('%Y-%m'), photo.filename)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+
+    db.session.delete(photo)
+    db.session.commit()
+
+    flash('Photo supprimée.', 'info')
+    return redirect(url_for('photos'))
+
+@app.route('/photos/file/<int:user_id>/<month>/<filename>')
+@login_required
+def serve_photo(user_id, month, filename):
+    """Sert les photos de façon sécurisée (seul l'utilisateur peut voir ses photos)."""
+    from flask import send_from_directory, abort
+    if session['user_id'] != user_id:
+        abort(403)
+    folder = os.path.join(UPLOAD_FOLDER, str(user_id), month)
+    return send_from_directory(folder, filename)
 
 if __name__ == '__main__':
     with app.app_context():
