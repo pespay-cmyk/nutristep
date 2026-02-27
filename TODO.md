@@ -13,9 +13,9 @@
 ## 🚀 PRIORITÉ 1 - À FAIRE MAINTENANT
 
 ### 🍽️ Repas types prédéfinis
-- [ ] Créer des templates de repas récurrents (ex: "Petit-déj standard")
-- [ ] Bouton "Utiliser un repas type" dans le modal de saisie
-- [ ] Gestion des templates dans les paramètres profil (créer / modifier / supprimer)
+- [x] Créer des templates de repas récurrents (ex: "Petit-déj standard")
+- [x] Bouton "Utiliser un repas type" dans le modal de saisie
+- [x] Gestion des templates dans les paramètres profil (créer / modifier / supprimer)
 
 ### 💾 Sauvegarde automatique
 - [ ] Script cron quotidien (3h du matin)

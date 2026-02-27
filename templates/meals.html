@@ -862,14 +862,14 @@ const allMeals = [
                         <div id="${mealType}_foods" class="food-items" ${mealData.is_none ? 'style="display:none;"' : ''}>
                             ${mealData.foods.length > 0 ? mealData.foods.map((food, idx) => `
                                 <div class="food-item">
-                                    <input type="text" class="form-control" name="${mealType}_food[]"
+                                    <input type="text" class="form-control" name="${mealType}_food[]" autocomplete="off"
                                            value="${food}" placeholder="Ex: Yaourt nature"
                                            oninput="showAutocomplete(this); markChanged();">
                                     <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();"><svg class="icon icon-sm"><use href="#icon-delete"/></svg><span class="btn-text"></button>
                                 </div>
                             `).join('') : `
                                 <div class="food-item">
-                                    <input type="text" class="form-control" name="${mealType}_food[]"
+                                    <input type="text" class="form-control" name="${mealType}_food[]" autocomplete="off"
                                            placeholder="Ex: Yaourt nature" oninput="showAutocomplete(this); markChanged();">
                                     <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();"><svg class="icon icon-sm"><use href="#icon-delete"/></svg><span class="btn-text"></button>
                                 </div>
@@ -927,6 +927,8 @@ const allMeals = [
         renderVisibleMeals(currentDayData);
         updateAddMealMenu();
         document.getElementById('addMealMenu').style.display = 'none';
+        // Déplier automatiquement le repas ajouté
+        setTimeout(() => toggleMealSection(mealType), 50);
         markChanged();
     }
 
@@ -997,7 +999,7 @@ const allMeals = [
         const newItem = document.createElement('div');
         newItem.className = 'food-item';
         newItem.innerHTML = `
-            <input type="text" class="form-control" name="${mealType}_food[]"
+            <input type="text" class="form-control" name="${mealType}_food[]" autocomplete="off"
                    placeholder="Ex: Pomme" oninput="showAutocomplete(this); markChanged();">
             <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();"><svg class="icon icon-sm"><use href="#icon-delete"/></svg></button>
         `;
@@ -1153,7 +1155,7 @@ const allMeals = [
             const item = document.createElement('div');
             item.className = 'food-item';
             item.innerHTML = `
-                <input type="text" class="form-control" name="${mealType}_food[]"
+                <input type="text" class="form-control" name="${mealType}_food[]" autocomplete="off"
                        value="${food.replace(/"/g, '&quot;')}"
                        oninput="showAutocomplete(this); markChanged();">
                 <button type="button" class="btn-remove" onclick="removeFood(this); markChanged();"><svg class="icon icon-sm"><use href="#icon-delete"/></svg><span class="btn-text"></span></button>
